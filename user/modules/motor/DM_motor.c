@@ -4,16 +4,28 @@
 #include "fdcan.h"
 #if DM4310_1TO4
 
-void DM4310_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data)
+void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t id)
 {
-	motor->encoder = (rx_data[0]<<8|rx_data[1]);
-	motor->rpm = (uint16_t)(rx_data[2]<<8|rx_data[3])/100;
-	motor->torque_current = (uint16_t)(rx_data[4]<<8|rx_data[5]);
-	motor->motor_temperature = rx_data[6];
-	motor->pcb_temperature = rx_data[7];
+	init->motor_measurement.motor_type = type;
+	init->motor_measurement.motor_id = id;
+}
+
+void DM_GetRxPacket(dm_control_struct *motor,uint8_t *rx_data)
+{
+	motor->motor_measurement.encoder = (rx_data[0]<<8|rx_data[1]);
+	motor->motor_measurement.rpm = (uint16_t)(rx_data[2]<<8|rx_data[3])/100;
+	motor->motor_measurement.torque_current = (uint16_t)(rx_data[4]<<8|rx_data[5]);
+	motor->motor_measurement.motor_temperature = rx_data[6];
+	motor->motor_measurement.pcb_temperature = rx_data[7];
+}
+void DM_RxPacketUpdate(dm_control_struct *update)
+{
+	update->angle = EncoderToAngle(update->motor_measurement.encoder);
+	update->angle_pi =
+	update->omega = RpmToOmega(update->motor_measurement.rpm);
 }
 //打包控制数据
-void DM4310_AddTxPacket(int16_t current1,int16_t current2,int16_t current3,int16_t current4)
+HAL_StatusTypeDef DM_AddTxPacket(uint8_t master_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
 {
 	uint8_t tx_data[8];
 	tx_data[0] = current1 >> 8;
@@ -24,7 +36,7 @@ void DM4310_AddTxPacket(int16_t current1,int16_t current2,int16_t current3,int16
 	tx_data[5] = current3;
 	tx_data[6] = current4 >> 8;
 	tx_data[7] = current4;
-	can_send_data(&hfdcan1,0xFF,tx_data,8);
+	return can_send_data(&hfdcan1,master_id,tx_data,8);
 }
 #else
 uint8_t DM_Motor_Enable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFC};

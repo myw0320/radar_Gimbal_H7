@@ -1,17 +1,6 @@
-/**
-  ******************************************************************************
-  * @file	 bsp_PWM.h
-  * @author  Wang Hongxi
-  * @version V1.0.0
-  * @date    2020/3/1
-  * @brief   
-  ******************************************************************************
-  * @attention
-  *
-  ******************************************************************************
-  */
-#ifndef __BSP_IMU_PWM_H
-#define __BSP_IMU_PWM_H
+
+#ifndef RADAR_GIMBAL_H7_BSP_PWM_H
+#define RADAR_GIMBAL_H7_BSP_PWM_H
 
 #include "stdint.h"
 #include "tim.h"

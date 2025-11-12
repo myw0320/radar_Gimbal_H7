@@ -1,6 +1,6 @@
 #ifndef SLOPE_H
 #define SLOPE_H
-#include "struct_typedef.h"
+#include "main.h"
 
 typedef enum {
     Slope_First_REAL,
@@ -18,7 +18,7 @@ typedef struct {
 } Slope_t;
 
 //快速开方
-extern fp32 invSqrt(fp32 num);
+extern float invSqrt(float num);
 
 //斜波函数初始化
 void slope_init(Slope_t *slope, float increase_value, float decrease_value, Enum_Slope_First slope_first) ;

@@ -2,13 +2,13 @@
 #include "arm_math.h"
 
 //快速开方
-fp32 invSqrt(fp32 num)
+float invSqrt(float num)
 {
-    fp32 halfnum = 0.5f * num;
-    fp32 y = num;
+    float halfnum = 0.5f * num;
+    float y = num;
     long i = *(long *)&y;
     i = 0x5f3759df - (i >> 1);
-    y = *(fp32 *)&i;
+    y = *(float *)&i;
     y = y * (1.5f - (halfnum * y * y));
     return y;
 }

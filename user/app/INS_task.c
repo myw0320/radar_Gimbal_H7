@@ -11,10 +11,7 @@
  ******************************************************************************
  */
 #include "INS_task.h"
-#include "controller.h"
-#include "QuaternionEKF.h"
-#include "bsp_PWM.h"
-#include "mahony_filter.h"
+
 
 INS_t INS;
 

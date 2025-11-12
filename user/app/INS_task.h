@@ -13,10 +13,12 @@
 #ifndef RADAR_GIMBAL_INS_TASK_H
 #define RADAR_GIMBAL_INS_TASK_H
 
-#include "stdint.h"
 #include "BMI088driver.h"
+#include "controller.h"
 #include "QuaternionEKF.h"
-
+#include "bsp_PWM.h"
+#include "mahony_filter.h"
+#include "stdint.h"
 #define X 0
 #define Y 1
 #define Z 2
@@ -72,8 +74,9 @@ typedef struct
     float Roll;
 } IMU_Param_t;
 
-extern void INS_Init(void);
-extern void INS_task(void);
+extern INS_t INS;
+void INS_Init(void);
+void INS_task(void);
 
 void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q);
 void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q);

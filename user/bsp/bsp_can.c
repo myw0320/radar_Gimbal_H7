@@ -3,9 +3,9 @@
 //
 
 #include "bsp_can.h"
-#include "fdcan.h"
 
-void FDCAN1_Config(void)
+
+void FDCAN1_Config_Init(void)
 {
   FDCAN_FilterTypeDef filterConfig;
   /* Configure Rx filter */
@@ -29,8 +29,7 @@ void FDCAN1_Config(void)
   {
     Error_Handler();
   }
-
-	/* 开启RX FIFO0的新数据中断 */
+  /* 开启RX FIFO0的新数据中断 */
   if (HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
   {
     Error_Handler();
@@ -42,7 +41,7 @@ void FDCAN1_Config(void)
   }
 }
 
-void FDCAN2_Config(void)
+void FDCAN2_Config_Init(void)
 {
   FDCAN_FilterTypeDef sFilterConfig;
   /* Configure Rx filter */
@@ -56,26 +55,21 @@ void FDCAN2_Config(void)
   {
     Error_Handler();
   }
-
-  /* Configure global filter:
-     Filter all remote frames with STD and EXT ID
-     Reject non matching frames with STD ID and EXT ID */
   if (HAL_FDCAN_ConfigGlobalFilter(&hfdcan2, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE) != HAL_OK)
   {
     Error_Handler();
   }
-
   /* Activate Rx FIFO 0 new message notification on both FDCAN instances */
   if (HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO1_NEW_MESSAGE, 0) != HAL_OK)
   {
     Error_Handler();
   }
-
   if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK)
   {
     Error_Handler();
   }
 }
+
 
 HAL_StatusTypeDef can_send_data(FDCAN_HandleTypeDef *hcan, uint8_t id, uint8_t *tx_data, uint32_t len)
 {
@@ -116,7 +110,6 @@ HAL_StatusTypeDef can_send_data(FDCAN_HandleTypeDef *hcan, uint8_t id, uint8_t *
   TxHeader.MessageMarker = 0;//消息标记
 
   return HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, tx_data);
-
 }
 
 
@@ -130,11 +123,38 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
       uint8_t rx_data[8];
       HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader1, rx_data);
 
-			switch(RxHeader1.Identifier)
-			{
+      switch(RxHeader1.Identifier)
+      {
+      	case 0x301:
+      	{
+      		DM_GetRxPacket(&gimbalControl.yawMotor,rx_data);
+      		break;
+      	}
+      	case 0x302:
+      	{
+      		DM_GetRxPacket(&gimbalControl.pitchMotor,rx_data);
+      		break;
+      	}
+      }
+    }
+  	else if (hfdcan->Instance == FDCAN2)
+  	{
+  		FDCAN_RxHeaderTypeDef RxHeader2;
+  		uint8_t rx_data[8];
+  		switch(RxHeader2.Identifier)
+  		{
 
-			}
-	  }
+  		}
+  	}
+  	else if (hfdcan->Instance == FDCAN3)
+  	{
+  		FDCAN_RxHeaderTypeDef RxHeader3;
+  		uint8_t rx_data[8];
+  		switch(RxHeader3.Identifier)
+  		{
+
+  		}
+  	}
   }
 }
 

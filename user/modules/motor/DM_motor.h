@@ -24,10 +24,18 @@
 #define T_MAX 10.0f
 
 #define RpmToOmega(rpm) (rpm*(float)PI/30.0f)
-
+#define EncoderToAngle(encoder) (encoder*0.043950f - 180.0f)
 #if DM4310_1TO4
+typedef enum
+{
+	DM4010,
+	DM4310,
+	DM8009,
+}dm_motor_type_enum;
 typedef struct
 {
+	dm_motor_type_enum motor_type;
+	uint8_t motor_id;
 	uint16_t encoder;//编码值
 	uint16_t rpm;//rpm值
 	uint16_t torque_current;//扭矩电流
@@ -37,7 +45,7 @@ typedef struct
 
 typedef struct
 {
-	dm_motor_struct *motor_measurement;//电机原始数据
+	dm_motor_struct motor_measurement;//电机原始数据
 	float angle;
 	float angle_pi;
 	float omega;
@@ -45,6 +53,11 @@ typedef struct
 
 	int16_t give_cmd_current;//给定电流值
 }dm_control_struct;
+
+void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t id);
+void DM_GetRxPacket(dm_control_struct *motor,uint8_t *rx_data);
+void DM_RxPacketUpdate(dm_control_struct *update);
+HAL_StatusTypeDef DM_AddTxPacket(uint8_t master_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
 #else
 typedef enum
 {

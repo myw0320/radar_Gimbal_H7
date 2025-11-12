@@ -39,7 +39,12 @@ extern UART_HandleTypeDef huart9;
 extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
-
+extern DMA_HandleTypeDef hdma_uart7_rx;
+extern DMA_HandleTypeDef hdma_uart7_tx;
+extern DMA_HandleTypeDef hdma_uart9_rx;
+extern DMA_HandleTypeDef hdma_uart9_tx;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart1_tx;
 /* USER CODE END Private defines */
 
 void MX_UART7_Init(void);

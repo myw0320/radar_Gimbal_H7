@@ -1,7 +1,9 @@
 #ifndef RADAR_GIMBAL_H7_DJI_MOTOR_H
 #define RADAR_GIMBAL_H7_DJI_MOTOR_H
+#include "main.h"
 #include "math.h"
 #include "arm_math.h"
+#include "bsp_can.h"
 
 #define M3508_K0 2.49688994e-6f
 #define M3508_K1 1.253e-07
@@ -38,9 +40,11 @@ typedef enum
     GM6020,
     M2006,
 }dji_motor_type_enum;
+
 typedef struct
 {
     dji_motor_type_enum motor_type;
+    uint8_t motor_id;
     uint16_t encoder;
     uint16_t last_encoder;
     uint16_t rpm;
@@ -50,15 +54,18 @@ typedef struct
 
 typedef struct
 {
-    float angle;
-    float angle_pi;
-    float omega;
-    float velocity;
+    dji_motor_struct motor_measurement;//电机原始数据
+    float angle;//-180~180
+    float angle_pi;//-PI~PI
+    float omega;//角速度 转/秒
+    float velocity;//线速度 米/秒
 
-    float given_current;//给定电流值
+    int16_t give_cmd_current;//给定电流值
 }dji_control_struct;
-void DJI_Init(dji_motor_struct *init,dji_motor_type_enum type);
-void DJI_GetRxPacket(dji_motor_struct *dji,uint8_t *rx_data);
+
+
+void DJI_Init(dji_control_struct *init,dji_motor_type_enum type,uint8_t id);
+void DJI_GetRxPacket(dji_control_struct *motor,uint8_t *rx_data);
 void DJI_RxPacketUpdate(dji_control_struct *control);
-void DJI_AddTxPacket(int16_t current1,int16_t current2,int16_t current3,int16_t current4,uint8_t *tx_data);
+HAL_StatusTypeDef DJI_AddTxPacket(uint8_t master_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
 #endif

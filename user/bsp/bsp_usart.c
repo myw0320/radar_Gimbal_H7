@@ -1,20 +1,11 @@
 #include "bsp_usart.h"
-#include "main.h"
 #include "string.h"
 #include "usart.h"
 
-
-
-extern UART_HandleTypeDef huart1;
-extern DMA_HandleTypeDef hdma_usart1_rx;
-extern DMA_HandleTypeDef hdma_usart1_tx;
-
-uint8_t vision_rx_buf[2][VISION_RX_LEN_2];
-uint8_t refree_rx_buf[REFREE_RX_LEN];
-vision_rxfifo_t vision_rxfifo = {0};
-uint8_t referee_tx_buffer[128];
-
-void vision_rx_decode(uint8_t *test_code);
+uint8_t vision_rx_buf[VISION_RX_LEN];//视觉数据包
+uint8_t radar_rx_buf[RADAR_RX_LEN];//雷达数据包
+uint8_t referee_rx_buf[REFEREE_RX_LEN];//裁判数据包
+uint8_t remote_rx_buf[2][REMOTE_RX_LEN];//控数据包
 
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
@@ -50,11 +41,11 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 
         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
 
-        __HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN_2);
+        //__HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN_2);
 
         if(Size == VISION_RX_LEN)
         {
-            vision_rx_decode(vision_rx_buf[0]);
+            //vision_rx_decode(vision_rx_buf[0]);
         }
 
 
@@ -65,11 +56,11 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 
         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
 
-        __HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN_2);
+       // __HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN_2);
 
         if(Size == VISION_RX_LEN)
         {
-            vision_rx_decode(vision_rx_buf[1]);
+            //vision_rx_decode(vision_rx_buf[1]);
         }
     }
     __HAL_DMA_ENABLE(huart->hdmarx);
@@ -77,25 +68,15 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 }
 
 
-void vision_rx_decode(uint8_t *test_code)
-{
-    if((uint8_t)test_code[0] == 0xA5)
-    {
-        memset(&vision_rxfifo, 0, sizeof(vision_rxfifo));
 
-        memcpy(&vision_rxfifo, test_code,sizeof(vision_rxfifo));
-
-    }
-}
 
 void REFREE_Init(void)
 {
-    // Refree_Init(&huart1,refree_rx_buf[0],refree_rx_buf[1],REFREE_RX_LEN_2);
-    HAL_UARTEx_ReceiveToIdle_DMA(&huart1, refree_rx_buf, REFREE_RX_LEN);
+    //HAL_UARTEx_ReceiveToIdle_DMA(&huart1, refree_rx_buf, REFREE_RX_LEN);
 }
 
-uint8_t UART_Send_Data(UART_HandleTypeDef *huart, uint8_t *Data, uint16_t Length)
+HAL_StatusTypeDef UART_Send_Data(UART_HandleTypeDef *huart, uint8_t *tx_data, uint16_t len)
 {
-    return (HAL_UART_Transmit_DMA(huart, Data, Length));
+    return HAL_UART_Transmit_DMA(huart, tx_data, len);
 }
 

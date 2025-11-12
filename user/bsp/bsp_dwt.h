@@ -10,8 +10,8 @@
  *
  ******************************************************************************
  */
-#ifndef _BSP_DWT_H
-#define _BSP_DWT_H
+#ifndef RADAR_GIMBAL_H7_BSP_DWT_H
+#define RADAR_GIMBAL_H7_BSP_DWT_H
 
 #include "main.h"
 #include "stdint.h"
