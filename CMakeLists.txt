@@ -61,7 +61,9 @@ Drivers/CMSIS/Include
 Middlewares/Third_Party/FreeRTOS/Source/include
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
-Middlewares/ST/ARM/DSP/Inc)
+Middlewares/ST/ARM/DSP/Inc
+Middlewares/ST/ARM/DSP/lib
+)
 
 # User include_directories BEGIN
 include_directories(
@@ -77,6 +79,8 @@ user/bsp
 user/modules/bmi088
 user/modules/controller
 user/modules/motor
+user/modules/message
+user/modules/remote
 )
 
 # User include_directories END
@@ -85,11 +89,7 @@ add_definitions(-DDEBUG -DUSE_PWR_LDO_SUPPLY -DUSE_HAL_DRIVER -DSTM32H723xx)
 
 file(GLOB_RECURSE SOURCES "Core/*.*" "Drivers/*.*" "Middlewares/*.*" "USB_DEVICE/*.*" "user/*.*")
 
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32H723VGTX_FLASH.ld
-        user/bsp/bsp_remote.c
-        user/bsp/bsp_remote.h
-        user/app/message_task.c
-        user/app/message_task.h)
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32H723VGTX_FLASH.ld)
 
 add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
 add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork)

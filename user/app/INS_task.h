@@ -16,7 +16,7 @@
 #include "BMI088driver.h"
 #include "controller.h"
 #include "QuaternionEKF.h"
-#include "bsp_PWM.h"
+#include "bsp_pwm.h"
 #include "mahony_filter.h"
 #include "stdint.h"
 #define X 0

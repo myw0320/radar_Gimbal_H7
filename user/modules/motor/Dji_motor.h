@@ -1,8 +1,6 @@
 #ifndef RADAR_GIMBAL_H7_DJI_MOTOR_H
 #define RADAR_GIMBAL_H7_DJI_MOTOR_H
-#include "main.h"
-#include "math.h"
-#include "arm_math.h"
+#include "stdint.h"
 #include "bsp_can.h"
 
 #define M3508_K0 2.49688994e-6f
@@ -41,7 +39,7 @@ typedef enum
     M2006,
 }dji_motor_type_enum;
 
-typedef struct
+typedef struct __attribute__((packed))
 {
     dji_motor_type_enum motor_type;
     uint8_t motor_id;

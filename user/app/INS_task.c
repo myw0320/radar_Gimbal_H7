@@ -30,10 +30,9 @@ void INS_Init(void)
     INS.AccelLPF = 0.0089f;
 }
 
-void INS_TASK(void)
+void INS_TASK(void *pvParameters)
 {
 	 INS_Init();
-
 	 while(1)
 	 {
 		ins_dt = DWT_GetDeltaT(&INS_DWT_Count);

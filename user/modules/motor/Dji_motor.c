@@ -34,5 +34,5 @@ HAL_StatusTypeDef DJI_AddTxPacket(uint8_t master_id, int16_t current1, int16_t c
     tx_data[5] = current3;
     tx_data[6] = current4 >> 8;
     tx_data[7] = current4;
-    return can_send_data(&hfdcan1,master_id,tx_data,8);
+    return can_tx_data(&hfdcan1,master_id,tx_data,8);
 }

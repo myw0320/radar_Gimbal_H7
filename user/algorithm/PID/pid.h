@@ -45,8 +45,8 @@ typedef struct
     float Dbuf[3];  //微分项 0最新 1上一次 2上上次
     float error[3]; //误差项 0最新 1上一次 2上上次
 
-} PidTypeDef;
-extern void PID_init(PidTypeDef *pid, uint8_t mode, const float PID[3], float max_out, float max_iout);
-extern float PID_calc(PidTypeDef *pid, float ref, float set);
-extern void PID_clear(PidTypeDef *pid);
+}pid_struct;
+extern void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float max_iout);
+extern float PID_calc(pid_struct *pid, float ref, float set);
+extern void PID_clear(pid_struct *pid);
 #endif

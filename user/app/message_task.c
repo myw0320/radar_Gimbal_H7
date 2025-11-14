@@ -5,7 +5,7 @@
 #include "message_task.h"
 
 
-void message_task(void)
+void message_task(void *pvParameters)
 {
 
 }

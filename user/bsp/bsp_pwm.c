@@ -1,9 +1,15 @@
-#include "bsp_PWM.h"
+#include "bsp_pwm.h"
 
+void pwm_init(TIM_HandleTypeDef *htim)
+{
+    HAL_TIM_Base_Start(htim);
+}
 void TIM_Set_PWM(TIM_HandleTypeDef *tim_pwmHandle, uint8_t Channel, uint16_t value)
 {
     if (value > tim_pwmHandle->Instance->ARR)
+    {
         value = tim_pwmHandle->Instance->ARR;
+    }
 
     switch (Channel)
     {

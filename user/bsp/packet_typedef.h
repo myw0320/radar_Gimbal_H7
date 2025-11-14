@@ -15,8 +15,6 @@
 #ifndef NAVIGATION_TASK_PACKET_TYPEDEF_H
 #define NAVIGATION_TASK_PACKET_TYPEDEF_H
 
-#include "struct_typedef.h"
-
 typedef enum{
   SOF_RECEIVE = 0x5A,
   SOF_SEND = 0x5A

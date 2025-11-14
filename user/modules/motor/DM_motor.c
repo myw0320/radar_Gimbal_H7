@@ -1,13 +1,11 @@
-#include "cmsis_os.h"
 #include "DM_motor.h"
-#include "bsp_can.h"
-#include "fdcan.h"
+
 #if DM4310_1TO4
 
-void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t id)
+void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t canid)
 {
 	init->motor_measurement.motor_type = type;
-	init->motor_measurement.motor_id = id;
+	init->motor_measurement.motor_canid = canid;
 }
 
 void DM_GetRxPacket(dm_control_struct *motor,uint8_t *rx_data)
@@ -36,7 +34,7 @@ HAL_StatusTypeDef DM_AddTxPacket(uint8_t master_id, int16_t current1, int16_t cu
 	tx_data[5] = current3;
 	tx_data[6] = current4 >> 8;
 	tx_data[7] = current4;
-	return can_send_data(&hfdcan1,master_id,tx_data,8);
+	return can_tx_data(&hfdcan1,master_id,tx_data,8);
 }
 #else
 uint8_t DM_Motor_Enable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFC};
@@ -188,7 +186,7 @@ void DM4310_AddTxPacket(dm_control_struct *control)
 			break;
 		}
 	}
-	can_send_data(&hfdcan1,control->motor_measurement->id,tx_data,8);
+	can_tx_data(&hfdcan1,control->motor_measurement->id,tx_data,8);
 }
 
 

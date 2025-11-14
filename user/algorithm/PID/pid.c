@@ -29,7 +29,7 @@
         }                      \
     }
 
-void PID_init(PidTypeDef *pid, uint8_t mode, const float PID[3], float max_out, float max_iout)
+void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float max_iout)
 {
     if (pid == NULL || PID == NULL)
     {
@@ -45,7 +45,7 @@ void PID_init(PidTypeDef *pid, uint8_t mode, const float PID[3], float max_out, 
     pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
 }
 
-float PID_calc(PidTypeDef *pid, float ref, float set)
+float PID_calc(pid_struct *pid, float ref, float set)
 {
     if (pid == NULL)
     {
@@ -83,7 +83,7 @@ float PID_calc(PidTypeDef *pid, float ref, float set)
     return pid->out;
 }
 
-void PID_clear(PidTypeDef *pid)
+void PID_clear(pid_struct *pid)
 {
     if (pid == NULL)
     {

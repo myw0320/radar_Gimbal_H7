@@ -1,6 +1,8 @@
 #ifndef RADAR_GIMBAL_H7_DM_MOTOR_H
 #define RADAR_GIMBAL_H7_DM_MOTOR_H
-#include "main.h"
+#include "stdint.h"
+#include "bsp_can.h"
+
 
 #define DM4310_1TO4 1
 
@@ -32,10 +34,10 @@ typedef enum
 	DM4310,
 	DM8009,
 }dm_motor_type_enum;
-typedef struct
+typedef struct __attribute__((packed))
 {
 	dm_motor_type_enum motor_type;
-	uint8_t motor_id;
+	uint8_t motor_canid;
 	uint16_t encoder;//编码值
 	uint16_t rpm;//rpm值
 	uint16_t torque_current;//扭矩电流

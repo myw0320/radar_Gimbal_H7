@@ -78,6 +78,8 @@ user/bsp
 user/modules/bmi088
 user/modules/controller
 user/modules/motor
+user/modules/message
+user/modules/remote
 )
 
 # User include_directories END

@@ -2,81 +2,107 @@
 #include "string.h"
 #include "usart.h"
 
-uint8_t vision_rx_buf[VISION_RX_LEN];//视觉数据包
-uint8_t radar_rx_buf[RADAR_RX_LEN];//雷达数据包
-uint8_t referee_rx_buf[REFEREE_RX_LEN];//裁判数据包
-uint8_t remote_rx_buf[2][REMOTE_RX_LEN];//控数据包
 
-
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
+//dma接收初始化
+void uart_dma_rx_init(UART_HandleTypeDef *huart,uint8_t *rx1_buf, uint8_t *rx2_buf, uint32_t buf_len)
 {
-
-}
-
-void Radar_Init(UART_HandleTypeDef *huart, uint8_t *DstAddress, uint8_t *SecondMemAddress, uint32_t DataLength)
-{
-    huart->ReceptionType = HAL_UART_RECEPTION_TOIDLE;
-
-    huart->RxEventType = HAL_UART_RXEVENT_IDLE;
-
-    huart->RxXferSize = DataLength;
-
+    //使能UART DMA接收
     SET_BIT(huart->Instance->CR3,USART_CR3_DMAR);
-
+    //启用空闲中断
     __HAL_UART_ENABLE_IT(huart, UART_IT_IDLE);
+    //失能DMA
+    __HAL_DMA_DISABLE(huart->hdmarx);
 
-    HAL_DMAEx_MultiBufferStart(huart->hdmarx,(uint32_t)&huart->Instance->RDR,(uint32_t)DstAddress,(uint32_t)SecondMemAddress,DataLength);
-}
-
-void RADAR_Init(void)
-{
-   // Radar_Init(&huart10,vision_rx_buf[0],vision_rx_buf[1],VISION_RX_LEN_2);
-}
-
-void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
-{
-    if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
-    {
-        __HAL_DMA_DISABLE(huart->hdmarx);
-
-        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
-
-        //__HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN_2);
-
-        if(Size == VISION_RX_LEN)
-        {
-            //vision_rx_decode(vision_rx_buf[0]);
-        }
-
-
-    }
-    else
-    {
-        __HAL_DMA_DISABLE(huart->hdmarx);
-
-        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
-
-       // __HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN_2);
-
-        if(Size == VISION_RX_LEN)
-        {
-            //vision_rx_decode(vision_rx_buf[1]);
-        }
-    }
+    ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->PAR = (uint32_t)&huart->Instance->RDR;
+    //内存缓冲区1
+    ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->M0AR = (uint32_t)rx1_buf;
+    //内存缓冲区2
+    ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->M1AR = (uint32_t)rx2_buf;
+    //数据长度
+    ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->NDTR = buf_len;
+    //使能双缓冲区
+    ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->CR |= DMA_SxCR_DBM;
+    //使能DMA
     __HAL_DMA_ENABLE(huart->hdmarx);
-
 }
-
-
-
-
-void REFREE_Init(void)
+//弱定义数据处理函数
+__weak void uart_rx_date_treating(uint8_t *data)
 {
-    //HAL_UARTEx_ReceiveToIdle_DMA(&huart1, refree_rx_buf, REFREE_RX_LEN);
+
+}
+//串口dma回调
+void UART_RxIRQHandler(UART_HandleTypeDef *huart,uint16_t len)
+{
+    if (huart->Instance->ISR & UART_FLAG_RXNE)//接收到数据
+    {
+        __HAL_UART_CLEAR_IDLEFLAG(huart);//清除空闲中断
+    }
+    else if (huart->Instance->ISR & UART_FLAG_IDLE)//检测到空闲
+    {
+        static uint16_t this_time_rx_len = 0;
+
+        __HAL_UART_CLEAR_IDLEFLAG(huart);//清除空闲中断
+
+        if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
+        {
+            //失能DMA
+            __HAL_DMA_DISABLE(huart->hdmarx);
+            //获取接收数据长度,长度 = 设定长度 - 剩余长度
+            this_time_rx_len = len - ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->NDTR;
+            //重新设定数据长度
+            ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->NDTR = len;
+            //设定缓冲区1
+            ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+            //使能DMA
+            __HAL_DMA_ENABLE(huart->hdmarx);
+
+            if(this_time_rx_len == len >> 1)
+            {
+                //接受数据
+                if (huart == &huart1)
+                {
+
+                }
+                else if (huart == &huart7)
+                {
+
+                }
+                else if (huart == &huart9)
+                {
+
+                }
+            }
+        }
+        else
+        {
+            //失能DMA
+            __HAL_DMA_DISABLE(huart->hdmarx);
+            //获取接收数据长度,长度 = 设定长度 - 剩余长度
+            this_time_rx_len = len - ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->NDTR;
+            //重新设定数据长度
+            ((DMA_Stream_TypeDef   *)huart->hdmarx->Instance)->NDTR = len;
+            //设定缓冲区0
+            ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
+            //使能DMA
+            __HAL_DMA_ENABLE(huart->hdmarx);
+
+            if(this_time_rx_len == len >> 1)
+            {
+                if (huart == &huart1)
+                {
+
+                }
+                else if (huart == &huart7)
+                {
+
+                }
+                else if (huart == &huart9)
+                {
+
+                }
+            }
+        }
+    }
 }
 
-HAL_StatusTypeDef UART_Send_Data(UART_HandleTypeDef *huart, uint8_t *tx_data, uint16_t len)
-{
-    return HAL_UART_Transmit_DMA(huart, tx_data, len);
-}
 

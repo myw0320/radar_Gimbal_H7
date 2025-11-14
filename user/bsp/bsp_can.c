@@ -71,7 +71,7 @@ void FDCAN2_Config_Init(void)
 }
 
 
-HAL_StatusTypeDef can_send_data(FDCAN_HandleTypeDef *hcan, uint8_t id, uint8_t *tx_data, uint32_t len)
+HAL_StatusTypeDef can_tx_data(FDCAN_HandleTypeDef *hcan, uint8_t id, uint8_t *tx_data, uint32_t len)
 {
 
 	FDCAN_TxHeaderTypeDef TxHeader;
