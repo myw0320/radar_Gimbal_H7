@@ -4,6 +4,7 @@
 
 #ifndef RADAR_GIMBAL_H7_GIMBAL_TASK_H
 #define RADAR_GIMBAL_H7_GIMBAL_TASK_H
+#include "main.h"
 #include "stdint.h"
 #include "stdbool.h"
 #include "INS_task.h"
@@ -13,8 +14,7 @@
 #include "remote.h"
 #include "DM_motor.h"
 #include "pid.h"
-
-
+#include "Mathh.h"
 #define ECD_RANGE 8191
 #define HALF_ECD_RANGE 4096
 #define MOTOR_ECD_TO_RAD 0.000766990394f //编码值转换为弧度值  2*PI/8192
@@ -33,29 +33,39 @@
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-#define YAW_OMEGA_P
-#define YAW_OMEGA_I
-#define YAW_OMEGA_D
-#define YAW_OMEGA_MAX_OUT
-#define YAW_OMEGA_MAX_I_OUT
+#define YAW_OMEGA_P 0
+#define YAW_OMEGA_I 0
+#define YAW_OMEGA_D 0
+#define YAW_OMEGA_MAX_OUT 0
+#define YAW_OMEGA_MIN_OUT 0
+#define YAW_OMEGA_MAX_IOUT 0
+#define YAW_OMEGA_MIN_IOUT 0
 
-#define YAW_POS_P
-#define YAW_POS_I
-#define YAW_POS_D
-#define YAW_POS_MAX_OUT
-#define YAW_POS_MAX_I_OUT
+#define YAW_POS_P 0
+#define YAW_POS_I 0
+#define YAW_POS_D 0
+#define YAW_POS_MAX_OUT 0
+#define YAW_POS_MIN_OUT 0
+#define YAW_POS_MAX_IOUT 0
+#define YAW_POS_MIN_IOUT 0
 
-#define PITCH_OMEGA_P
-#define PITCH_OMEGA_I
-#define PITCH_OMEGA_D
-#define PITCH_OMEGA_MAX_OUT
-#define PITCH_OMEGA_MAX_I_OUT
+#define PITCH_OMEGA_P 0
+#define PITCH_OMEGA_I 0
+#define PITCH_OMEGA_D 0
+#define PITCH_OMEGA_MAX_OUT 0
+#define PITCH_OMEGA_MIN_OUT 0
+#define PITCH_OMEGA_MAX_IOUT 0
+#define PITCH_OMEGA_MIN_IOUT 0
 
-#define PITCH_POS_P
-#define PITCH_POS_I
-#define PITCH_POS_D
-#define PITCH_POS_MAX_OUT
-#define PITCH_POS_MAX_I_OUT
+#define PITCH_POS_P 0
+#define PITCH_POS_I 0
+#define PITCH_POS_D 0
+#define PITCH_POS_MAX_OUT 0
+#define PITCH_POS_MIN_OUT 0
+#define PITCH_POS_MAX_IOUT 0
+#define PITCH_POS_MIN_IOUT 0
+
+
 typedef enum
 {
     MOTOR_INIT,
@@ -68,6 +78,7 @@ typedef struct
     motor_mode_enum motorMode;
     pid_struct euler_omega_control;//角速度环
     pid_struct euler_pos_control;//角度环
+
     float absolute_angle;
     float absolute_angle_set;
     float absolute_angle_max;

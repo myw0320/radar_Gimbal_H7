@@ -16,6 +16,10 @@ void vision_init()
     uart_dma_rx_init(&huart1,vision_rx_buf[0],vision_rx_buf[1],VISION_RX_LEN);
 }
 
+void Vision_GetRxPacket()
+{
+
+}
 void Vision_RxPacketUpdate(const uint8_t *rx_data,vision_data_struct *update)
 {
     if (rx_data[0] == 0xAA)//¼ì²é°üÍ·

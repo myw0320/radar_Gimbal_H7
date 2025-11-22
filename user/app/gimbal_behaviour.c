@@ -17,6 +17,10 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
 
 void gimbal_behaviour_set(gimbal_control_struct *behaver)
 {
+    if (behaver == NULL)
+    {
+        return;
+    }
     switch(gimbalMode)
     {
         case GIMBAL_INIT_MODE:
@@ -109,7 +113,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
     {
         case GIMBAL_INIT_MODE:
         {
-            gimbal_init_control_set();
+            gimbal_init_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
         case GIMBAL_RC_MODE:
@@ -118,7 +122,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         }
         case GIMBAL_AUTO_MOVE_MODE://自动移动
         {
-            gimbal_auto_move_control();
+            gimbal_auto_move_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
         case GIMBAL_AUTO_SCAN_MODE://自动扫描

@@ -21,4 +21,5 @@ typedef enum
 
 extern gimbal_mode_enum gimbalMode;//ÔÆÌ¨Ä£Ê½
 void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update);
+void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_control_struct *gimbal_control_set);
 #endif //RADAR_GIMBAL_GIMBAL_BEHAVIOUR_H

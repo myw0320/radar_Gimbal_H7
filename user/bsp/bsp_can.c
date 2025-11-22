@@ -1,9 +1,5 @@
-//
-// Created by myw04 on 2025/11/9.
-//
-
 #include "bsp_can.h"
-
+#include "gimbal_task.h"
 
 void FDCAN1_Config_Init(void)
 {

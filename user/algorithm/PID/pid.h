@@ -33,7 +33,9 @@ typedef struct
     float Kd;
 
     float max_out;  //最大输出
+    float min_out;
     float max_iout; //最大积分输出
+    float min_iout;
 
     float set;
     float fdb;
@@ -46,7 +48,8 @@ typedef struct
     float error[3]; //误差项 0最新 1上一次 2上上次
 
 }pid_struct;
-extern void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float max_iout);
-extern float PID_calc(pid_struct *pid, float ref, float set);
-extern void PID_clear(pid_struct *pid);
+
+void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float min_out, float max_iout, float min_iout);
+float PID_calc(pid_struct *pid, float ref, float set);
+void PID_clear(pid_struct *pid);
 #endif

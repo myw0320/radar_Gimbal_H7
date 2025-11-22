@@ -1,6 +1,7 @@
 #ifndef RADAR_GIMBAL_H7_DM_MOTOR_H
 #define RADAR_GIMBAL_H7_DM_MOTOR_H
 #include "stdint.h"
+#include "math.h"
 #include "bsp_can.h"
 
 
@@ -25,7 +26,7 @@
 #define T_MIN -10.0f
 #define T_MAX 10.0f
 
-#define RpmToOmega(rpm) (rpm*(float)PI/30.0f)
+#define RpmToOmega(rpm) (rpm*(float)M_PI/30.0f)
 #define EncoderToAngle(encoder) (encoder*0.043950f - 180.0f)
 #if DM4310_1TO4
 typedef enum

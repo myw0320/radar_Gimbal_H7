@@ -6,7 +6,7 @@
 #define RADAR_GIMBAL_BSP_CAN_H
 #include "stdint.h"
 #include "fdcan.h"
-#include "gimbal_task.h"
+
 void FDCAN1_Config_Init(void);
 void FDCAN2_Config_Init(void);
 HAL_StatusTypeDef can_tx_data(FDCAN_HandleTypeDef *hcan, uint8_t id, uint8_t *data, uint32_t len);

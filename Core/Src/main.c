@@ -110,9 +110,10 @@ int main(void)
   MX_FDCAN3_Init();
   MX_SPI6_Init();
   MX_UART7_Init();
-  MX_UART9_Init();
   MX_USART1_UART_Init();
   MX_TIM15_Init();
+  MX_SPI3_Init();
+  MX_USART10_UART_Init();
   /* USER CODE BEGIN 2 */
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)
   {

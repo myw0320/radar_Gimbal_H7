@@ -67,6 +67,10 @@ void Error_Handler(void);
 #define GYRO_INT_Pin GPIO_PIN_12
 #define GYRO_INT_GPIO_Port GPIOE
 #define GYRO_INT_EXTI_IRQn EXTI15_10_IRQn
+#define SPI3_NSS2_Pin GPIO_PIN_0
+#define SPI3_NSS2_GPIO_Port GPIOE
+#define SPI3_NSS1_Pin GPIO_PIN_1
+#define SPI3_NSS1_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 #define Power_OUT1_ON 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET)

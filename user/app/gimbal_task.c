@@ -12,6 +12,8 @@ static void gimbal_init(gimbal_control_struct *init);
 static void gimbal_update(gimbal_control_struct *update);
 static void gimbal_control_set(gimbal_control_struct *control);
 static void gimbal_control(gimbal_control_struct *control);
+static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add);
+static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add);
 static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control);
 static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control);
 
@@ -57,19 +59,19 @@ static void gimbal_init(gimbal_control_struct *init)
     init->yawEuler.absolute_angle_min = YAW_ABS_MIN;
     init->yawEuler.relative_angle_max = YAW_REL_MAX;
     init->yawEuler.relative_angle_min = YAW_REL_MIN;
-    PID_init(&init->yawEuler.euler_omega_control,PID_POSITION,yaw_omega_k,10,0);//
-    PID_init(&init->yawEuler.euler_pos_control,PID_POSITION,yaw_pos_k,10,10);
+    PID_init(&init->yawEuler.euler_omega_control,PID_POSITION,yaw_omega_k,YAW_OMEGA_MAX_OUT,YAW_OMEGA_MIN_OUT,YAW_OMEGA_MAX_IOUT,YAW_OMEGA_MIN_IOUT);//
+    PID_init(&init->yawEuler.euler_pos_control,PID_POSITION,yaw_pos_k,YAW_POS_MAX_OUT,YAW_POS_MIN_OUT,YAW_POS_MAX_IOUT,YAW_POS_MIN_IOUT);
     //pitch数据初始化
     DM_Init(&init->pitchMotor,DM4310,0x02);//电机控制初始化
     init->pitchEuler.absolute_angle_max = PITCH_ABS_MAX;
     init->pitchEuler.absolute_angle_min = PITCH_ABS_MIN;
     init->pitchEuler.relative_angle_max = PITCH_REL_MAX;
     init->pitchEuler.relative_angle_min = PITCH_REL_MIN;
-    PID_init(&init->pitchEuler.euler_omega_control,PID_POSITION,pitch_omega_k,10,0);//
-    PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,10,10);
+    PID_init(&init->pitchEuler.euler_omega_control,PID_POSITION,pitch_omega_k,PITCH_OMEGA_MAX_OUT,PITCH_OMEGA_MIN_OUT,PITCH_OMEGA_MAX_IOUT,PITCH_OMEGA_MIN_IOUT);//
+    PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
 }
 
-
+//编码值转弧度
 static float motor_ecd_to_rad(uint16_t ecd, uint16_t zero_ecd)
 {
     uint16_t relative_ecd = ecd - zero_ecd;
@@ -105,8 +107,13 @@ static void gimbal_control_update(gimbal_control_struct)
 //控制设置
 static void gimbal_control_set(gimbal_control_struct *control)
 {
-    //更新云台各电机行为
-    gimbal_motor_mode_update(control);
+    if (control == NULL)
+    {
+        return;
+    }
+    static float euler_yaw_add = 0,euler_pitch_add = 0;
+    //云台行为控制设置
+    gimbal_behaviour_control_set(&euler_yaw_add,&euler_pitch_add,control);
     switch (control->yawEuler.motorMode)
     {
         case MOTOR_INIT:
@@ -115,12 +122,12 @@ static void gimbal_control_set(gimbal_control_struct *control)
         }
         case MOTOR_GYRO:
         {
-            gimbal_motor_gyro_control_set(control,&control->yawEuler);
+            gimbal_motor_gyro_control_set(control,&control->yawEuler,euler_yaw_add);
             break;
         }
         case MOTOR_ENCODER:
         {
-            gimbal_motor_encoder_control_set(control,&control->yawEuler);
+            gimbal_motor_encoder_control_set(control,&control->yawEuler,euler_yaw_add);
             break;
         }
         default:
@@ -136,12 +143,12 @@ static void gimbal_control_set(gimbal_control_struct *control)
         }
         case MOTOR_GYRO:
         {
-            gimbal_motor_gyro_control_set(control,&control->pitchEuler);
+            gimbal_motor_gyro_control_set(control,&control->pitchEuler,euler_pitch_add);
             break;
         }
         case MOTOR_ENCODER:
         {
-            gimbal_motor_encoder_control_set(control,&control->pitchEuler);
+            gimbal_motor_encoder_control_set(control,&control->pitchEuler,euler_pitch_add);
             break;
         }
         default:
@@ -153,6 +160,12 @@ static void gimbal_control_set(gimbal_control_struct *control)
 
 static void gimbal_control(gimbal_control_struct *control)
 {
+    if (control == NULL)
+    {
+        return;
+    }
+    //更新云台各电机行为
+    gimbal_motor_mode_update(control);
     switch (control->yawEuler.motorMode)
     {
         case MOTOR_INIT:
@@ -196,13 +209,55 @@ static void gimbal_control(gimbal_control_struct *control)
         }
     }
 }
-static void gimbal_motor_encoder_control_set()
-{
 
+
+//编码值
+static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add)
+{
+    if (gimbal_control == NULL || motor_control == NULL)
+    {
+        return;
+    }
+
+    static float euler_yaw_set =0,euler_pitch_set = 0;
+    if (motor_control == &gimbal_control->yawEuler)
+    {
+
+    }
+    else if (motor_control == &gimbal_control->pitchEuler)
+    {
+
+    }
 }
-static void gimbal_motor_gyro_control_set()
+//陀螺仪
+static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add)
 {
+    if (gimbal_control == NULL || motor_control == NULL)
+    {
+        return;
+    }
 
+    static float euler_yaw_set =0,euler_pitch_set = 0;
+    if (motor_control == &gimbal_control->yawEuler)
+    {
+        if (gimbal_control->rc_point->key.v & KEY_PRESSED_OFFSET_Q)
+        {
+            //一键掉头
+
+        }
+        else
+        {
+            euler_yaw_set = motor_control->absolute_angle_set;
+            //限幅
+
+        }
+    }
+    else if (motor_control == &gimbal_control->pitchEuler)
+    {
+
+        //pitch绝对角限幅
+        Math_Constrain(&motor_control->absolute_angle_set,motor_control->absolute_angle_min,motor_control->absolute_angle_min);
+    }
 }
 //电机编码值控制
 static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control)

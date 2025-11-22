@@ -17,19 +17,19 @@
 
 #include "pid.h"
 
-#define LimitMax(input, max)   \
-    {                          \
-        if (input > max)       \
-        {                      \
-            input = max;       \
-        }                      \
-        else if (input < -max) \
-        {                      \
-            input = -max;      \
-        }                      \
+#define LimitMax(input, min, max)   \
+    {                               \
+        if (input > max)            \
+        {                           \
+            input = max;            \
+        }                           \
+        else if (input < min)       \
+        {                           \
+            input = min;            \
+        }                           \
     }
 
-void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float max_iout)
+void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float min_out, float max_iout, float min_iout)
 {
     if (pid == NULL || PID == NULL)
     {
@@ -40,7 +40,9 @@ void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, 
     pid->Ki = PID[1];
     pid->Kd = PID[2];
     pid->max_out = max_out;
+    pid->min_out = min_out;
     pid->max_iout = max_iout;
+    pid->min_iout = min_iout;
     pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
     pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
 }
@@ -65,9 +67,9 @@ float PID_calc(pid_struct *pid, float ref, float set)
         pid->Dbuf[1] = pid->Dbuf[0];
         pid->Dbuf[0] = (pid->error[0] - pid->error[1]);
         pid->Dout = pid->Kd * pid->Dbuf[0];
-        LimitMax(pid->Iout, pid->max_iout);
+        LimitMax(pid->Iout,pid->min_iout ,pid->max_iout);
         pid->out = pid->Pout + pid->Iout + pid->Dout;
-        LimitMax(pid->out, pid->max_out);
+        LimitMax(pid->out,pid->min_out ,pid->max_out);
     }
     else if (pid->mode == PID_DELTA)
     {
@@ -78,7 +80,7 @@ float PID_calc(pid_struct *pid, float ref, float set)
         pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
         pid->Dout = pid->Kd * pid->Dbuf[0];
         pid->out += pid->Pout + pid->Iout + pid->Dout;
-        LimitMax(pid->out, pid->max_out);
+        LimitMax(pid->out,pid->min_out ,pid->max_out);
     }
     return pid->out;
 }

@@ -9,3 +9,8 @@ void message_task(void *pvParameters)
 {
 
 }
+
+void message_init(void)
+{
+    
+}

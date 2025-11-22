@@ -1,6 +1,11 @@
 #include "bsp_usart.h"
 #include "string.h"
 #include "usart.h"
+/* USER CODE BEGIN Includes */
+#include "vision_task.h"
+#include "radar_task.h"
+#include "remote.h"
+/* USER CODE END Includes */
 
 
 //dma接收初始化
@@ -56,21 +61,16 @@ void UART_RxIRQHandler(UART_HandleTypeDef *huart,uint16_t len)
             //使能DMA
             __HAL_DMA_ENABLE(huart->hdmarx);
 
-            if(this_time_rx_len == len >> 1)
+            if (huart == &huart1)
             {
-                //接受数据
-                if (huart == &huart1)
+                if(this_time_rx_len == len >> 1)
                 {
 
                 }
-                else if (huart == &huart7)
-                {
+            }
+            else if (huart == &huart7)
+            {
 
-                }
-                else if (huart == &huart9)
-                {
-
-                }
             }
         }
         else
@@ -86,20 +86,16 @@ void UART_RxIRQHandler(UART_HandleTypeDef *huart,uint16_t len)
             //使能DMA
             __HAL_DMA_ENABLE(huart->hdmarx);
 
-            if(this_time_rx_len == len >> 1)
+            if (huart == &huart1)
             {
-                if (huart == &huart1)
+                if(this_time_rx_len == len >> 1)
                 {
 
                 }
-                else if (huart == &huart7)
-                {
+            }
+            else if (huart == &huart7)
+            {
 
-                }
-                else if (huart == &huart9)
-                {
-
-                }
             }
         }
     }

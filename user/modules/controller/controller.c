@@ -521,7 +521,7 @@ void LDOB_Init(
 
 float LDOB_Calculate(LDOB_t *ldob, float measure, float u)
 {
-    ldob->dt = DWT_GetDeltaT((void *)&ldob->DWT_CNT);
+    ldob->dt = DWT_GetDeltaT(&ldob->DWT_CNT);
 
     ldob->Measure = measure;
 
@@ -579,7 +579,7 @@ float TD_Calculate(TD_t *td, float input)
 {
     static float d, a0, y, a1, a2, a, fhan;
 
-    td->dt = DWT_GetDeltaT((void *)&td->DWT_CNT);
+    td->dt = DWT_GetDeltaT(&td->DWT_CNT);
 
     if (td->dt > 0.5f)
         return 0;
