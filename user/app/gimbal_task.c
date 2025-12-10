@@ -23,15 +23,15 @@ const float yaw_omega_k[3] = {YAW_OMEGA_P,YAW_OMEGA_I,YAW_OMEGA_D};
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_omega_k[3] = {};
 const float pitch_pos_k[3] = {};
-void gimbal_task(void *pvParameters)
+
+void Gimbal_Task(void *pvParameters)
 {
     //云台初始化
     gimbal_init(&gimbalControl);
     while(1)
     {
         //
-        gimbal_update(&gimbalControl);//更新原始数据
-        //更新控制数据
+        gimbal_update(&gimbalControl);//更新数据
         gimbal_control_set(&gimbalControl);//设置
         gimbal_control(&gimbalControl);//计算控制值
         //发送电流值

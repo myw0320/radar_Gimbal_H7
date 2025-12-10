@@ -50,8 +50,9 @@
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 osThreadId INS_TASKHandle;
-osThreadId CHASSIS_TASKHandle;
-osThreadId CAN_COMMHandle;
+osThreadId GIMBAL_TASKHandle;
+osThreadId MESSAGE_TASKHandle;
+osThreadId DETECT_TASKHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -60,8 +61,9 @@ osThreadId CAN_COMMHandle;
 
 void StartDefaultTask(void const * argument);
 void INS_Task(void const * argument);
-void Chassis_Task(void const * argument);
-void Can_Comm(void const * argument);
+void Gimbal_Task(void const * argument);
+void Message_Task(void const * argument);
+void Detect_Task(void const * argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -101,13 +103,17 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(INS_TASK, INS_Task, osPriorityRealtime, 0, 512);
   INS_TASKHandle = osThreadCreate(osThread(INS_TASK), NULL);
 
-  /* definition and creation of CHASSIS_TASK */
-  osThreadDef(CHASSIS_TASK, Chassis_Task, osPriorityHigh, 0, 512);
-  CHASSIS_TASKHandle = osThreadCreate(osThread(CHASSIS_TASK), NULL);
+  /* definition and creation of GIMBAL_TASK */
+  osThreadDef(GIMBAL_TASK, Gimbal_Task, osPriorityHigh, 0, 512);
+  GIMBAL_TASKHandle = osThreadCreate(osThread(GIMBAL_TASK), NULL);
 
-  /* definition and creation of CAN_COMM */
-  osThreadDef(CAN_COMM, Can_Comm, osPriorityHigh, 0, 512);
-  CAN_COMMHandle = osThreadCreate(osThread(CAN_COMM), NULL);
+  /* definition and creation of MESSAGE_TASK */
+  osThreadDef(MESSAGE_TASK, Message_Task, osPriorityHigh, 0, 512);
+  MESSAGE_TASKHandle = osThreadCreate(osThread(MESSAGE_TASK), NULL);
+
+  /* definition and creation of DETECT_TASK */
+  osThreadDef(DETECT_TASK, Detect_Task, osPriorityBelowNormal, 0, 128);
+  DETECT_TASKHandle = osThreadCreate(osThread(DETECT_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -142,7 +148,7 @@ void StartDefaultTask(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_INS_Task */
-void INS_Task(void const * argument)
+__weak void INS_Task(void const * argument)
 {
   /* USER CODE BEGIN INS_Task */
   /* Infinite loop */
@@ -153,40 +159,58 @@ void INS_Task(void const * argument)
   /* USER CODE END INS_Task */
 }
 
-/* USER CODE BEGIN Header_Chassis_Task */
+/* USER CODE BEGIN Header_Gimbal_Task */
 /**
-* @brief Function implementing the CHASSIS_TASK thread.
+* @brief Function implementing the GIMBAL_TASK thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_Chassis_Task */
-void Chassis_Task(void const * argument)
+/* USER CODE END Header_Gimbal_Task */
+__weak void Gimbal_Task(void const * argument)
 {
-  /* USER CODE BEGIN Chassis_Task */
+  /* USER CODE BEGIN Gimbal_Task */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END Chassis_Task */
+  /* USER CODE END Gimbal_Task */
 }
 
-/* USER CODE BEGIN Header_Can_Comm */
+/* USER CODE BEGIN Header_Message_Task */
 /**
-* @brief Function implementing the CAN_COMM thread.
+* @brief Function implementing the MESSAGE thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_Can_Comm */
-void Can_Comm(void const * argument)
+/* USER CODE END Header_Message_Task */
+__weak void Message_Task(void const * argument)
 {
-  /* USER CODE BEGIN Can_Comm */
+  /* USER CODE BEGIN Message_Task */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END Can_Comm */
+  /* USER CODE END Message_Task */
+}
+
+/* USER CODE BEGIN Header_Detect_Task */
+/**
+* @brief Function implementing the DETECT_TASK thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Detect_Task */
+__weak void Detect_Task(void const * argument)
+{
+  /* USER CODE BEGIN Detect_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Detect_Task */
 }
 
 /* Private application code --------------------------------------------------*/

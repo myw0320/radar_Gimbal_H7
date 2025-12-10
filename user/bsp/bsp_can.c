@@ -1,6 +1,6 @@
 #include "bsp_can.h"
 #include "gimbal_task.h"
-
+#include "detect_task.h"
 void FDCAN1_Config_Init(void)
 {
   FDCAN_FilterTypeDef filterConfig;
@@ -124,11 +124,13 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
       	case 0x301:
       	{
       		DM_GetRxPacket(&gimbalControl.yawMotor,rx_data);
+      		detect_hook(GIMBAL_YAW_TOE);
       		break;
       	}
       	case 0x302:
       	{
       		DM_GetRxPacket(&gimbalControl.pitchMotor,rx_data);
+      		detect_hook(GIMBAL_PITCH_TOE);
       		break;
       	}
       }

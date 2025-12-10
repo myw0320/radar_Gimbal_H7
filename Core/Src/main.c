@@ -115,6 +115,7 @@ int main(void)
   MX_SPI3_Init();
   MX_USART10_UART_Init();
   /* USER CODE BEGIN 2 */
+  DWT_Init(480);
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)
   {
     ;

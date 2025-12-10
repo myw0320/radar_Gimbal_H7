@@ -66,6 +66,7 @@ Middlewares/ST/ARM/DSP/lib
 
 # User include_directories BEGIN
 include_directories(
+user/algorithm/controller
 user/algorithm/EKF
 user/algorithm/kalman
 user/algorithm/mahony
@@ -76,7 +77,6 @@ user/algorithm/VMC
 user/app
 user/bsp
 user/modules/bmi088
-user/modules/controller
 user/modules/message
 user/modules/motor
 user/modules/remote

@@ -30,7 +30,7 @@ void INS_Init(void)
     INS.AccelLPF = 0.0089f;
 }
 
-void INS_TASK(void *pvParameters)
+void INS_Task(void const * argument)
 {
 	 INS_Init();
 	 while(1)

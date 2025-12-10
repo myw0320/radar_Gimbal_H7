@@ -41,7 +41,8 @@
 /**
  * @brief  通信接口类型枚举
  */
-typedef enum {
+typedef enum
+{
     ICM42688_INTERFACE_SPI,    /**< SPI通信接口 */
     ICM42688_INTERFACE_IIC     /**< IIC通信接口 */
 } icm42688_interface_type_t;
@@ -49,7 +50,8 @@ typedef enum {
 /**
  * @brief  加速度计量程枚举
  */
-typedef enum {
+typedef enum
+{
     ICM42688_ACC_SAMPLE_SGN_2G,   /**< 加速度计量程 ±2G */
     ICM42688_ACC_SAMPLE_SGN_4G,   /**< 加速度计量程 ±4G */
     ICM42688_ACC_SAMPLE_SGN_8G,   /**< 加速度计量程 ±8G */
@@ -59,7 +61,8 @@ typedef enum {
 /**
  * @brief  陀螺仪量程枚举，量程越大，精度越低
  */
-typedef enum {
+typedef enum
+{
     ICM42688_GYRO_SAMPLE_SGN_15_125DPS,  /**< 陀螺仪量程 ±15.125dps */
     ICM42688_GYRO_SAMPLE_SGN_31_25DPS,   /**< 陀螺仪量程 ±31.25dps */
     ICM42688_GYRO_SAMPLE_SGN_62_5DPS,    /**< 陀螺仪量程 ±62.5dps */
@@ -73,7 +76,8 @@ typedef enum {
 /**
  * @brief  采样速率枚举
  */
-typedef enum {
+typedef enum
+{
     ICM42688_SAMPLE_RATE_8000,   /**< 采样速率 8000Hz */
     ICM42688_SAMPLE_RATE_4000,   /**< 采样速率 4000Hz */
     ICM42688_SAMPLE_RATE_2000,   /**< 采样速率 2000Hz */
@@ -89,7 +93,8 @@ typedef enum {
 /**
  * @brief  三轴数据结构体
  */
-typedef struct {
+typedef struct
+{
     int16_t x;    /**< X轴数据 */
     int16_t y;    /**< Y轴数据 */
     int16_t z;    /**< Z轴数据 */
@@ -98,7 +103,8 @@ typedef struct {
 /**
  * @brief  ICM42688配置结构体
  */
-typedef struct {
+typedef struct
+{
     icm42688_interface_type_t interface_type;  /**< 通信接口类型 */
     icm42688_acc_sample_t acc_sample;          /**< 加速度计量程 */
     icm42688_gyro_sample_t gyro_sample;        /**< 陀螺仪量程 */
@@ -108,7 +114,8 @@ typedef struct {
 /**
  * @brief  ICM42688通信接口抽象结构体
  */
-typedef struct {
+typedef struct
+{
     /**
      * @brief      初始化通信接口
      */
@@ -140,7 +147,8 @@ typedef struct {
 /**
  * @brief  ICM42688系统接口抽象结构体
  */
-typedef struct {
+typedef struct
+{
     /**
      * @brief      延时函数(毫秒)
      * @param      ms  延时毫秒数

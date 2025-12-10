@@ -2,7 +2,7 @@
 #define __VMC_CALC_H
 
 #include "main.h"
-#include "INS_task.h"
+#include "ins_task.h"
 
 #define pi 3.1415926f
 #define LEG_PID_KP  350.0f

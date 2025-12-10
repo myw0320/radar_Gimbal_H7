@@ -22,7 +22,8 @@ static icm42688_system_t *p_system = NULL;
  * @param      system  系统接口
  * @param      config  ICM42688配置
  */
-void icm42688_hal_init(icm42688_comm_t *comm, icm42688_system_t *system, icm42688_config_t *config) {
+void icm42688_hal_init(icm42688_comm_t *comm, icm42688_system_t *system, icm42688_config_t *config)
+{
     p_comm = comm;
     p_system = system;
     p_config = config;
@@ -32,8 +33,10 @@ void icm42688_hal_init(icm42688_comm_t *comm, icm42688_system_t *system, icm4268
  * @brief      根据加速度量程设置转换系数
  * @param      range  加速度量程
  */
-static void set_acc_transition_factor(icm42688_acc_sample_t range) {
-    switch(range) {
+static void set_acc_transition_factor(icm42688_acc_sample_t range)
+{
+    switch(range)
+    {
         case ICM42688_ACC_SAMPLE_SGN_2G:
             icm42688_transition_factor[0] = 2.0f / 32768.0f;
             break;
@@ -56,8 +59,10 @@ static void set_acc_transition_factor(icm42688_acc_sample_t range) {
  * @brief      根据陀螺仪量程设置转换系数
  * @param      range  陀螺仪量程
  */
-static void set_gyro_transition_factor(icm42688_gyro_sample_t range) {
-    switch(range) {
+static void set_gyro_transition_factor(icm42688_gyro_sample_t range)
+{
+    switch(range)
+    {
         case ICM42688_GYRO_SAMPLE_SGN_15_125DPS:
             icm42688_transition_factor[1] = 15.125f / 32768.0f;
             break;
@@ -92,10 +97,12 @@ static void set_gyro_transition_factor(icm42688_gyro_sample_t range) {
  * @brief      配置采样速率
  * @param      rate  采样速率
  */
-static void set_sample_rate(icm42688_sample_rate_t rate) {
+static void set_sample_rate(icm42688_sample_rate_t rate)
+{
     uint8_t odr_conf = 0x00;
 
-    switch(rate) {
+    switch(rate)
+    {
         case ICM42688_SAMPLE_RATE_8000:
             odr_conf = 0x03;
             break;
@@ -140,7 +147,8 @@ static void set_sample_rate(icm42688_sample_rate_t rate) {
  * @brief      初始化ICM42688
  * @return     初始化结果，0表示成功，非0表示失败
  */
-uint8_t icm42688_init(void) {
+uint8_t icm42688_init(void)
+{
     uint8_t id = 0;
 
     // 检查接口是否初始化
@@ -188,7 +196,8 @@ uint8_t icm42688_init(void) {
 /**
  * @brief      获取加速度计数据
  */
-void icm42688_get_acc(void) {
+void icm42688_get_acc(void)
+{
     uint8_t buffer[6];
 
     // 检查接口是否初始化
@@ -212,7 +221,8 @@ void icm42688_get_gyro(void) {
     uint8_t buffer[6];
 
     // 检查接口是否初始化
-    if(p_comm == NULL) {
+    if(p_comm == NULL)
+    {
         return;
     }
 

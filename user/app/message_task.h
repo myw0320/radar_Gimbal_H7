@@ -8,5 +8,4 @@
 #include "buzzer.h"
 #include "ws2812.h"
 #include "key.h"
-
 #endif //RADAR_GIMBAL_H7_MESSAGE_TASK_H
