@@ -26,7 +26,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "gimbal_task.h"
-#include "INS_task.h"
+#include "ins_task.h"
+#include "message_task.h"
+#include "detect_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,8 +53,8 @@
 osThreadId defaultTaskHandle;
 osThreadId INS_TASKHandle;
 osThreadId GIMBAL_TASKHandle;
-osThreadId MESSAGE_TASKHandle;
 osThreadId DETECT_TASKHandle;
+osThreadId MESSAGE_TASKHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -62,8 +64,8 @@ osThreadId DETECT_TASKHandle;
 void StartDefaultTask(void const * argument);
 void INS_Task(void const * argument);
 void Gimbal_Task(void const * argument);
-void Message_Task(void const * argument);
 void Detect_Task(void const * argument);
+void Message_Task(void const * argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -100,20 +102,20 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of INS_TASK */
-  osThreadDef(INS_TASK, INS_Task, osPriorityRealtime, 0, 512);
-  INS_TASKHandle = osThreadCreate(osThread(INS_TASK), NULL);
+  // osThreadDef(INS_TASK, INS_Task, osPriorityRealtime, 0, 512);
+  // INS_TASKHandle = osThreadCreate(osThread(INS_TASK), NULL);
 
   /* definition and creation of GIMBAL_TASK */
-  osThreadDef(GIMBAL_TASK, Gimbal_Task, osPriorityHigh, 0, 512);
+  osThreadDef(GIMBAL_TASK, Gimbal_Task, osPriorityHigh, 0, 1024);
   GIMBAL_TASKHandle = osThreadCreate(osThread(GIMBAL_TASK), NULL);
 
-  /* definition and creation of MESSAGE_TASK */
-  osThreadDef(MESSAGE_TASK, Message_Task, osPriorityHigh, 0, 512);
-  MESSAGE_TASKHandle = osThreadCreate(osThread(MESSAGE_TASK), NULL);
-
   /* definition and creation of DETECT_TASK */
-  osThreadDef(DETECT_TASK, Detect_Task, osPriorityBelowNormal, 0, 128);
+  osThreadDef(DETECT_TASK, Detect_Task, osPriorityNormal, 0, 128);
   DETECT_TASKHandle = osThreadCreate(osThread(DETECT_TASK), NULL);
+
+  /* definition and creation of MESSAGE_TASK */
+  osThreadDef(MESSAGE_TASK, Message_Task, osPriorityNormal, 0, 128);
+  MESSAGE_TASKHandle = osThreadCreate(osThread(MESSAGE_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -177,24 +179,6 @@ __weak void Gimbal_Task(void const * argument)
   /* USER CODE END Gimbal_Task */
 }
 
-/* USER CODE BEGIN Header_Message_Task */
-/**
-* @brief Function implementing the MESSAGE thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_Message_Task */
-__weak void Message_Task(void const * argument)
-{
-  /* USER CODE BEGIN Message_Task */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END Message_Task */
-}
-
 /* USER CODE BEGIN Header_Detect_Task */
 /**
 * @brief Function implementing the DETECT_TASK thread.
@@ -211,6 +195,24 @@ __weak void Detect_Task(void const * argument)
     osDelay(1);
   }
   /* USER CODE END Detect_Task */
+}
+
+/* USER CODE BEGIN Header_Message_Task */
+/**
+* @brief Function implementing the MESSAGE_TASK thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Message_Task */
+__weak void Message_Task(void const * argument)
+{
+  /* USER CODE BEGIN Message_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Message_Task */
 }
 
 /* Private application code --------------------------------------------------*/

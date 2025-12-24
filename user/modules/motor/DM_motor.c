@@ -2,30 +2,62 @@
 
 #if DM4310_1TO4
 
+/**
+ * @brief 初始化电机控制结构体
+ *
+ * @param init 指向电机控制结构体的指针
+ * @param type 电机类型
+ * @param canid 电机的CAN ID
+ */
 void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t canid)
 {
 	init->motor_measurement.motor_type = type;
 	init->motor_measurement.motor_canid = canid;
+
+	init->motor_measurement.encoder = 0;
+	init->motor_measurement.rpm = 0;
+	init->motor_measurement.torque_current = 0;
+	init->motor_measurement.motor_temperature = 0;
+	init->motor_measurement.pcb_temperature = 0;
 }
 
+/**
+ * @brief 解析接收到的CAN数据包并更新电机测量数据
+ *
+ * @param motor 指向电机控制结构体的指针
+ * @param rx_data 指向接收到的数据的指针
+ */
 void DM_GetRxPacket(dm_control_struct *motor,uint8_t *rx_data)
 {
 	motor->motor_measurement.encoder = (rx_data[0]<<8|rx_data[1]);
-	motor->motor_measurement.rpm = (uint16_t)(rx_data[2]<<8|rx_data[3])/100;
-	motor->motor_measurement.torque_current = (uint16_t)(rx_data[4]<<8|rx_data[5]);
+	motor->motor_measurement.rpm = (rx_data[2]<<8|rx_data[3])/100;
+	motor->motor_measurement.torque_current = (rx_data[4]<<8|rx_data[5]);
 	motor->motor_measurement.motor_temperature = rx_data[6];
 	motor->motor_measurement.pcb_temperature = rx_data[7];
 }
+/**
+ * @brief 根据接收到的数据包更新角度和角速度值
+ * @param update 指向电机控制结构体的指针
+ */
 void DM_RxPacketUpdate(dm_control_struct *update)
 {
 	update->angle = EncoderToAngle(update->motor_measurement.encoder);
 	update->angle_pi =
 	update->omega = RpmToOmega(update->motor_measurement.rpm);
 }
-//打包控制数据
-HAL_StatusTypeDef DM_AddTxPacket(uint8_t master_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
+
+/**
+ * @brief 添加发送数据包
+ *
+ * @param tx_data 发送的数据
+ * @param current1 电流1
+ * @param current2 电流2
+ * @param current3 电流3
+ * @param current4 电流4
+ */
+void DM_AddTxPacket(uint8_t *tx_data, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
 {
-	uint8_t tx_data[8];
+
 	tx_data[0] = current1 >> 8;
 	tx_data[1] = current1;
 	tx_data[2] = current2 >> 8;
@@ -34,12 +66,12 @@ HAL_StatusTypeDef DM_AddTxPacket(uint8_t master_id, int16_t current1, int16_t cu
 	tx_data[5] = current3;
 	tx_data[6] = current4 >> 8;
 	tx_data[7] = current4;
-	return can_tx_data(&hfdcan1,master_id,tx_data,8);
+	//return can_tx_data(&hfdcan1,master_id,tx_data,8);
 }
 #else
-uint8_t DM_Motor_Enable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFC};
+const uint8_t DM_Motor_Enable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFC};
 
-uint8_t DM_Motor_Disable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD};
+const uint8_t DM_Motor_Disable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD};
 
 	/**
 ************************************************************************
@@ -89,9 +121,16 @@ static int float_to_uint(float x_float, float x_min, float x_max, int bits)
 * @details:    	将给定的浮点数 x 在指定范围 [x_min, x_max] 内进行线性映射，映射结果为一个指定位数的无符号整数
 ************************************************************************
 **/
-void DM4310_Enable(void)
+void DM4310_Enable(uint8_t *tx_data)
 {
-
+	tx_data[0] = 0xFF;
+	tx_data[1] = 0xFF;
+	tx_data[2] = 0xFF;
+	tx_data[3] = 0xFF;
+	tx_data[4] = 0xFF;
+	tx_data[5] = 0xFF;
+	tx_data[6] = 0xFF;
+	tx_data[7] = 0xFC;
 }
 
 /**
@@ -105,9 +144,16 @@ void DM4310_Enable(void)
 * @details:    	将给定的浮点数 x 在指定范围 [x_min, x_max] 内进行线性映射，映射结果为一个指定位数的无符号整数
 ************************************************************************
 **/
-void DM4310_Disable(void)
+void DM4310_Disable(uint8_t *tx_data)
 {
-
+	tx_data[0] = 0xFF;
+	tx_data[1] = 0xFF;
+	tx_data[2] = 0xFF;
+	tx_data[3] = 0xFF;
+	tx_data[4] = 0xFF;
+	tx_data[5] = 0xFF;
+	tx_data[6] = 0xFF;
+	tx_data[7] = 0xFD;
 }
 /**
 ************************************************************************
@@ -120,14 +166,13 @@ void DM4310_Disable(void)
 * @details:    	将给定的浮点数 x 在指定范围 [x_min, x_max] 内进行线性映射，映射结果为一个指定位数的无符号整数
 ************************************************************************
 **/
-void DM4310_Init(dm_motor_struct *init,uint8_t id,dm_mode_enum mode)
+void DM_Init(dm_control_struct *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid)
 {
-	DM4310_Enable();
-	init->id = id;//canid
+	init->can_id = canid;//canid
 	init->mode = mode;
 }
 
-void DM4310_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data)
+void DM_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data)
 {
 	motor->id = (rx_data[0])&0x0F;
 	motor->state = (rx_data[0])>>4;
@@ -141,17 +186,18 @@ void DM4310_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data)
 	motor->Tcoil = (float)(rx_data[7]);
 }
 
-void DM4310_AddTxPacket(dm_control_struct *control)
+
+
+void DM_AddTxPacket(dm_control_struct *motor, uint8_t *tx_data)
 {
-	uint8_t tx_data[8];
 	uint16_t pos_tmp,vel_tmp,kp_tmp,kd_tmp,tor_tmp;
 	uint8_t *pbuf,*vbuf;
-	pos_tmp = float_to_uint(control->give_pos,  P_MIN,  P_MAX,  16);
-	vel_tmp = float_to_uint(control->give_vel,  V_MIN,  V_MAX,  12);
-	kp_tmp  = float_to_uint(control->give_kp,   KP_MIN, KP_MAX, 12);
-	kd_tmp  = float_to_uint(control->give_kd,   KD_MIN, KD_MAX, 12);
-	tor_tmp = float_to_uint(control->give_torque, T_MIN,  T_MAX,  12);
-	switch(control->motor_measurement->mode)
+	pos_tmp = float_to_uint(motor->give_pos,  P_MIN,  P_MAX,  16);
+	vel_tmp = float_to_uint(motor->give_vel,  V_MIN,  V_MAX,  12);
+	kp_tmp  = float_to_uint(motor->give_kp,   KP_MIN, KP_MAX, 12);
+	kd_tmp  = float_to_uint(motor->give_kd,   KD_MIN, KD_MAX, 12);
+	tor_tmp = float_to_uint(motor->give_torque, T_MIN,  T_MAX,  12);
+	switch(motor->mode)
 	{
 		case MIT://MIT模式
 		{
@@ -167,8 +213,8 @@ void DM4310_AddTxPacket(dm_control_struct *control)
 		}
 		case ANGLE_OMEGA://位置速度模式
 		{
-			pbuf = (uint8_t*)&control->give_pos;
-			vbuf = (uint8_t*)&control->give_vel;
+			pbuf = (uint8_t*)&motor->give_pos;
+			vbuf = (uint8_t*)&motor->give_vel;
 
 			tx_data[0] = *pbuf;
 			tx_data[1] = *(pbuf+1);
@@ -182,13 +228,14 @@ void DM4310_AddTxPacket(dm_control_struct *control)
 		}
 		case OMEGA:
 		{
-			//vbuf =(uint8_t*)&motor->give_vel;
+			vbuf =(uint8_t*)&motor->give_vel;
+			tx_data[0] = *vbuf;
+			tx_data[1] = *(vbuf+1);
+			tx_data[2] = *(vbuf+2);
+			tx_data[3] = *(vbuf+3);
 			break;
 		}
 	}
-	can_tx_data(&hfdcan1,control->motor_measurement->id,tx_data,8);
 }
-
-
 
 #endif

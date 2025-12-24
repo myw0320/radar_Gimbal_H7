@@ -19,11 +19,11 @@ void MT6816_GetRxPacket(mt6816_data_struct *encoder)
 	{
 		//读取SPI数据
 		MT6816_SPI_CS_L();
-		HAL_SPI_TransmitReceive(&MT6816_SPI, (uint8_t*)&data_t[0], (uint8_t*)&data_r[0], 1, 200);
+		HAL_SPI_TransmitReceive(&Mt6816_SPI, (uint8_t*)&data_t[0], (uint8_t*)&data_r[0], 1, 200);
 		MT6816_SPI_CS_H();
 
 		MT6816_SPI_CS_L();
-		HAL_SPI_TransmitReceive(&MT6816_SPI, (uint8_t*)&data_t[1], (uint8_t*)&data_r[1], 1, 200);
+		HAL_SPI_TransmitReceive(&Mt6816_SPI, (uint8_t*)&data_t[1], (uint8_t*)&data_r[1], 1, 200);
 		MT6816_SPI_CS_H();
 		encoder->sample_data = ((data_r[0] & 0x00FF) << 8) | (data_r[1] & 0x00FF);
 		//奇偶校验
@@ -45,23 +45,22 @@ void MT6816_GetRxPacket(mt6816_data_struct *encoder)
 	}
 	if(encoder->pc_flag)
 	{
-		encoder->angle = encoder->sample_data >> 2;
+		encoder->encoder_value = encoder->sample_data >> 2;
 		encoder->no_mag_flag = (bool)(encoder->sample_data & (0x0001 << 1));
 	}
 }
-
 
 //中断调用
 void MT6816_GetRpm(void)
 {
 	// 1. 获取当前编码值
 	MT6816_GetRxPacket(&mt6816Data);
-	mt6816Data.angle_value = mt6816Data.angle >> 1;//转换为0-8191
-
-	// 只有在数据通过奇偶校验时才进行计算
+	//计算弧度值（rad）
+	mt6816Data.angle_rad = (float)mt6816Data.encoder_value * ENC_TO_RAD;
+	//只有在数据通过奇偶校验时才进行计算
 	if (mt6816Data.pc_flag)
 	{
-		uint16_t current_angle = mt6816Data.angle;
+		uint16_t current_angle = mt6816Data.encoder_value;
 
 		// 2. 计算角度差 (带符号)
 		// 差值可能为正 (正转) 或负 (反转)
@@ -94,6 +93,7 @@ void MT6816_GetRpm(void)
 
 		// 5. 存储结果并更新上一次的角度值
 		mt6816Data.speed_rpm = (int16_t)rpm;
+		mt6816Data.speed_omega = rpm * RPM_TO_OMEGA;//(rad/s)
 		mt6816Data.prev_angle = current_angle;
 	}
 	// 如果奇偶校验失败，则跳过此次计算，保持上一次的速度值不变。

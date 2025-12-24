@@ -1,5 +1,6 @@
 #include "BMI088Middleware.h"
 #include "main.h"
+#include "spi.h"
 
 SPI_HandleTypeDef *BMI088_SPI;
 
@@ -24,6 +25,6 @@ void BMI088_GYRO_NS_H(void)
 uint8_t BMI088_read_write_byte(uint8_t txdata)
 {
     uint8_t rx_data;
-    HAL_SPI_TransmitReceive(BMI088_SPI, &txdata, &rx_data, 1, 1000);
+    HAL_SPI_TransmitReceive(&hspi2, &txdata, &rx_data, 1, 1000);
     return rx_data;
 }

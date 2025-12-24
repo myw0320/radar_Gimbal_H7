@@ -1,79 +1,31 @@
-/**
-  ******************************************************************************
-  * @file	 user_lib.c
-  * @author  Wang Hongxi
-  * @version V1.0.0
-  * @date    2021/2/18
-  * @brief   
-  ******************************************************************************
-  * @attention
-  *
-  ******************************************************************************
-  */
+#include "user_lib.h"
+#include "arm_math.h"
 #include "stdlib.h"
 #include "string.h"
-#include "user_lib.h"
-#include "math.h"
-#include "main.h"
 
-#ifdef _CMSIS_OS_H
-#define user_malloc pvPortMalloc
-#else
-#define user_malloc malloc
-#endif
 
-uint8_t GlobalDebugMode = 7;
-
-//å¿«é€Ÿå¼€æ–¹
-float Sqrt(float x)
-{
-    float y;
-    float delta;
-    float maxError;
-
-    if (x <= 0)
-    {
-        return 0;
-    }
-
-    // initial guess
-    y = x / 2;
-
-    // refine
-    maxError = x * 0.001f;
-
-    do
-    {
-        delta = (y * y) - x;
-        y -= delta / (2 * y);
-    } while (delta > maxError || delta < -maxError);
-
-    return y;
-}
-
-//å¿«é€Ÿæ±‚å¹³æ–¹æ ¹å€’æ•°
-/*
-float invSqrt(float num)
-{
-    float halfnum = 0.5f * num;
-    float y = num;
-    long i = *(long *)&y;
-    i = 0x5f375a86- (i >> 1);
-    y = *(float *)&i;
-    y = y * (1.5f - (halfnum * y * y));
-    return y;
-}*/
+// //¿ìËÙ¿ª·½
+// float invSqrt(float num)
+// {
+//     float halfnum = 0.5f * num;
+//     float y = num;
+//     long i = *(long*)&y;
+//     i = 0x5f3759df - (i >> 1);
+//     y = *(float*)&i;
+//     y = y * (1.5f - (halfnum * y * y));
+//     return y;
+// }
 
 /**
-  * @brief          æ–œæ³¢å‡½æ•°åˆå§‹åŒ–
+  * @brief          Ğ±²¨º¯Êı³õÊ¼»¯
   * @author         RM
-  * @param[in]      æ–œæ³¢å‡½æ•°ç»“æ„ä½“
-  * @param[in]      é—´éš”çš„æ—¶é—´ï¼Œå•ä½ s
-  * @param[in]      æœ€å¤§å€¼
-  * @param[in]      æœ€å°å€¼
-  * @retval         è¿”å›ç©º
+  * @param[in]      Ğ±²¨º¯Êı½á¹¹Ìå
+  * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
+  * @param[in]      ×î´óÖµ
+  * @param[in]      ×îĞ¡Öµ
+  * @retval         ·µ»Ø¿Õ
   */
-void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, float max, float min)
+void ramp_init(ramp_function_source_t* ramp_source_type, float frame_period, float max, float min)
 {
     ramp_source_type->frame_period = frame_period;
     ramp_source_type->max_value = max;
@@ -83,13 +35,14 @@ void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, flo
 }
 
 /**
-  * @brief          æ–œæ³¢å‡½æ•°è®¡ç®—ï¼Œæ ¹æ®è¾“å…¥çš„å€¼è¿›è¡Œå åŠ ï¼Œ è¾“å…¥å•ä½ä¸º /s å³ä¸€ç§’åå¢åŠ è¾“å…¥çš„å€¼
+  * @brief          Ğ±²¨º¯Êı¼ÆËã£¬¸ù¾İÊäÈëµÄÖµ½øĞĞµş¼Ó£¬ ÊäÈëµ¥Î»Îª /s ¼´Ò»ÃëºóÔö¼ÓÊäÈëµÄÖµ
   * @author         RM
-  * @param[in]      æ–œæ³¢å‡½æ•°ç»“æ„ä½“
-  * @param[in]      è¾“å…¥å€¼
-  * @retval         è¿”å›ç©º
+  * @param[in]      Ğ±²¨º¯Êı½á¹¹Ìå
+  * @param[in]      ÊäÈëÖµ
+  * @param[in]      ÂË²¨²ÎÊı
+  * @retval         ·µ»Ø¿Õ
   */
-float ramp_calc(ramp_function_source_t *ramp_source_type, float input)
+void ramp_calc(ramp_function_source_t* ramp_source_type, float input)
 {
     ramp_source_type->input = input;
     ramp_source_type->out += ramp_source_type->input * ramp_source_type->frame_period;
@@ -101,24 +54,50 @@ float ramp_calc(ramp_function_source_t *ramp_source_type, float input)
     {
         ramp_source_type->out = ramp_source_type->min_value;
     }
-    return ramp_source_type->out;
 }
-
-//ç»å¯¹å€¼é™åˆ¶
-float abs_limit(float num, float Limit)
+/**
+  * @brief          Ò»½×µÍÍ¨ÂË²¨³õÊ¼»¯
+  * @author         RM
+  * @param[in]      Ò»½×µÍÍ¨ÂË²¨½á¹¹Ìå
+  * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
+  * @param[in]      ÂË²¨²ÎÊı
+  * @retval         ·µ»Ø¿Õ
+  */
+void first_order_filter_init(first_order_filter_type_t* first_order_filter_type, float frame_period, const float num[1])
 {
-    if (num > Limit)
-    {
-        num = Limit;
-    }
-    else if (num < -Limit)
-    {
-        num = -Limit;
-    }
-    return num;
+    first_order_filter_type->frame_period = frame_period;
+    first_order_filter_type->num[0] = num[0];
+    first_order_filter_type->input = 0.0f;
+    first_order_filter_type->out = 0.0f;
 }
 
-//åˆ¤æ–­ç¬¦å·ä½
+/**
+  * @brief          Ò»½×µÍÍ¨ÂË²¨¼ÆËã
+  * @author         RM
+  * @param[in]      Ò»½×µÍÍ¨ÂË²¨½á¹¹Ìå
+  * @param[in]      ¼ä¸ôµÄÊ±¼ä£¬µ¥Î» s
+  * @retval         ·µ»Ø¿Õ
+  */
+void first_order_filter_cali(first_order_filter_type_t* first_order_filter_type, float input)
+{
+    first_order_filter_type->input = input;
+    first_order_filter_type->out = first_order_filter_type->num[0] / (first_order_filter_type->num[0] + first_order_filter_type->frame_period) * first_order_filter_type->out + first_order_filter_type->frame_period / (first_order_filter_type->num[0] + first_order_filter_type->frame_period) * first_order_filter_type->input;
+}
+
+//¾ø¶ÔÏŞÖÆ
+void abs_limit(float* num, float Limit)
+{
+    if (*num > Limit)
+    {
+        *num = Limit;
+    }
+    else if (*num < -Limit)
+    {
+        *num = -Limit;
+    }
+}
+
+//ÅĞ¶Ï·ûºÅÎ»
 float sign(float value)
 {
     if (value >= 0.0f)
@@ -131,8 +110,8 @@ float sign(float value)
     }
 }
 
-//æµ®ç‚¹æ­»åŒº
-float float_deadband(float Value, float minValue, float maxValue)
+//¸¡µãËÀÇø
+float fp32_deadline(float Value, float minValue, float maxValue)
 {
     if (Value < maxValue && Value > minValue)
     {
@@ -141,7 +120,18 @@ float float_deadband(float Value, float minValue, float maxValue)
     return Value;
 }
 
-//int26æ­»åŒº
+int fp32_rounding(float raw)
+{
+    static int integer;
+    static float decimal;
+    integer = (int)raw;
+    decimal = raw - integer;
+    if (decimal > 0.5f)
+        integer++;
+    return integer;
+}
+
+//int26ËÀÇø
 int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue)
 {
     if (Value < maxValue && Value > minValue)
@@ -151,8 +141,8 @@ int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue)
     return Value;
 }
 
-//é™å¹…å‡½æ•°
-float float_constrain(float Value, float minValue, float maxValue)
+//ÏŞ·ùº¯Êı
+float fp32_constrain(float Value, float minValue, float maxValue)
 {
     if (Value < minValue)
         return minValue;
@@ -162,7 +152,7 @@ float float_constrain(float Value, float minValue, float maxValue)
         return Value;
 }
 
-//é™å¹…å‡½æ•°
+//ÏŞ·ùº¯Êı
 int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
 {
     if (Value < minValue)
@@ -173,8 +163,8 @@ int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
         return Value;
 }
 
-//å¾ªç¯é™å¹…å‡½æ•°
-float loop_float_constrain(float Input, float minValue, float maxValue)
+//Ñ­»·ÏŞ·ùº¯Êı
+float loop_fp32_constrain(float Input, float minValue, float maxValue)
 {
     if (maxValue < minValue)
     {
@@ -200,49 +190,38 @@ float loop_float_constrain(float Input, float minValue, float maxValue)
     return Input;
 }
 
-//å¼§åº¦æ ¼å¼åŒ–ä¸º-PI~PI
+//»¡¶È¸ñÊ½»¯Îª-PI~PI
 
-//è§’åº¦æ ¼å¼åŒ–ä¸º-180~180
+//½Ç¶È¸ñÊ½»¯Îª-180~180
 float theta_format(float Ang)
 {
-    return loop_float_constrain(Ang, -180.0f, 180.0f);
-}
-
-int float_rounding(float raw)
-{
-    static int integer;
-    static float decimal;
-    integer = (int)raw;
-    decimal = raw - integer;
-    if (decimal > 0.5f)
-        integer++;
-    return integer;
+    return loop_fp32_constrain(Ang, -180.0f, 180.0f);
 }
 
 /**
-  * @brief          æœ€å°äºŒä¹˜æ³•åˆå§‹åŒ–
-  * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
-  * @param[in]      æ ·æœ¬æ•°
-  * @retval         è¿”å›ç©º
+  * @brief          ×îĞ¡¶ş³Ë·¨³õÊ¼»¯
+  * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
+  * @param[in]      Ñù±¾Êı
+  * @retval         ·µ»Ø¿Õ
   */
-void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order)
-{
-    OLS->Order = order;
-    OLS->Count = 0;
-    OLS->x = (float *)user_malloc(sizeof(float) * order);
-    OLS->y = (float *)user_malloc(sizeof(float) * order);
-    OLS->k = 0;
-    OLS->b = 0;
-    memset((void *)OLS->x, 0, sizeof(float) * order);
-    memset((void *)OLS->y, 0, sizeof(float) * order);
-    memset((void *)OLS->t, 0, sizeof(float) * 4);
-}
+// void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order)
+// {
+//     OLS->Order = order;
+//     OLS->Count = 0;
+//     OLS->x = (float *)user_malloc(sizeof(float) * order);
+//     OLS->y = (float *)user_malloc(sizeof(float) * order);
+//     OLS->k = 0;
+//     OLS->b = 0;
+//     memset((void *)OLS->x, 0, sizeof(float) * order);
+//     memset((void *)OLS->y, 0, sizeof(float) * order);
+//     memset((void *)OLS->t, 0, sizeof(float) * 4);
+// }
 
 /**
-  * @brief          æœ€å°äºŒä¹˜æ³•æ‹Ÿåˆ
-  * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
-  * @param[in]      ä¿¡å·æ–°æ ·æœ¬è·ä¸Šä¸€ä¸ªæ ·æœ¬æ—¶é—´é—´éš”
-  * @param[in]      ä¿¡å·å€¼
+  * @brief          ×îĞ¡¶ş³Ë·¨ÄâºÏ
+  * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
+  * @param[in]      ĞÅºÅĞÂÑù±¾¾àÉÏÒ»¸öÑù±¾Ê±¼ä¼ä¸ô
+  * @param[in]      ĞÅºÅÖµ
   */
 void OLS_Update(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 {
@@ -281,11 +260,11 @@ void OLS_Update(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 }
 
 /**
-  * @brief          æœ€å°äºŒä¹˜æ³•æå–ä¿¡å·å¾®åˆ†
-  * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
-  * @param[in]      ä¿¡å·æ–°æ ·æœ¬è·ä¸Šä¸€ä¸ªæ ·æœ¬æ—¶é—´é—´éš”
-  * @param[in]      ä¿¡å·å€¼
-  * @retval         è¿”å›æ–œç‡k
+  * @brief          ×îĞ¡¶ş³Ë·¨ÌáÈ¡ĞÅºÅÎ¢·Ö
+  * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
+  * @param[in]      ĞÅºÅĞÂÑù±¾¾àÉÏÒ»¸öÑù±¾Ê±¼ä¼ä¸ô
+  * @param[in]      ĞÅºÅÖµ
+  * @retval         ·µ»ØĞ±ÂÊk
   */
 float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 {
@@ -326,9 +305,9 @@ float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 }
 
 /**
-  * @brief          è·å–æœ€å°äºŒä¹˜æ³•æå–ä¿¡å·å¾®åˆ†
-  * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
-  * @retval         è¿”å›æ–œç‡k
+  * @brief          »ñÈ¡×îĞ¡¶ş³Ë·¨ÌáÈ¡ĞÅºÅÎ¢·Ö
+  * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
+  * @retval         ·µ»ØĞ±ÂÊk
   */
 float Get_OLS_Derivative(Ordinary_Least_Squares_t *OLS)
 {
@@ -336,11 +315,11 @@ float Get_OLS_Derivative(Ordinary_Least_Squares_t *OLS)
 }
 
 /**
-  * @brief          æœ€å°äºŒä¹˜æ³•å¹³æ»‘ä¿¡å·
-  * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
-  * @param[in]      ä¿¡å·æ–°æ ·æœ¬è·ä¸Šä¸€ä¸ªæ ·æœ¬æ—¶é—´é—´éš”
-  * @param[in]      ä¿¡å·å€¼
-  * @retval         è¿”å›å¹³æ»‘è¾“å‡º
+  * @brief          ×îĞ¡¶ş³Ë·¨Æ½»¬ĞÅºÅ
+  * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
+  * @param[in]      ĞÅºÅĞÂÑù±¾¾àÉÏÒ»¸öÑù±¾Ê±¼ä¼ä¸ô
+  * @param[in]      ĞÅºÅÖµ
+  * @retval         ·µ»ØÆ½»¬Êä³ö
   */
 float OLS_Smooth(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 {
@@ -382,28 +361,12 @@ float OLS_Smooth(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 }
 
 /**
-  * @brief          è·å–æœ€å°äºŒä¹˜æ³•å¹³æ»‘ä¿¡å·
-  * @param[in]      æœ€å°äºŒä¹˜æ³•ç»“æ„ä½“
-  * @retval         è¿”å›å¹³æ»‘è¾“å‡º
+  * @brief          »ñÈ¡×îĞ¡¶ş³Ë·¨Æ½»¬ĞÅºÅ
+  * @param[in]      ×îĞ¡¶ş³Ë·¨½á¹¹Ìå
+  * @retval         ·µ»ØÆ½»¬Êä³ö
   */
 float Get_OLS_Smooth(Ordinary_Least_Squares_t *OLS)
 {
     return OLS->k * OLS->x[OLS->Order - 1] + OLS->b;
 }
 
-void slope_following(float *target,float *set,float acc)
-{
-	if(*target > *set)
-	{
-		*set = *set + acc;
-		if(*set >= *target)
-		*set = *target;
-	}
-	else if(*target < *set)
-	{
-		*set = *set - acc;
-		if(*set <= *target)
-		*set = *target;
-	}
-
-}

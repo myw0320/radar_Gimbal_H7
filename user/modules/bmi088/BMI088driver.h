@@ -48,9 +48,9 @@
 #define GxOFFSET 0.0011394741f
 #define GyOFFSET 0.00257667899f
 #define GzOFFSET -0.00137258868f
-#define AxOFFSET 9.78904533f
-#define AyOFFSET 0.0720675737f
-#define AzOFFSET 0.0f//Z轴先不减去零飘值，因为零飘值包含重力加速度的值
+// #define AxOFFSET 9.78904533f
+// #define AyOFFSET 0.0720675737f
+// #define AzOFFSET 0.0f//Z轴先不减去零飘值，因为零飘值包含重力加速度的值
 #define gNORM 9.75085258f
 
 

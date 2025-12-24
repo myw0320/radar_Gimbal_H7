@@ -76,8 +76,6 @@ typedef struct
 
 extern INS_t INS;
 void INS_Init(void);
-void INS_task(void);
-
 void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q);
 void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q);
 

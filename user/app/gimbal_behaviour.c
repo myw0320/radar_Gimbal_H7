@@ -4,8 +4,8 @@
 
 #include "gimbal_behaviour.h"
 
-gimbal_mode_enum gimbalMode;//云台模式
-gimbal_mode_enum last_gimbalMode;//云台模式
+gimbal_mode_enum gimbalMode = GIMBAL_RC_MODE;//云台模式
+gimbal_mode_enum last_gimbalMode = GIMBAL_RC_MODE;//云台模式
 
 
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);
@@ -70,6 +70,12 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
         {
             motor_mode_update->yawEuler.motorMode = MOTOR_INIT;
             motor_mode_update->pitchEuler.motorMode = MOTOR_INIT;
+            break;
+        }
+        case GIMBAL_RC_MODE:
+        {
+            motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
+            motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
             break;
         }
         case GIMBAL_AUTO_MOVE_MODE:
@@ -186,7 +192,7 @@ static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_st
         return;
     }
     //雷达控制云台
-    radar_to_gimbal(yaw,pitch,control->radar_point);
+    //radar_to_gimbal(yaw,pitch,control->radar_point);
 }
 //自动扫描模式
 void scan_control_set(float *gimbal_set, float range, float period, float run_time)
@@ -253,15 +259,15 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
     pitch_set_angle = auto_scan_AC_set_pitch + control->gimbalScan.pitch_center_value;
 
     // 一阶低通使数据平滑
-    //first_order_filter_cali(&control->gimbalScan.yaw_auto_scan_first_order_filter, yaw_set_angle);
-    //first_order_filter_cali(&control->gimbalScan.pitch_auto_scan_first_order_filter, pitch_set_angle);
+    first_order_filter_cali(&control->gimbalScan.yaw_auto_scan_first_order_filter, yaw_set_angle);
+    first_order_filter_cali(&control->gimbalScan.pitch_auto_scan_first_order_filter, pitch_set_angle);
 
     // pitch_set_angle = gimbal_control_set->gimbal_auto_scan.pitch_center_value;
     // yaw_set_angle = gimbal_control_set->gimbal_auto_scan.yaw_center_value;
 
     // 赋值增量
-    //*yaw = control->gimbalScan.yaw_auto_scan_first_order_filter.out - gimbal_control_set->YAW_.absolute_angle- yaw_error;
-    //*pitch = control->gimbalScan.pitch_auto_scan_first_order_filter.out - gimbal_control_set->PITCH_.absolute_angle - pitch_error;
+    *yaw = control->gimbalScan.yaw_auto_scan_first_order_filter.out - control->yawEuler.absolute_angle- yaw_error;
+    *pitch = control->gimbalScan.pitch_auto_scan_first_order_filter.out - control->pitchEuler.absolute_angle - pitch_error;
 }
 
 //自动攻击模式

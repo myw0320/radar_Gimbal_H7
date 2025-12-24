@@ -7,6 +7,7 @@
 
 #include "gimbal_task.h"
 #include "controller.h"
+#include "user_lib.h"
 //时间ms转s
 #define TIME_MS_TO_S(ms) (float)(ms / 1000.0f)
 typedef enum
@@ -19,7 +20,7 @@ typedef enum
     GIMBAL_NO_MOVE_MODE,//云台无力
 }gimbal_mode_enum;
 
-extern gimbal_mode_enum gimbalMode;//云台模式
+// extern gimbal_mode_enum gimbalMode;//云台模式
 void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update);
 void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_control_struct *gimbal_control_set);
 #endif //RADAR_GIMBAL_GIMBAL_BEHAVIOUR_H

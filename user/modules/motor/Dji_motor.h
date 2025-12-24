@@ -1,5 +1,5 @@
-#ifndef RADAR_GIMBAL_H7_DJI_MOTOR_H
-#define RADAR_GIMBAL_H7_DJI_MOTOR_H
+#ifndef __DJI_MOTOR_H
+#define __DJI_MOTOR_H
 #include "stdint.h"
 #include "bsp_can.h"
 
@@ -22,12 +22,6 @@
 #define M3508_Current_To_Out (20.0f/16384.0f)
 #define GM6020_Current_To_Out (3.0f/16384.0f)
 #define M2006_Current_To_Out (10.0f/10000.0f)
-//转换式
-#define RpmToOmega(rpm) (rpm*(float)PI/30.0f)
-#define OmegaToRpm(omega) (omega *30.0f /(float)PI)
-#define Torque_To_Icmd(torque) (torque / KT * M3508_Current_To_Out)
-#define Icmd_To_Torque(icmd) (icmd * KT /M3508_Current_To_Out)
-#define Encoder_To_PI(ecd) ((ecd/4095.5f) * PI - PI)
 
 #define M3508_RPM_TO_VECTOR  0.000415809748903494517209f
 #define GM6020_RPM_TO_VECTOR 0.001746201886833
@@ -48,22 +42,18 @@ typedef struct __attribute__((packed))
     uint16_t rpm;
     uint16_t torque_current;
     uint16_t temperature;
+    float omega;
 }dji_motor_struct;
 
 typedef struct
 {
     dji_motor_struct motor_measurement;//电机原始数据
-    float angle;//-180~180
-    float angle_pi;//-PI~PI
-    float omega;//角速度 转/秒
-    float velocity;//线速度 米/秒
-
+    float give_vel;//rad/s
     int16_t give_cmd_current;//给定电流值
 }dji_control_struct;
 
 
 void DJI_Init(dji_control_struct *init,dji_motor_type_enum type,uint8_t id);
-void DJI_GetRxPacket(dji_control_struct *motor,uint8_t *rx_data);
-void DJI_RxPacketUpdate(dji_control_struct *control);
-HAL_StatusTypeDef DJI_AddTxPacket(uint8_t master_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
+void DJI_GetRxPacket(dji_motor_struct *motor,uint8_t *rx_data);
+void DJI_AddTxPacket(uint8_t *tx_data, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
 #endif

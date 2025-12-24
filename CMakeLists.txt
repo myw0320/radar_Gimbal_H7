@@ -78,10 +78,11 @@ user/algorithm/VMC
 user/app
 user/bsp
 user/modules/bmi088
+user/modules/can_comm
+user/modules/lcd
 user/modules/message
 user/modules/motor
 user/modules/remote
-#user/modules/ws25q64_flash
 )
 
 # User include_directories END

@@ -13,7 +13,7 @@ void vision_task(void *pvParameters)
 void vision_init()
 {
     //调用串口DMA初始化
-    uart_dma_rx_init(&huart1,vision_rx_buf[0],vision_rx_buf[1],VISION_RX_LEN);
+
 }
 
 void Vision_GetRxPacket()

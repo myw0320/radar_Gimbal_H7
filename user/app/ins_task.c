@@ -11,8 +11,7 @@
  ******************************************************************************
  */
 #include "INS_task.h"
-
-
+#include "cmsis_os.h"
 INS_t INS;
 
 struct MAHONY_FILTER_t mahony;
@@ -39,40 +38,40 @@ void INS_Task(void const * argument)
 
 		mahony.dt = ins_dt;
 
-    BMI088_Read(&BMI088);
+		BMI088_Read(&BMI088);
 
-    INS.Accel[X] = BMI088.Accel[X];
-    INS.Accel[Y] = BMI088.Accel[Y];
-    INS.Accel[Z] = BMI088.Accel[Z];
-	Accel.x=BMI088.Accel[0];
-	Accel.y=BMI088.Accel[1];
-	Accel.z=BMI088.Accel[2];
-    INS.Gyro[X] = BMI088.Gyro[X];
-    INS.Gyro[Y] = BMI088.Gyro[Y];
-    INS.Gyro[Z] = BMI088.Gyro[Z];
-  	Gyro.x=BMI088.Gyro[0];
-	Gyro.y=BMI088.Gyro[1];
-	Gyro.z=BMI088.Gyro[2];
+    	INS.Accel[X] = BMI088.Accel[X];
+    	INS.Accel[Y] = BMI088.Accel[Y];
+    	INS.Accel[Z] = BMI088.Accel[Z];
+		Accel.x=BMI088.Accel[0];
+		Accel.y=BMI088.Accel[1];
+		Accel.z=BMI088.Accel[2];
+    	INS.Gyro[X] = BMI088.Gyro[X];
+    	INS.Gyro[Y] = BMI088.Gyro[Y];
+    	INS.Gyro[Z] = BMI088.Gyro[Z];
+  		Gyro.x=BMI088.Gyro[0];
+		Gyro.y=BMI088.Gyro[1];
+		Gyro.z=BMI088.Gyro[2];
 
-	mahony_input(&mahony,Gyro,Accel);
-	mahony_update(&mahony);
-	mahony_output(&mahony);
-	RotationMatrix_update(&mahony);
+		mahony_input(&mahony,Gyro,Accel);
+		mahony_update(&mahony);
+		mahony_output(&mahony);
+		RotationMatrix_update(&mahony);
 
-	INS.q[0]=mahony.q0;
-	INS.q[1]=mahony.q1;
-	INS.q[2]=mahony.q2;
-	INS.q[3]=mahony.q3;
+		INS.q[0]=mahony.q0;
+		INS.q[1]=mahony.q1;
+		INS.q[2]=mahony.q2;
+		INS.q[3]=mahony.q3;
 
-    // 将重力从导航坐标系n转换到机体系b,随后根据加速度计数据计算运动加速度
-	float gravity_b[3];
-    EarthFrameToBodyFrame(gravity, gravity_b, INS.q);
-    for (uint8_t i = 0; i < 3; i++) // 同样过一个低通滤波
-    {
-      INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * ins_dt / (INS.AccelLPF + ins_dt)
-														+ INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + ins_dt);
-//			INS.MotionAccel_b[i] = (INS.Accel[i] ) * dt / (INS.AccelLPF + dt)
-//														+ INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
+    	// 将重力从导航坐标系n转换到机体系b,随后根据加速度计数据计算运动加速度
+		float gravity_b[3];
+    	EarthFrameToBodyFrame(gravity, gravity_b, INS.q);
+    	for (uint8_t i = 0; i < 3; i++) // 同样过一个低通滤波
+    	{
+    	  INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * ins_dt / (INS.AccelLPF + ins_dt)
+															+ INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + ins_dt);
+//				INS.MotionAccel_b[i] = (INS.Accel[i] ) * dt / (INS.AccelLPF + dt)
+//															+ INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
 		}
 		BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // 转换回导航系n
 
@@ -94,9 +93,9 @@ void INS_Task(void const * argument)
 		{
 			INS.ins_flag=1;//四元数基本收敛，加速度也基本收敛，可以开始底盘任务
 			// 获取最终数据
-      INS.Pitch=mahony.roll;
-		  INS.Roll=mahony.pitch;
-		  INS.Yaw=mahony.yaw;
+			INS.Pitch=mahony.roll;
+			INS.Roll=mahony.pitch;
+			INS.Yaw=mahony.yaw;
 
 		//INS.YawTotalAngle=INS.YawTotalAngle+INS.Gyro[2]*0.001f;
 

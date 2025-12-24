@@ -33,6 +33,8 @@
 #include "kalman_filter.h"
 #include "mahony_filter.h"
 #include "bsp_dwt.h"
+#include "bsp_can.h"
+#include "remote.h"
 #include "BMI088Middleware.h"
 /* USER CODE END Includes */
 
@@ -109,20 +111,22 @@ int main(void)
   MX_FDCAN2_Init();
   MX_FDCAN3_Init();
   MX_SPI6_Init();
-  MX_UART7_Init();
-  MX_USART1_UART_Init();
   MX_TIM15_Init();
-  MX_SPI3_Init();
   MX_USART10_UART_Init();
+  MX_TIM12_Init();
+  MX_USART1_UART_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
   DWT_Init(480);
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)
   {
     ;
   }
-
+  FDCAN1_Config_Init();
+  FDCAN2_Config_Init();
   Power_OUT1_ON;
   Power_OUT2_ON;
+  Remote_Init();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */

@@ -1,10 +1,8 @@
-//
-// Created by myw04 on 2025/11/8.
-//
-
 #include "gimbal_task.h"
+#include "can_comm.h"
 #include "gimbal_behaviour.h"
-
+#include "ws2812.h"
+#include "cmsis_os.h"
 
 gimbal_control_struct gimbalControl;//云台控制
 
@@ -19,14 +17,15 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
 
 
 /******/
-const float yaw_omega_k[3] = {YAW_OMEGA_P,YAW_OMEGA_I,YAW_OMEGA_D};
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
-const float pitch_omega_k[3] = {};
-const float pitch_pos_k[3] = {};
+const float yaw_omega_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
+const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
 
-void Gimbal_Task(void *pvParameters)
+void Gimbal_Task(void const *pvParameters)
 {
-    //云台初始化
+    //云台
+    vTaskDelay(100);
+    //初始化
     gimbal_init(&gimbalControl);
     while(1)
     {
@@ -34,13 +33,31 @@ void Gimbal_Task(void *pvParameters)
         gimbal_update(&gimbalControl);//更新数据
         gimbal_control_set(&gimbalControl);//设置
         gimbal_control(&gimbalControl);//计算控制值
-        //发送电流值
-        if (!toe_is_error(GIMBAL_YAW_TOE) && !toe_is_error(GIMBAL_PITCH_TOE))
+
+
+        // if (gimbalControl.yawMotor.motor_measurement.state == 1)
+        // {
+        //     DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
+        //     gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        // }
+        // else
+        // {
+        //     DM4310_Enable(gimbalControl.can_tx_data);
+        //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        // }
+
+        if (gimbalControl.pitchMotor.motor_measurement.state == 1)
         {
-            //电机在线发送电流值
-            DM_AddTxPacket(0xFE,gimbalControl.yawMotor.give_cmd_current,gimbalControl.pitchMotor.give_cmd_current,0,0);
+            DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.can_tx_data);
+            gimbalControl.can_tx_status = can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+        }
+        else
+        {
+            DM4310_Enable(gimbalControl.can_tx_data);
+            can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
         }
     }
+    osDelay(1);
 }
 
 
@@ -49,26 +66,28 @@ static void gimbal_init(gimbal_control_struct *init)
     //获取指针地址
     init->imu_point = &INS;
     init->vision_point = &visionData;
-    init->radar_point = &radarData;
+    //init->radar_point = &radarData;
     init->rc_point = &rcData;
 
-
     //yaw数据初始化
-    DM_Init(&init->yawMotor,DM4310,0x01);//电机控制初始化
+    DM_Init(&init->yawMotor,DM4310,OMEGA,0x01);//电机控制初始化
     init->yawEuler.absolute_angle_max = YAW_ABS_MAX;
     init->yawEuler.absolute_angle_min = YAW_ABS_MIN;
     init->yawEuler.relative_angle_max = YAW_REL_MAX;
     init->yawEuler.relative_angle_min = YAW_REL_MIN;
-    PID_init(&init->yawEuler.euler_omega_control,PID_POSITION,yaw_omega_k,YAW_OMEGA_MAX_OUT,YAW_OMEGA_MIN_OUT,YAW_OMEGA_MAX_IOUT,YAW_OMEGA_MIN_IOUT);//
     PID_init(&init->yawEuler.euler_pos_control,PID_POSITION,yaw_pos_k,YAW_POS_MAX_OUT,YAW_POS_MIN_OUT,YAW_POS_MAX_IOUT,YAW_POS_MIN_IOUT);
     //pitch数据初始化
-    DM_Init(&init->pitchMotor,DM4310,0x02);//电机控制初始化
+    DM_Init(&init->pitchMotor,DM4310,OMEGA,0x06);//电机控制初始化
     init->pitchEuler.absolute_angle_max = PITCH_ABS_MAX;
     init->pitchEuler.absolute_angle_min = PITCH_ABS_MIN;
     init->pitchEuler.relative_angle_max = PITCH_REL_MAX;
     init->pitchEuler.relative_angle_min = PITCH_REL_MIN;
-    PID_init(&init->pitchEuler.euler_omega_control,PID_POSITION,pitch_omega_k,PITCH_OMEGA_MAX_OUT,PITCH_OMEGA_MIN_OUT,PITCH_OMEGA_MAX_IOUT,PITCH_OMEGA_MIN_IOUT);//
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
+    //电机使能
+    DM4310_Enable(init->can_tx_data);
+    can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+    osDelay(50);
+    can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
 }
 
 //编码值转弧度
@@ -76,7 +95,7 @@ static float motor_ecd_to_rad(uint16_t ecd, uint16_t zero_ecd)
 {
     uint16_t relative_ecd = ecd - zero_ecd;
 
-    if (relative_ecd > HALF_ECD_RANGE)
+    if (relative_ecd >= HALF_ECD_RANGE)
     {
         relative_ecd -= ECD_RANGE;
     }
@@ -90,13 +109,11 @@ static float motor_ecd_to_rad(uint16_t ecd, uint16_t zero_ecd)
 static void gimbal_update(gimbal_control_struct *update)
 {
     //yaw数据更新
-    DM_RxPacketUpdate(&update->yawMotor);
     update->yawEuler.absolute_angle = update->imu_point->Yaw;//获取绝对角
-    update->yawEuler.relative_angle = motor_ecd_to_rad(update->yawMotor.motor_measurement.encoder,YAW_ZERO_ENCODER);//获取相对角
+    update->yawEuler.relative_angle = update->yawMotor.motor_measurement.pos;//获取相对角
     //pitch数据更新
-    DM_RxPacketUpdate(&update->pitchMotor);
     update->pitchEuler.absolute_angle = update->imu_point->Pitch;//获取绝对角
-    update->pitchEuler.relative_angle = motor_ecd_to_rad(update->pitchMotor.motor_measurement.encoder,PITCH_ZERO_ENCODER);//获取相对角
+    update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;//获取相对角
 }
 
 
@@ -240,17 +257,9 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
     static float euler_yaw_set =0,euler_pitch_set = 0;
     if (motor_control == &gimbal_control->yawEuler)
     {
-        if (gimbal_control->rc_point->key.v & KEY_PRESSED_OFFSET_Q)
-        {
-            //一键掉头
 
-        }
-        else
-        {
-            euler_yaw_set = motor_control->absolute_angle_set;
-            //限幅
+        euler_yaw_set = motor_control->absolute_angle_set;
 
-        }
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
@@ -269,14 +278,10 @@ static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,g
     if (motor_control == &gimbal_control->yawEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
-        PID_calc(&motor_control->euler_omega_control,gimbal_control->yawMotor.omega,motor_control->euler_omega_control.out);
-        gimbal_control->yawMotor.give_cmd_current = (int16_t)motor_control->euler_omega_control.out;
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
-        PID_calc(&motor_control->euler_omega_control,gimbal_control->pitchMotor.omega,motor_control->euler_omega_control.out);
-        gimbal_control->pitchMotor.give_cmd_current = (int16_t)motor_control->euler_omega_control.out;
     }
 }
 
@@ -290,13 +295,11 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
     if (motor_control == &gimbal_control->yawEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
-        PID_calc(&motor_control->euler_omega_control,gimbal_control->yawMotor.omega,motor_control->euler_omega_control.out);
-        gimbal_control->yawMotor.give_cmd_current = (int16_t)motor_control->euler_omega_control.out;
+        gimbal_control->yawMotor.give_vel = motor_control->euler_pos_control.out;;
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-        PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
-        PID_calc(&motor_control->euler_omega_control,gimbal_control->pitchMotor.omega,motor_control->euler_omega_control.out);
-        gimbal_control->pitchMotor.give_cmd_current = (int16_t)motor_control->euler_omega_control.out;
+        PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,0);
+        gimbal_control->pitchMotor.give_vel = motor_control->euler_pos_control.out;
     }
 }
