@@ -4,6 +4,9 @@
 #include "stdint.h"
 #include "ins_task.h"
 #include "bsp_uart.h"
+#define VISION_RX_LEN  28u
+
+
 /******** À×´ï×ÔÃé ********/
 typedef struct __attribute__((packed))
 {

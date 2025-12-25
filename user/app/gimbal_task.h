@@ -44,14 +44,6 @@
 #define YAW_POS_MAX_IOUT 0
 #define YAW_POS_MIN_IOUT 0
 
-#define YAW_OMEGA_P 8.0
-#define YAW_OMEGA_I 0.0
-#define YAW_OMEGA_D 2.0
-#define YAW_OMEGA_MAX_OUT 10.0
-#define YAW_OMEGA_MIN_OUT -10.0
-#define YAW_OMEGA_MAX_IOUT 0
-#define YAW_OMEGA_MIN_IOUT 0
-
 #define PITCH_POS_P 8.0
 #define PITCH_POS_I 0
 #define PITCH_POS_D 2.0

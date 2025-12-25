@@ -18,7 +18,7 @@ void Message_Task(void const * argument)
     static uint16_t current_time = 0;
     while (1)
     {
-        Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
+        //Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
         osDelay(1);
         current_time++;
         if (current_time >= 100)

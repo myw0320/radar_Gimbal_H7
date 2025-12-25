@@ -1,79 +1,7 @@
 #include "DM_motor.h"
 
-#if DM4310_1TO4
 
 /**
- * @brief 初始化电机控制结构体
- *
- * @param init 指向电机控制结构体的指针
- * @param type 电机类型
- * @param canid 电机的CAN ID
- */
-void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t canid)
-{
-	init->motor_measurement.motor_type = type;
-	init->motor_measurement.motor_canid = canid;
-
-	init->motor_measurement.encoder = 0;
-	init->motor_measurement.rpm = 0;
-	init->motor_measurement.torque_current = 0;
-	init->motor_measurement.motor_temperature = 0;
-	init->motor_measurement.pcb_temperature = 0;
-}
-
-/**
- * @brief 解析接收到的CAN数据包并更新电机测量数据
- *
- * @param motor 指向电机控制结构体的指针
- * @param rx_data 指向接收到的数据的指针
- */
-void DM_GetRxPacket(dm_control_struct *motor,uint8_t *rx_data)
-{
-	motor->motor_measurement.encoder = (rx_data[0]<<8|rx_data[1]);
-	motor->motor_measurement.rpm = (rx_data[2]<<8|rx_data[3])/100;
-	motor->motor_measurement.torque_current = (rx_data[4]<<8|rx_data[5]);
-	motor->motor_measurement.motor_temperature = rx_data[6];
-	motor->motor_measurement.pcb_temperature = rx_data[7];
-}
-/**
- * @brief 根据接收到的数据包更新角度和角速度值
- * @param update 指向电机控制结构体的指针
- */
-void DM_RxPacketUpdate(dm_control_struct *update)
-{
-	update->angle = EncoderToAngle(update->motor_measurement.encoder);
-	update->angle_pi =
-	update->omega = RpmToOmega(update->motor_measurement.rpm);
-}
-
-/**
- * @brief 添加发送数据包
- *
- * @param tx_data 发送的数据
- * @param current1 电流1
- * @param current2 电流2
- * @param current3 电流3
- * @param current4 电流4
- */
-void DM_AddTxPacket(uint8_t *tx_data, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
-{
-
-	tx_data[0] = current1 >> 8;
-	tx_data[1] = current1;
-	tx_data[2] = current2 >> 8;
-	tx_data[3] = current2;
-	tx_data[4] = current3 >> 8;
-	tx_data[5] = current3;
-	tx_data[6] = current4 >> 8;
-	tx_data[7] = current4;
-	//return can_tx_data(&hfdcan1,master_id,tx_data,8);
-}
-#else
-const uint8_t DM_Motor_Enable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFC};
-
-const uint8_t DM_Motor_Disable[8] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD};
-
-	/**
 ************************************************************************
 * @brief:      	uint_to_float: 无符号整数转换为浮点数函数
 * @param[in]:   x_int: 待转换的无符号整数
@@ -110,17 +38,7 @@ static int float_to_uint(float x_float, float x_min, float x_max, int bits)
 	return (int) ((x_float-offset)*((float)((1<<bits)-1))/span);
 }
 
-/**
-************************************************************************
-* @brief:      	float_to_uint: 浮点数转换为无符号整数函数
-* @param[in]:   x_float:	待转换的浮点数
-* @param[in]:   x_min:		范围最小值
-* @param[in]:   x_max:		范围最大值
-* @param[in]:   bits: 		目标无符号整数的位数
-* @retval:     	无符号整数结果
-* @details:    	将给定的浮点数 x 在指定范围 [x_min, x_max] 内进行线性映射，映射结果为一个指定位数的无符号整数
-************************************************************************
-**/
+
 void DM4310_Enable(uint8_t *tx_data)
 {
 	tx_data[0] = 0xFF;
@@ -133,17 +51,7 @@ void DM4310_Enable(uint8_t *tx_data)
 	tx_data[7] = 0xFC;
 }
 
-/**
-************************************************************************
-* @brief:      	float_to_uint: 浮点数转换为无符号整数函数
-* @param[in]:   x_float:	待转换的浮点数
-* @param[in]:   x_min:		范围最小值
-* @param[in]:   x_max:		范围最大值
-* @param[in]:   bits: 		目标无符号整数的位数
-* @retval:     	无符号整数结果
-* @details:    	将给定的浮点数 x 在指定范围 [x_min, x_max] 内进行线性映射，映射结果为一个指定位数的无符号整数
-************************************************************************
-**/
+
 void DM4310_Disable(uint8_t *tx_data)
 {
 	tx_data[0] = 0xFF;
@@ -155,17 +63,29 @@ void DM4310_Disable(uint8_t *tx_data)
 	tx_data[6] = 0xFF;
 	tx_data[7] = 0xFD;
 }
-/**
-************************************************************************
-* @brief:      	DM4310_Init: 浮点数转换为无符号整数函数
-* @param[in]:   x_float:	待转换的浮点数
-* @param[in]:   x_min:		范围最小值
-* @param[in]:   x_max:		范围最大值
-* @param[in]:   bits: 		目标无符号整数的位数
-* @retval:     	无符号整数结果
-* @details:    	将给定的浮点数 x 在指定范围 [x_min, x_max] 内进行线性映射，映射结果为一个指定位数的无符号整数
-************************************************************************
-**/
+void DM4310_SaveZero(uint8_t *tx_data)
+{
+	tx_data[0] = 0xFF;
+	tx_data[1] = 0xFF;
+	tx_data[2] = 0xFF;
+	tx_data[3] = 0xFF;
+	tx_data[4] = 0xFF;
+	tx_data[5] = 0xFF;
+	tx_data[6] = 0xFF;
+	tx_data[7] = 0xFE;
+}
+void DM4310_Clear(uint8_t *tx_data)
+{
+	tx_data[0] = 0xFF;
+	tx_data[1] = 0xFF;
+	tx_data[2] = 0xFF;
+	tx_data[3] = 0xFF;
+	tx_data[4] = 0xFF;
+	tx_data[5] = 0xFF;
+	tx_data[6] = 0xFF;
+	tx_data[7] = 0xFB;
+}
+
 void DM_Init(dm_control_struct *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid)
 {
 	init->can_id = canid;//canid
@@ -237,5 +157,3 @@ void DM_AddTxPacket(dm_control_struct *motor, uint8_t *tx_data)
 		}
 	}
 }
-
-#endif

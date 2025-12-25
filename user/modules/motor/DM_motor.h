@@ -5,7 +5,7 @@
 #include "bsp_can.h"
 
 
-#define DM4310_1TO4 0
+
 
 //达妙电机初始化数据
 //#define Angle_Max 1.0f
@@ -33,36 +33,6 @@ typedef enum
 	DM8009,
 }dm_motor_type_enum;
 
-
-#if DM4310_1TO4
-
-typedef struct __attribute__((packed))
-{
-	dm_motor_type_enum motor_type;
-	uint8_t motor_canid;
-	uint16_t encoder;//编码值
-	int16_t rpm;//rpm值
-	int16_t torque_current;//扭矩电流
-	uint8_t motor_temperature;
-	uint8_t pcb_temperature;
-}dm_motor_struct;//电机原始数据
-
-typedef struct
-{
-	dm_motor_struct motor_measurement;//电机原始数据
-	float angle;
-	float angle_pi;
-	float omega;
-	float velocity;
-
-	int16_t give_cmd_current;//给定电流值
-}dm_control_struct;
-
-void DM_Init(dm_control_struct *init,dm_motor_type_enum type,uint8_t id);
-void DM_GetRxPacket(dm_control_struct *motor,uint8_t *rx_data);
-void DM_RxPacketUpdate(dm_control_struct *update);
-void DM_AddTxPacket(uint8_t *tx_data, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
-#else
 typedef enum
 {
 	Disable = 0,
@@ -107,13 +77,14 @@ typedef struct
 	float give_kd;
 	int16_t give_cmd_current;
 }dm_control_struct;//电机控制结构体
-void DM_Init(dm_control_struct *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid);
+
 
 void DM4310_Enable(uint8_t *tx_data);
+void DM4310_Disable(uint8_t *tx_data);
+void DM4310_SaveZero(uint8_t *tx_data);
+void DM4310_Clear(uint8_t *tx_data);
+void DM_Init(dm_control_struct *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid);
 void DM_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data);
 void DM_AddTxPacket(dm_control_struct *motor, uint8_t *tx_data);
-#endif
-
-
 
 #endif

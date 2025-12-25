@@ -128,10 +128,6 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
             motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
             break;
         }
-        default:
-        {
-            break;
-        }
     }
     //±£´æ
     motor_mode_update->yawEuler.last_motorMode = motor_mode_update->yawEuler.motorMode;
