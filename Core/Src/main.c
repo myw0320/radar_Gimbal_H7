@@ -117,6 +117,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
+  Remote_Init();
+
   DWT_Init(480);
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)
   {
@@ -126,7 +128,7 @@ int main(void)
   FDCAN2_Config_Init();
   Power_OUT1_ON;
   Power_OUT2_ON;
-  Remote_Init();
+
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */

@@ -3,9 +3,13 @@
 //
 
 #include "gimbal_behaviour.h"
+#include "remote.h"
+gimbal_control_mode_enum gimbalControlMode = GIMBAL_STOP;//云台控制模式
+gimbal_control_mode_enum gimbalControlModeLast = GIMBAL_STOP;
 
-gimbal_mode_enum gimbalMode = GIMBAL_RC_MODE;//云台模式
-gimbal_mode_enum last_gimbalMode = GIMBAL_RC_MODE;//云台模式
+gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;//云台模式
+
+
 
 
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);
@@ -21,34 +25,56 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
     {
         return;
     }
-    switch(gimbalMode)
-    {
-        case GIMBAL_INIT_MODE:
-        {
-            if (behaver->rc_point)
-            {
+    uint8_t mode_bit = ((behaver->rc_point->rc.sw[0]<<1) | behaver->rc_point->rc.sw[1]);
 
+    switch (mode_bit)
+    {
+        case 0:
+            gimbalControlMode = GIMBAL_STOP;
+            break;
+        case 1:
+            gimbalControlMode = GIMBAL_INIT;
+            break;
+        case 2:
+            gimbalControlMode = GIMBAL_MANUAL;
+            break;
+        case 3:
+            gimbalControlMode = GIMBAL_AUTO;
+            break;
+    }
+    gimbalControlModeLast = gimbalControlMode;//保存上次数据
+
+    switch(gimbalControlMode)
+    {
+        case GIMBAL_STOP:
+        {
+            gimbalMode = GIMBAL_NO_MOVE_MODE;
+            break;
+        }
+        case GIMBAL_INIT://自动移动
+        {
+            gimbalMode = GIMBAL_INIT_MODE;
+            break;
+        }
+        case GIMBAL_MANUAL:
+        {
+            gimbalMode = GIMBAL_MANUAL_RC_MODE;
+            break;
+        }
+        case GIMBAL_AUTO://自动移动
+        {
+            switch (behaver->rc_point->rc.sw[2])
+            {
+                case 0:
+                    gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
+                    break;
+                case 1:
+                    gimbalMode = GIMBAL_AUTO_MOVE_MODE;
+                    break;
+                case 2:
+                    gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+                    break;
             }
-            break;
-        }
-        case GIMBAL_RC_MODE:
-        {
-            break;
-        }
-        case GIMBAL_AUTO_MOVE_MODE://自动移动
-        {
-            break;
-        }
-        case GIMBAL_AUTO_SCAN_MODE://自动扫描
-        {
-            break;
-        }
-        case GIMBAL_AUTO_ATTACK_MODE://自动攻击
-        {
-            break;
-        }
-        case GIMBAL_NO_MOVE_MODE://无力
-        {
             break;
         }
         default:
@@ -72,7 +98,7 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
             motor_mode_update->pitchEuler.motorMode = MOTOR_INIT;
             break;
         }
-        case GIMBAL_RC_MODE:
+        case GIMBAL_MANUAL_RC_MODE:
         {
             motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
             motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
@@ -107,6 +133,9 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
             break;
         }
     }
+    //保存
+    motor_mode_update->yawEuler.last_motorMode = motor_mode_update->yawEuler.motorMode;
+    motor_mode_update->pitchEuler.last_motorMode = motor_mode_update->pitchEuler.motorMode;
 }
 
 void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_control_struct *gimbal_control_set)
@@ -117,13 +146,20 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
     }
     switch(gimbalMode)
     {
+        case GIMBAL_NO_MOVE_MODE://无力
+        {
+            *add_yaw = 0;
+            *add_pitch = 0;
+            break;
+        }
         case GIMBAL_INIT_MODE:
         {
             gimbal_init_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
-        case GIMBAL_RC_MODE:
+        case GIMBAL_MANUAL_RC_MODE:
         {
+            gimbal_rc_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
         case GIMBAL_AUTO_MOVE_MODE://自动移动
@@ -133,16 +169,14 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         }
         case GIMBAL_AUTO_SCAN_MODE://自动扫描
         {
+            gimbal_auto_scan_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
         case GIMBAL_AUTO_ATTACK_MODE://自动攻击
         {
             break;
         }
-        case GIMBAL_NO_MOVE_MODE://无力
-        {
-            break;
-        }
+
         default:
         {
             break;
@@ -171,17 +205,14 @@ static void gimbal_rc_control(float *yaw, float *pitch, gimbal_control_struct *c
     {
         return;
     }
-    static float rc_add_yaw, rc_add_pitch;
-    static float mouse_add_yaw, mouse_add_pitch;
+    static int16_t yaw_channel, pitch_channel;
+    //static float rc_add_yaw, rc_add_pitch;
+    rc_deadband_limit(control->rc_point->rc.ch[0],yaw_channel,10);
+    rc_deadband_limit(control->rc_point->rc.ch[1],pitch_channel,10);
     //遥控器数据处理
-    rc_add_yaw = (float)control->rc_point->rc.ch[3] * YAW_RC_SEN;//衰减系数
-    rc_add_pitch = (float)control->rc_point->rc.ch[2] * PITCH_RC_SEN;
-    //鼠标数据处理
-    mouse_add_yaw = (float)control->rc_point->mouse.x * YAW_MOUSE_SEN;
-    mouse_add_pitch = (float)control->rc_point->mouse.y * PITCH_MOUSE_SEN;
+    *yaw = (float) -yaw_channel* YAW_RC_SEN;//衰减系数
+    *pitch = (float)pitch_channel * PITCH_RC_SEN;
 
-    *yaw = rc_add_yaw + mouse_add_yaw;
-    *pitch = rc_add_pitch + mouse_add_pitch;
 }
 
 //自动移动模式
@@ -232,7 +263,6 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
     {
         return;
     }
-    // yaw pitch 轴设定值与当前值的差值
     float pitch_error = 0;
     float yaw_error = 0;
 
@@ -240,34 +270,26 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
     float pitch_set_angle = 0;
     float yaw_set_angle = 0;
 
-    //设置扫描中值
-    control->gimbalScan.pitch_center_value = 0.05f;
 
     // 计算过去设定角度与当前角度之间的差值
     yaw_error = control->yawEuler.absolute_angle_set - control->yawEuler.absolute_angle;
     pitch_error = control->pitchEuler.absolute_angle_set - control->pitchEuler.absolute_angle;
+
     // 自动扫描设置浮动值
     float auto_scan_AC_set_yaw = 0;
     float auto_scan_AC_set_pitch = 0;
     // 计算运行时间
-    control->gimbalScan.scan_run_time = TIME_MS_TO_S(HAL_GetTick()) - control->gimbalScan.scan_begin_time;
+    control->gimbalScan.scan_run_time = HAL_GetTick()*0.001f - control->gimbalScan.scan_begin_time;
+
     // 云台自动扫描,设置浮动值
-    scan_control_set(&auto_scan_AC_set_yaw, control->gimbalScan.yaw_range, control->gimbalScan.scan_yaw_period, control->gimbalScan.scan_run_time);
-    scan_control_set(&auto_scan_AC_set_pitch, control->gimbalScan.pitch_range, control->gimbalScan.scan_pitch_period, control->gimbalScan.scan_run_time);
+    scan_control_set(&auto_scan_AC_set_yaw, 0.5f, 6, control->gimbalScan.scan_run_time);
+    scan_control_set(&auto_scan_AC_set_pitch,0.3f, 5, control->gimbalScan.scan_run_time);
     // 赋值控制值  = 中心值 + 加上浮动函数
-    yaw_set_angle = auto_scan_AC_set_yaw + control->gimbalScan.yaw_center_value;
-    pitch_set_angle = auto_scan_AC_set_pitch + control->gimbalScan.pitch_center_value;
-
-    // 一阶低通使数据平滑
-    first_order_filter_cali(&control->gimbalScan.yaw_auto_scan_first_order_filter, yaw_set_angle);
-    first_order_filter_cali(&control->gimbalScan.pitch_auto_scan_first_order_filter, pitch_set_angle);
-
-    // pitch_set_angle = gimbal_control_set->gimbal_auto_scan.pitch_center_value;
-    // yaw_set_angle = gimbal_control_set->gimbal_auto_scan.yaw_center_value;
-
+    yaw_set_angle = auto_scan_AC_set_yaw;
+    pitch_set_angle = auto_scan_AC_set_pitch;
     // 赋值增量
-    *yaw = control->gimbalScan.yaw_auto_scan_first_order_filter.out - control->yawEuler.absolute_angle- yaw_error;
-    *pitch = control->gimbalScan.pitch_auto_scan_first_order_filter.out - control->pitchEuler.absolute_angle - pitch_error;
+    *yaw = yaw_set_angle - control->yawEuler.absolute_angle- yaw_error;
+    *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
 }
 
 //自动攻击模式

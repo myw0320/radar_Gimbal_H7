@@ -71,6 +71,8 @@ typedef enum
 typedef struct
 {
     motor_mode_enum motorMode;
+    motor_mode_enum last_motorMode;
+
     pid_struct euler_pos_control;//角度环
     pid_struct euler_omega_control;//角速度环
 

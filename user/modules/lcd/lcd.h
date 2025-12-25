@@ -6,7 +6,7 @@
 #define RADAR_GIMBAL_H7_LCD_H
 #include "main.h"
 #include "tim.h"
-#include "bsp_i2c.h"
+
 
 
 

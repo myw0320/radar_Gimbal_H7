@@ -1,0 +1,8 @@
+//
+// Created by myw04 on 2025/12/25.
+//
+
+#ifndef RADAR_GIMBAL_H7_CAN_COMM_TASK_H
+#define RADAR_GIMBAL_H7_CAN_COMM_TASK_H
+
+#endif //RADAR_GIMBAL_H7_CAN_COMM_TASK_H

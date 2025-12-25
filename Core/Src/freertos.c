@@ -102,8 +102,8 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of INS_TASK */
-  // osThreadDef(INS_TASK, INS_Task, osPriorityRealtime, 0, 512);
-  // INS_TASKHandle = osThreadCreate(osThread(INS_TASK), NULL);
+  osThreadDef(INS_TASK, INS_Task, osPriorityRealtime, 0, 512);
+  INS_TASKHandle = osThreadCreate(osThread(INS_TASK), NULL);
 
   /* definition and creation of GIMBAL_TASK */
   osThreadDef(GIMBAL_TASK, Gimbal_Task, osPriorityHigh, 0, 1024);
@@ -114,7 +114,7 @@ void MX_FREERTOS_Init(void) {
   DETECT_TASKHandle = osThreadCreate(osThread(DETECT_TASK), NULL);
 
   /* definition and creation of MESSAGE_TASK */
-  osThreadDef(MESSAGE_TASK, Message_Task, osPriorityNormal, 0, 128);
+  osThreadDef(MESSAGE_TASK, Message_Task, osPriorityLow, 0, 128);
   MESSAGE_TASKHandle = osThreadCreate(osThread(MESSAGE_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

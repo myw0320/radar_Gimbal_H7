@@ -77,6 +77,7 @@ user/algorithm/slope
 user/algorithm/VMC
 user/app
 user/bsp
+user/bsp/Inc
 user/modules/bmi088
 user/modules/can_comm
 user/modules/lcd

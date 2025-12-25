@@ -36,7 +36,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
                 case 0x01:
                 {
                     DM_GetRxPacket(&gimbalControl.yawMotor.motor_measurement,rx1_data);
-                    //detect_hook(GIMBAL_PITCH_TOE);
+                    detect_hook(GIMBAL_YAW_TOE);
                     break;
                 }
             }
@@ -51,7 +51,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
                 case 0x06:
                 {
                     DM_GetRxPacket(&gimbalControl.pitchMotor.motor_measurement,rx2_data);
-                    //detect_hook(GIMBAL_PITCH_TOE);
+                    detect_hook(GIMBAL_PITCH_TOE);
                     break;
                 }
             }

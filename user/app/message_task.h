@@ -7,6 +7,7 @@
 #include "stdint.h"
 #include "buzzer.h"
 #include "ws2812.h"
+#include "buzzer.h"
 #include "key.h"
 void Message_Task(void const * argument);
 

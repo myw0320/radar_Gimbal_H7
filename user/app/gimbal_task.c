@@ -8,6 +8,7 @@ gimbal_control_struct gimbalControl;//云台控制
 
 static void gimbal_init(gimbal_control_struct *init);
 static void gimbal_update(gimbal_control_struct *update);
+static void gimbal_update_save(gimbal_control_struct *save);
 static void gimbal_control_set(gimbal_control_struct *control);
 static void gimbal_control(gimbal_control_struct *control);
 static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add);
@@ -24,27 +25,27 @@ const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
 void Gimbal_Task(void const *pvParameters)
 {
     //云台
-    vTaskDelay(100);
+    //vTaskDelay(100);
     //初始化
     gimbal_init(&gimbalControl);
     while(1)
     {
-        //
         gimbal_update(&gimbalControl);//更新数据
         gimbal_control_set(&gimbalControl);//设置
+        gimbal_update_save(&gimbalControl);
         gimbal_control(&gimbalControl);//计算控制值
 
 
-        // if (gimbalControl.yawMotor.motor_measurement.state == 1)
-        // {
-        //     DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
-        //     gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        // }
-        // else
-        // {
-        //     DM4310_Enable(gimbalControl.can_tx_data);
-        //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        // }
+        if (gimbalControl.yawMotor.motor_measurement.state == 1)
+        {
+            DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
+            gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        }
+        else
+        {
+            DM4310_Enable(gimbalControl.can_tx_data);
+            can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        }
 
         if (gimbalControl.pitchMotor.motor_measurement.state == 1)
         {
@@ -56,8 +57,8 @@ void Gimbal_Task(void const *pvParameters)
             DM4310_Enable(gimbalControl.can_tx_data);
             can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
         }
+        osDelay(2);
     }
-    osDelay(1);
 }
 
 
@@ -88,6 +89,8 @@ static void gimbal_init(gimbal_control_struct *init)
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
     osDelay(50);
     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+
+
 }
 
 //编码值转弧度
@@ -116,10 +119,30 @@ static void gimbal_update(gimbal_control_struct *update)
     update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;//获取相对角
 }
 
-
-static void gimbal_control_update(gimbal_control_struct)
+//模式切换保存数据
+static void gimbal_update_save(gimbal_control_struct *save)
 {
+    if (save == NULL)
+    {
+        return;
+    }
+    if (save->yawEuler.last_motorMode != MOTOR_GYRO && save->yawEuler.motorMode != MOTOR_GYRO)
+    {
+        save->yawEuler.absolute_angle_set = save->yawEuler.absolute_angle;
+    }
+    else if (save->yawEuler.last_motorMode != MOTOR_ENCODER && save->yawEuler.motorMode != MOTOR_ENCODER)
+    {
+        save->yawEuler.relative_angle_set = save->yawEuler.relative_angle;
+    }
 
+    if (save->pitchEuler.last_motorMode != MOTOR_GYRO && save->pitchEuler.motorMode != MOTOR_GYRO)
+    {
+        save->pitchEuler.absolute_angle_set = save->pitchEuler.absolute_angle;
+    }
+    else if (save->pitchEuler.last_motorMode != MOTOR_ENCODER && save->pitchEuler.motorMode != MOTOR_ENCODER)
+    {
+        save->pitchEuler.relative_angle_set = save->pitchEuler.relative_angle;
+    }
 }
 //控制设置
 static void gimbal_control_set(gimbal_control_struct *control)
@@ -135,6 +158,7 @@ static void gimbal_control_set(gimbal_control_struct *control)
     {
         case MOTOR_INIT:
         {
+
             break;
         }
         case MOTOR_GYRO:
@@ -253,19 +277,18 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
     {
         return;
     }
-
     static float euler_yaw_set =0,euler_pitch_set = 0;
     if (motor_control == &gimbal_control->yawEuler)
     {
-
         euler_yaw_set = motor_control->absolute_angle_set;
-
+        motor_control->absolute_angle_set = fmodf(euler_yaw_set + add,PI);
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-
+        euler_pitch_set = motor_control->absolute_angle_set;
+        motor_control->absolute_angle_set = fmodf(euler_pitch_set + add,PI);
         //pitch绝对角限幅
-        Math_Constrain(&motor_control->absolute_angle_set,motor_control->absolute_angle_min,motor_control->absolute_angle_min);
+        //Math_Constrain(&motor_control->absolute_angle_set,motor_control->absolute_angle_min,motor_control->absolute_angle_min);
     }
 }
 //电机编码值控制
@@ -299,7 +322,7 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-        PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,0);
+        PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
         gimbal_control->pitchMotor.give_vel = motor_control->euler_pos_control.out;
     }
 }
