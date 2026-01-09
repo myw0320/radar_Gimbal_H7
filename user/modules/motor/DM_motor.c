@@ -86,13 +86,13 @@ void DM4310_Clear(uint8_t *tx_data)
 	tx_data[7] = 0xFB;
 }
 
-void DM_Init(dm_control_struct *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid)
+void DM_Init(dm_control_t *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid)
 {
 	init->can_id = canid;//canid
 	init->mode = mode;
 }
 
-void DM_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data)
+void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data)
 {
 	motor->id = (rx_data[0])&0x0F;
 	motor->state = (rx_data[0])>>4;
@@ -108,7 +108,7 @@ void DM_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data)
 
 
 
-void DM_AddTxPacket(dm_control_struct *motor, uint8_t *tx_data)
+void DM_AddTxPacket(dm_control_t *motor, uint8_t *tx_data)
 {
 	uint16_t pos_tmp,vel_tmp,kp_tmp,kd_tmp,tor_tmp;
 	uint8_t *pbuf,*vbuf;

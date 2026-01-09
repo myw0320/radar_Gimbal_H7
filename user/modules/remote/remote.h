@@ -21,18 +21,20 @@
 #define switch_is_up(s)         (s == RC_SW_UP)
 
 
+/**
+ * @brief          遥控器的死区判断，因为遥控器的拨杆在中位的时候，不一定为0，
+ */
 #define rc_deadband_limit(input, output, dealine)        \
-{                                                    \
-    if ((input) > (dealine) || (input) < -(dealine)) \
-    {                                                \
-    (output) = (input);                          \
-}                                                \
-else                                             \
-{                                                \
-(output) = 0;                                \
-}                                                \
-}
-
+    {                                                    \
+        if ((input) > (dealine) || (input) < -(dealine)) \
+        {                                                \
+            (output) = (input);                          \
+        }                                                \
+        else                                             \
+        {                                                \
+            (output) = 0;                                \
+        }                                                \
+    }
 typedef struct __attribute__((packed))
 {
     __attribute__((packed)) struct

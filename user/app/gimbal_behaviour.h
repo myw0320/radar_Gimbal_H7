@@ -8,7 +8,11 @@
 #include "gimbal_task.h"
 #include "controller.h"
 #include "user_lib.h"
+#define YAW_RC_SEN  0.000005f
+#define PITCH_RC_SEN  0.000005f
 
+#define YAW_MOUSE_SEN  0.00005f
+#define PITCH_MOUSE_SEN  0.00005f
 //Ê±¼äms×ªs
 #define TIME_MS_TO_S(ms) (float)(ms / 1000.0f)
 

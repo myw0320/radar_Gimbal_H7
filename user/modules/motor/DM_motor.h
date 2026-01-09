@@ -62,11 +62,11 @@ typedef struct
 	float Kd;
 	float Tmos;
 	float Tcoil;
-}dm_motor_struct;//单电机结构体
+}dm_motor_t;//单电机结构体
 
 typedef struct
 {
-	dm_motor_struct motor_measurement;//电机原始数据
+	dm_motor_t motor_measurement;//电机原始数据
 	dm_mode_enum mode;
 	uint16_t can_id;
 
@@ -76,15 +76,15 @@ typedef struct
 	float give_kp;
 	float give_kd;
 	int16_t give_cmd_current;
-}dm_control_struct;//电机控制结构体
+}dm_control_t;//电机控制结构体
 
 
 void DM4310_Enable(uint8_t *tx_data);
 void DM4310_Disable(uint8_t *tx_data);
 void DM4310_SaveZero(uint8_t *tx_data);
 void DM4310_Clear(uint8_t *tx_data);
-void DM_Init(dm_control_struct *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid);
-void DM_GetRxPacket(dm_motor_struct *motor,uint8_t *rx_data);
-void DM_AddTxPacket(dm_control_struct *motor, uint8_t *tx_data);
+void DM_Init(dm_control_t *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid);
+void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data);
+void DM_AddTxPacket(dm_control_t *motor, uint8_t *tx_data);
 
 #endif

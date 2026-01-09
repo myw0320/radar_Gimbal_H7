@@ -13,7 +13,7 @@ gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;//云台模式
 
 
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);
-static void gimbal_rc_control(float *yaw, float *pitch, gimbal_control_struct *control);
+static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_struct *control);
@@ -87,6 +87,10 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
 
 void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
 {
+    if (motor_mode_update == NULL)
+    {
+        return;
+    }
     //更新云台行为
     gimbal_behaviour_set(motor_mode_update);
     //更新云台各电机行为
@@ -155,7 +159,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         }
         case GIMBAL_MANUAL_RC_MODE:
         {
-            gimbal_rc_control(add_yaw,add_pitch,gimbal_control_set);
+            gimbal_absolute_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
         case GIMBAL_AUTO_MOVE_MODE://自动移动
@@ -180,8 +184,20 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
     }
 }
 
-//
+//云台初始化
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control)
+{
+    if (yaw == NULL || pitch == NULL || control == NULL)
+    {
+        return;
+    }
+    //初始化状态控制量计算
+    // if ()
+    // {
+    //
+    // }
+}
+static void gimbal_cail_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
     //云台初始化
     if (yaw == NULL || pitch == NULL || control == NULL)
@@ -190,19 +206,14 @@ static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct 
     }
 }
 //手动控制
-#define YAW_RC_SEN  0.000005f
-#define PITCH_RC_SEN  0.000005f
-
-#define YAW_MOUSE_SEN  0.00005f
-#define PITCH_MOUSE_SEN  0.00005f
-static void gimbal_rc_control(float *yaw, float *pitch, gimbal_control_struct *control)
+static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
     if (yaw == NULL || pitch == NULL || control == NULL)
     {
         return;
     }
-    static int16_t yaw_channel, pitch_channel;
-    //static float rc_add_yaw, rc_add_pitch;
+    static int16_t yaw_channel = 0, pitch_channel = 0;
+
     rc_deadband_limit(control->rc_point->rc.ch[0],yaw_channel,10);
     rc_deadband_limit(control->rc_point->rc.ch[1],pitch_channel,10);
     //遥控器数据处理
@@ -210,7 +221,19 @@ static void gimbal_rc_control(float *yaw, float *pitch, gimbal_control_struct *c
     *pitch = (float)pitch_channel * PITCH_RC_SEN;
 
 }
+static void gimbal_relative_control(float *yaw, float *pitch, gimbal_control_struct *control)
+{
 
+}
+static void gimbal_motionless_control(float *yaw, float *pitch, gimbal_control_struct *control)
+{
+    if (yaw == NULL || pitch == NULL || control == NULL)
+    {
+        return;
+    }
+    *yaw = 0.0f;
+    *pitch = 0.0f;
+}
 //自动移动模式
 static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {

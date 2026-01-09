@@ -3,6 +3,7 @@
 #include "gimbal_behaviour.h"
 #include "ws2812.h"
 #include "cmsis_os.h"
+#include "cap_comm.h"
 
 gimbal_control_struct gimbalControl;//云台控制
 
@@ -11,15 +12,16 @@ static void gimbal_update(gimbal_control_struct *update);
 static void gimbal_update_save(gimbal_control_struct *save);
 static void gimbal_control_set(gimbal_control_struct *control);
 static void gimbal_control(gimbal_control_struct *control);
-static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add);
-static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add);
-static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control);
-static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control);
+static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add);
+static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add);
+static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
+static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 
 
 /******/
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
+cap_tx_data_t cap_tx_test;
 
 void Gimbal_Task(void const *pvParameters)
 {
@@ -34,44 +36,47 @@ void Gimbal_Task(void const *pvParameters)
         gimbal_update_save(&gimbalControl);
         gimbal_control(&gimbalControl);//计算控制值
 
+        HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
+        CAP_AddTxPacket(&cap_tx_test,gimbalControl.can_tx_data);
+        can_tx_data(&hfdcan1,0x210,gimbalControl.can_tx_data,8);
+        //
+        // if (toe_is_error(GIMBAL_YAW_TOE))
+        // {
+        //     DM4310_Clear(gimbalControl.can_tx_data);
+        //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        // }
+        // else
+        // {
+            // if (gimbalControl.yawMotor.motor_measurement.state == 1)
+            // {
+            //     DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
+            //     gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+            // }
+            // else
+            // {
+            //     DM4310_Enable(gimbalControl.can_tx_data);
+            //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+            // }
+        // }
 
-        if (toe_is_error(GIMBAL_YAW_TOE))
-        {
-            DM4310_Clear(gimbalControl.can_tx_data);
-            can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        }
-        else
-        {
-            if (gimbalControl.yawMotor.motor_measurement.state == 1)
-            {
-                DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
-                gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-            }
-            else
-            {
-                DM4310_Enable(gimbalControl.can_tx_data);
-                can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-            }
-        }
-
-        if (toe_is_error(GIMBAL_PITCH_TOE))
-        {
-            DM4310_Clear(gimbalControl.can_tx_data);
-            can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-        }
-        else
-        {
-            if (gimbalControl.pitchMotor.motor_measurement.state == 1)
-            {
-                DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.can_tx_data);
-                gimbalControl.can_tx_status = can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-            }
-            else
-            {
-                DM4310_Enable(gimbalControl.can_tx_data);
-                can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-            }
-        }
+        // if (toe_is_error(GIMBAL_PITCH_TOE))
+        // {
+        //     DM4310_Clear(gimbalControl.can_tx_data);
+        //     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+        // }
+        // else
+        // {
+            // if (gimbalControl.pitchMotor.motor_measurement.state == 1)
+            // {
+            //     DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.can_tx_data);
+            //     gimbalControl.can_tx_status = can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+            // }
+            // else
+            // {
+            //     DM4310_Enable(gimbalControl.can_tx_data);
+            //     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+            // }
+        // }
         osDelay(2);
     }
 }
@@ -99,12 +104,16 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.relative_angle_max = PITCH_REL_MAX;
     init->pitchEuler.relative_angle_min = PITCH_REL_MIN;
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
+    //电机清除
+    DM4310_Clear(init->can_tx_data);
+    can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+    osDelay(50);
+    can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
     //电机使能
     DM4310_Enable(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
     osDelay(50);
     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-    
 }
 
 //编码值转弧度
@@ -268,7 +277,7 @@ static void gimbal_control(gimbal_control_struct *control)
 
 
 //编码值
-static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add)
+static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add)
 {
     if (gimbal_control == NULL || motor_control == NULL)
     {
@@ -287,7 +296,7 @@ static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_contr
     }
 }
 //陀螺仪
-static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control,float add)
+static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add)
 {
     if (gimbal_control == NULL || motor_control == NULL)
     {
@@ -298,15 +307,19 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
     {
         euler_yaw_set = motor_control->absolute_angle_set;
         motor_control->absolute_angle_set = fmodf(euler_yaw_set + add,PI);
+        //motor_control->absolute_angle_set = fmax(motor_control->absolute_angle_set,YAW_ABS_MAX);
+
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
         euler_pitch_set = motor_control->absolute_angle_set;
         motor_control->absolute_angle_set = fmodf(euler_pitch_set + add,PI);
+        motor_control->absolute_angle_set = Math_Constrain(&motor_control->absolute_angle_set,PITCH_ABS_MIN,PITCH_ABS_MAX);
+
     }
 }
 //电机编码值控制
-static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control)
+static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {
     if (gimbal_control == NULL || motor_control == NULL)
     {
@@ -325,7 +338,7 @@ static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,g
 }
 
 //电机陀螺仪控制
-static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_struct *motor_control)
+static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {
     if (gimbal_control == NULL || motor_control == NULL)
     {

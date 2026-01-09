@@ -42,8 +42,6 @@ void DJI_GetRxPacket(dji_motor_struct *motor,uint8_t *rx_data)
 
 
 
-
-
 /**
  * @brief 添加发送数据包
  * 

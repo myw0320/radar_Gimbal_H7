@@ -1,10 +1,11 @@
 #include "can_comm_task.h"
 #include "gimbal_task.h"
 #include "detect_task.h"
+#include "cap_comm.h"
+
 
 HAL_StatusTypeDef can_tx_data(FDCAN_HandleTypeDef *hcan, uint16_t id, uint8_t *tx_data, uint32_t len)
 {
-
     FDCAN_TxHeaderTypeDef TxHeader;
 
     TxHeader.Identifier = id;// CAN ID
@@ -20,11 +21,16 @@ HAL_StatusTypeDef can_tx_data(FDCAN_HandleTypeDef *hcan, uint16_t id, uint8_t *t
     return HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, tx_data);
 }
 
+
+cap_rx_data_t cap_rx_tset;
+uint8_t rx1_data[8];
+uint8_t rx2_data[8];
+uint8_t rx3_data[8];
+
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
     if(hfdcan == &hfdcan1)
     {
-        uint8_t rx1_data[8];
         FDCAN_RxHeaderTypeDef RxHeader1;
         HAL_FDCAN_GetRxMessage(&hfdcan1, FDCAN_RX_FIFO0, &RxHeader1, rx1_data);
         switch(RxHeader1.Identifier)
@@ -35,11 +41,16 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
                 detect_hook(GIMBAL_YAW_TOE);
                 break;
             }
+            case 0x210:
+            {
+                CAP_GetRxPacket(&cap_rx_tset,rx1_data);
+                break;
+            }
         }
     }
     else if (hfdcan == &hfdcan2)
     {
-        uint8_t rx2_data[8];
+
         FDCAN_RxHeaderTypeDef RxHeader2;
         HAL_FDCAN_GetRxMessage(&hfdcan2, FDCAN_RX_FIFO0, &RxHeader2, rx2_data);
         switch(RxHeader2.Identifier)
@@ -55,7 +66,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     else if (hfdcan == &hfdcan3)
     {
         FDCAN_RxHeaderTypeDef RxHeader3;
-        uint8_t rx3_data[8];
+
     }
 }
-

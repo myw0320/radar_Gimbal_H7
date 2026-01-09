@@ -30,8 +30,8 @@
 #define YAW_REL_MAX 3.14f
 #define YAW_REL_MIN -3.14f
 //pitch轴数据限幅值
-#define PITCH_ABS_MAX 3.14f
-#define PITCH_ABS_MIN -3.14f
+#define PITCH_ABS_MAX 0.4f
+#define PITCH_ABS_MIN -0.5f
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
@@ -77,7 +77,8 @@ typedef struct
     float relative_angle_set;
     float relative_angle_max;
     float relative_angle_min;
-}gimbal_motor_struct;
+}gimbal_motor_t;
+
 typedef struct
 {
     // 扫描低通滤波结构体
@@ -112,10 +113,10 @@ typedef struct
     vision_data_struct *vision_point;//视觉数据
     rc_ctrl_struct *rc_point;//遥控器数据
 
-    gimbal_motor_struct yawEuler;
-    dm_control_struct yawMotor;//yaw电机结构体
-    gimbal_motor_struct pitchEuler;
-    dm_control_struct pitchMotor;//pitch电机结构体
+    gimbal_motor_t yawEuler;
+    dm_control_t yawMotor;//yaw电机结构体
+    gimbal_motor_t pitchEuler;
+    dm_control_t pitchMotor;//pitch电机结构体
 
     scan_struct gimbalScan;//自动扫描
 
