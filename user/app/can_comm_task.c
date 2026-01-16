@@ -26,7 +26,6 @@ cap_rx_data_t cap_rx_tset;
 uint8_t rx1_data[8];
 uint8_t rx2_data[8];
 uint8_t rx3_data[8];
-
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
     if(hfdcan == &hfdcan1)
@@ -43,7 +42,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             }
             case 0x210:
             {
-                CAP_GetRxPacket(&cap_rx_tset,rx1_data);
+                CAP_GetRxPacket(&cap_rx_tset,rx1_data);//³¬µç
                 break;
             }
         }

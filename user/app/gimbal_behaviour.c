@@ -319,5 +319,5 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
         return;
     }
     //ÊÓ¾õ¿ØÖÆÔÆÌ¨
-    vision_to_gimbal(yaw,pitch,control->vision_point);
+    //vision_to_gimbal(yaw,pitch,control->vision_point);
 }

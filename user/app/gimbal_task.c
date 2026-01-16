@@ -25,8 +25,6 @@ cap_tx_data_t cap_tx_test;
 
 void Gimbal_Task(void const *pvParameters)
 {
-    //‘∆Ã®
-    
     //≥ı ºªØ
     gimbal_init(&gimbalControl);
     while(1)

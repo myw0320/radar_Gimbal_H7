@@ -110,7 +110,7 @@ typedef struct
 {
     INS_t *imu_point;//陀螺仪数据
     //radar_data_struct *radar_point;
-    vision_data_struct *vision_point;//视觉数据
+    vision_data_t *vision_point;//视觉数据
     rc_ctrl_struct *rc_point;//遥控器数据
 
     gimbal_motor_t yawEuler;

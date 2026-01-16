@@ -18,8 +18,9 @@ void CAP_GetRxPacket(cap_rx_data_t* rx, uint8_t* rx_data)
      rx->cap_volt = (float)(rx_data[1] << 8 | rx_data[2]) / 100; // 解析电容电压
      rx->chassis_power = (float)(rx_data[3] << 8 | rx_data[4]) / 100; // 解析底盘功率
      rx->cap_target_power = (float)(rx_data[5] << 8 | rx_data[6]) / 100; // 解析目标电容功率
-     rx->cap_target_buffer = rx_data[7]; // 解析目标电容缓冲
+     rx->cap_target_buffer = rx_data[7]; // 解析目标电容缓冲能量
 }
+
 
 /**
  * 将CAP数据包添加到发送数据中

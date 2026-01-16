@@ -27,7 +27,9 @@ void Message_Task(void const * argument)
             ws2812_rgb.r++;
             ws2812_rgb.g += 5;
             ws2812_rgb.b += 10;
-            ws2812_rgb.r++;ws2812_rgb.g++;ws2812_rgb.b++;
+            ws2812_rgb.r++;
+            ws2812_rgb.g++;
+            ws2812_rgb.b++;
             current_time = 0;
         }
         osDelay(1);

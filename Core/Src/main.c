@@ -35,6 +35,7 @@
 #include "bsp_dwt.h"
 #include "bsp_can.h"
 #include "remote.h"
+#include "radar_task.h"
 #include "BMI088Middleware.h"
 /* USER CODE END Includes */
 
@@ -116,6 +117,7 @@ int main(void)
   MX_TIM12_Init();
   MX_USART1_UART_Init();
   MX_UART5_Init();
+  MX_UART7_Init();
   /* USER CODE BEGIN 2 */
   Remote_Init();
 
@@ -129,6 +131,7 @@ int main(void)
   Power_OUT1_ON;
   Power_OUT2_ON;
 
+  radar_init();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
