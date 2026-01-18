@@ -10,7 +10,7 @@ vision_data_t visionData;
 
 void vision_init(void)
 {
-    USART_RxDMA_MultiBuffer_Init(&huart1,(uint32_t *)vision_rx_buf[0],(uint32_t *)vision_rx_buf[1],VISION_RX_LEN);
+    USART_RxDMA_MultiBuffer_Init(&huart7,(uint32_t *)vision_rx_buf[0],(uint32_t *)vision_rx_buf[1],VISION_RX_LEN);
 }
 
 void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet)
@@ -42,13 +42,10 @@ void USER_USART7_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         __HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN);
 
         /* Juge whether size is equal to the length of the received data */
-        // if(Size == REMOTE_RX_LEN)
-        // {
-
-        /* Memory 0 data update to remote_ctrl*/
-        //Remote_RxPacketUpdate(remote_rx_buf[0],&rcData);
-
-        // }
+        if(Size == VISION_RX_LEN)
+        {
+            Vision_GetRxPacket(vision_rx_buf[0],&visionData.receive_packet);
+        }
 
     }
     /* Current memory buffer used is Memory 1 */
@@ -63,10 +60,9 @@ void USER_USART7_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         /* Reset the receive count */
         __HAL_DMA_SET_COUNTER(huart->hdmarx,VISION_RX_LEN);
 
-        // if(Size == REMOTE_RX_LEN)
-        // {
-        /* Memory 1 to data update to remote_ctrl*/
-
-        // }
+         if(Size == VISION_RX_LEN)
+         {
+             Vision_GetRxPacket(vision_rx_buf[0],&visionData.receive_packet);
+         }
     }
 }

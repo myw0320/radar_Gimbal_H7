@@ -2,9 +2,9 @@
 
 #include "usart.h"
 
-uint8_t radar_rx_buf[2][RADAR_RX_LEN];//视觉数据包
+uint8_t radar_rx_buf[2][RADAR_RX_LEN];//
 
-// radar_data_struct visionData;
+radar_data_t radarData;
 
 void radar_init(void)
 {
@@ -39,8 +39,8 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         /* Juge whether size is equal to the length of the received data */
         if(Size == RADAR_RX_LEN)
         {
-
-         }
+            Radar_GetRxPacket(radar_rx_buf[0],&radarData.receive_packet);
+        }
 
     }
     /* Current memory buffer used is Memory 1 */
@@ -57,8 +57,7 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 
         if(Size == RADAR_RX_LEN)
         {
-
-
+            Radar_GetRxPacket(radar_rx_buf[1],&radarData.receive_packet);
         }
     }
 }

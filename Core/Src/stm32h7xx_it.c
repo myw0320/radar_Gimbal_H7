@@ -23,7 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bsp_uart.h"
-#include "remote.h"
+#include "fsi6.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

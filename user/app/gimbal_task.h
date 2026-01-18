@@ -1,6 +1,3 @@
-//
-// Created by myw04 on 2025/11/8.
-//
 
 #ifndef RADAR_GIMBAL_H7_GIMBAL_TASK_H
 #define RADAR_GIMBAL_H7_GIMBAL_TASK_H
@@ -11,7 +8,8 @@
 #include "vision_task.h"
 // #include "radar_task.h"
 #include "detect_task.h"
-#include "remote.h"
+#include "fsi6.h"
+#include "dt7.h"
 #include "Dji_motor.h"
 #include "DM_motor.h"
 #include "pid.h"
@@ -111,7 +109,7 @@ typedef struct
     INS_t *imu_point;//陀螺仪数据
     //radar_data_struct *radar_point;
     vision_data_t *vision_point;//视觉数据
-    rc_ctrl_struct *rc_point;//遥控器数据
+    dt7_data_struct *rc_point;//遥控器数据
 
     gimbal_motor_t yawEuler;
     dm_control_t yawMotor;//yaw电机结构体

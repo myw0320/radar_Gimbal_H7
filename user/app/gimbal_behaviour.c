@@ -3,13 +3,11 @@
 //
 
 #include "gimbal_behaviour.h"
-#include "remote.h"
+#include "fsi6.h"
 gimbal_control_mode_enum gimbalControlMode = GIMBAL_STOP;//云台控制模式
 gimbal_control_mode_enum gimbalControlModeLast = GIMBAL_STOP;
 
 gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;//云台模式
-
-
 
 
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);

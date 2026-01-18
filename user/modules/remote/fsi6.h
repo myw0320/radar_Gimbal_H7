@@ -1,11 +1,12 @@
 #ifndef RADAR_GIMBAL_H7_REMOTE_H
 #define RADAR_GIMBAL_H7_REMOTE_H
 #include "main.h"
+#include "usart.h"
 #include "bsp_uart.h"
 
 
-#define SBUS_RX_LEN 50U
-#define REMOTE_RX_LEN 25u
+#define SBUS_FS_RX_LEN 50U
+#define FSI6_RX_LEN 25u
 
 
 #define RC_CH_VALUE_MIN         ((uint16_t)364)
@@ -42,12 +43,6 @@ typedef struct __attribute__((packed))
         int16_t ch[4];
         uint8_t sw[4];
         uint16_t rotory_sw[2];
-        // uint8_t mode_sw;
-        // uint8_t stop;
-        // uint8_t left_button;
-        // uint8_t	right_button;
-        // int16_t wheel;
-        // uint8_t shutter;
     }rc;
     __attribute__((packed)) struct
     {
@@ -67,12 +62,12 @@ typedef struct __attribute__((packed))
     {
         uint16_t CH[16];
     } SBUS;
-}rc_ctrl_struct;
+}fs_data_struct;
 
 
-extern rc_ctrl_struct rcData;
-extern uint8_t remote_rx_buf[2][SBUS_RX_LEN];//控数据包
-void Remote_Init();
-void Remote_RxPacketUpdate(volatile const uint8_t *sbus_buf, rc_ctrl_struct *rc_ctrl);
+extern fs_data_struct fsData;
+extern uint8_t fsi6_rx_buf[2][SBUS_FS_RX_LEN];//控数据包
+void Fsi6_Init(void);
+void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fs_data_struct *rc_ctrl);
 void Remote_IRQHandler(UART_HandleTypeDef *huart,uint16_t Size);
 #endif //RADAR_GIMBAL_H7_REMOTE_H

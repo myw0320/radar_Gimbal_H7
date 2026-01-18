@@ -21,7 +21,7 @@ typedef struct __attribute__((packed))
 
 typedef struct
 {
-
+    vision_receive_packet_t receive_packet;
 }vision_data_t;
 
 extern vision_data_t visionData;

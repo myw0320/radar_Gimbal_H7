@@ -22,7 +22,7 @@ typedef struct __attribute__((packed))
 
 typedef struct
 {
-
+    radar_receive_packet_t receive_packet;
 }radar_data_t;
 
 void radar_init(void);

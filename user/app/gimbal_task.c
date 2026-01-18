@@ -43,20 +43,7 @@ void Gimbal_Task(void const *pvParameters)
         //     DM4310_Clear(gimbalControl.can_tx_data);
         //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
         // }
-        // else
-        // {
-            // if (gimbalControl.yawMotor.motor_measurement.state == 1)
-            // {
-            //     DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
-            //     gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-            // }
-            // else
-            // {
-            //     DM4310_Enable(gimbalControl.can_tx_data);
-            //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-            // }
-        // }
-
+        // else90-
         // if (toe_is_error(GIMBAL_PITCH_TOE))
         // {
         //     DM4310_Clear(gimbalControl.can_tx_data);
@@ -86,7 +73,7 @@ static void gimbal_init(gimbal_control_struct *init)
     init->imu_point = &INS;
     init->vision_point = &visionData;
     //init->radar_point = &radarData;
-    init->rc_point = &rcData;
+    init->rc_point = &dt7Data;
 
     //yaw数据初始化
     DM_Init(&init->yawMotor,DM4310,OMEGA,0x01);//电机控制初始化

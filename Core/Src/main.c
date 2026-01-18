@@ -34,7 +34,8 @@
 #include "mahony_filter.h"
 #include "bsp_dwt.h"
 #include "bsp_can.h"
-#include "remote.h"
+#include "fsi6.h"
+#include "dt7.h"+
 #include "radar_task.h"
 #include "BMI088Middleware.h"
 /* USER CODE END Includes */
@@ -119,7 +120,7 @@ int main(void)
   MX_UART5_Init();
   MX_UART7_Init();
   /* USER CODE BEGIN 2 */
-  Remote_Init();
+  Dt7_Init();
 
   DWT_Init(480);
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)
