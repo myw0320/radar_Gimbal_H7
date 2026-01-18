@@ -22,10 +22,10 @@ void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet)
     }
 }
 
-void vision_to_gimbal(float *yaw,float *pitch,vision_receive_packet_t *gimbal_control)
-{
-
-}
+// void vision_to_gimbal(float *yaw,float *pitch,vision_receive_packet_t *gimbal_control)
+// {
+//
+// }
 
 void USER_USART7_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 {

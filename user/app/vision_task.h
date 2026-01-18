@@ -4,6 +4,7 @@
 #include "stdint.h"
 #include "ins_task.h"
 #include "bsp_uart.h"
+#include "pid.h"
 #define VISION_RX_LEN  28u
 
 
@@ -22,6 +23,9 @@ typedef struct __attribute__((packed))
 typedef struct
 {
     vision_receive_packet_t receive_packet;
+    pid_struct x_err_pid;
+    pid_struct y_err_pid;
+
 }vision_data_t;
 
 extern vision_data_t visionData;

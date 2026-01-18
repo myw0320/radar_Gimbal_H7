@@ -17,7 +17,7 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
 static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 
-
+//24.03mm
 /******/
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
@@ -89,13 +89,17 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.relative_angle_max = PITCH_REL_MAX;
     init->pitchEuler.relative_angle_min = PITCH_REL_MIN;
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
+    //初始化视觉控制pid
+    PID_init(&init->vision_point->x_err_pid,PID_POSITION,)
+    PID_init(&init->vision_point->y_err_pid,PID_POSITION,)
+
     //电机清除
-    DM4310_Clear(init->can_tx_data);
+    DM_Clear(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
     osDelay(50);
     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
     //电机使能
-    DM4310_Enable(init->can_tx_data);
+    DM_Enable(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
     osDelay(50);
     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);

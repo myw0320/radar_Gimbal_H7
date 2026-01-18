@@ -79,10 +79,10 @@ typedef struct
 }dm_control_t;//电机控制结构体
 
 
-void DM4310_Enable(uint8_t *tx_data);
-void DM4310_Disable(uint8_t *tx_data);
-void DM4310_SaveZero(uint8_t *tx_data);
-void DM4310_Clear(uint8_t *tx_data);
+void DM_Enable(uint8_t *tx_data);
+void DM_Disable(uint8_t *tx_data);
+void DM_SaveZero(uint8_t *tx_data);
+void DM_Clear(uint8_t *tx_data);
 void DM_Init(dm_control_t *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid);
 void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data);
 void DM_AddTxPacket(dm_control_t *motor, uint8_t *tx_data);

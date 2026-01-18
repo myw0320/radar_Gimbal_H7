@@ -129,8 +129,8 @@ int main(void)
   }
   FDCAN1_Config_Init();
   FDCAN2_Config_Init();
-  Power_OUT1_ON;
-  Power_OUT2_ON;
+  Power_OUT1_OFF;
+  Power_OUT2_OFF;
 
   radar_init();
   /* USER CODE END 2 */

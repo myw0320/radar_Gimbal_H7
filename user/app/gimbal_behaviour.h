@@ -4,7 +4,7 @@
 
 #ifndef RADAR_GIMBAL_GIMBAL_BEHAVIOUR_H
 #define RADAR_GIMBAL_GIMBAL_BEHAVIOUR_H
-
+#include "main.h"
 #include "gimbal_task.h"
 #include "controller.h"
 #include "user_lib.h"

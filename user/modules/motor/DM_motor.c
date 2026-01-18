@@ -39,7 +39,7 @@ static int float_to_uint(float x_float, float x_min, float x_max, int bits)
 }
 
 
-void DM4310_Enable(uint8_t *tx_data)
+void DM_Enable(uint8_t *tx_data)
 {
 	tx_data[0] = 0xFF;
 	tx_data[1] = 0xFF;
@@ -52,7 +52,7 @@ void DM4310_Enable(uint8_t *tx_data)
 }
 
 
-void DM4310_Disable(uint8_t *tx_data)
+void DM_Disable(uint8_t *tx_data)
 {
 	tx_data[0] = 0xFF;
 	tx_data[1] = 0xFF;
@@ -63,7 +63,7 @@ void DM4310_Disable(uint8_t *tx_data)
 	tx_data[6] = 0xFF;
 	tx_data[7] = 0xFD;
 }
-void DM4310_SaveZero(uint8_t *tx_data)
+void DM_SaveZero(uint8_t *tx_data)
 {
 	tx_data[0] = 0xFF;
 	tx_data[1] = 0xFF;
@@ -74,7 +74,7 @@ void DM4310_SaveZero(uint8_t *tx_data)
 	tx_data[6] = 0xFF;
 	tx_data[7] = 0xFE;
 }
-void DM4310_Clear(uint8_t *tx_data)
+void DM_Clear(uint8_t *tx_data)
 {
 	tx_data[0] = 0xFF;
 	tx_data[1] = 0xFF;

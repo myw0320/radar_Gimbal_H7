@@ -318,4 +318,9 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     }
     //视觉控制云台
     //vision_to_gimbal(yaw,pitch,control->vision_point);
+    Power_OUT1_ON;
+    Power_OUT1_ON;//开启激光
+    //pid处理
+    PID_calc(&control->vision_point->x_err_pid,control->vision_point->receive_packet.x_error,0);
+    PID_calc(&control->vision_point->y_err_pid,control->vision_point->receive_packet.y_error,0);
 }
