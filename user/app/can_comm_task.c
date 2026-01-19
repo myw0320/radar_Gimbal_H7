@@ -54,7 +54,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         HAL_FDCAN_GetRxMessage(&hfdcan2, FDCAN_RX_FIFO0, &RxHeader2, rx2_data);
         switch(RxHeader2.Identifier)
         {
-            case 0x06:
+            case 0x02:
             {
                 DM_GetRxPacket(&gimbalControl.pitchMotor.motor_measurement,rx2_data);
                 detect_hook(GIMBAL_PITCH_TOE);

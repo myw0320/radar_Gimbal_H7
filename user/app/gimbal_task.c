@@ -21,6 +21,9 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
 /******/
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
+
+const float x_err_k[3] = {10.0f,0.0f,4.0f};
+const float y_err_k[3] = {10.0f,0.0f,4.0f};
 cap_tx_data_t cap_tx_test;
 
 void Gimbal_Task(void const *pvParameters)
@@ -34,34 +37,30 @@ void Gimbal_Task(void const *pvParameters)
         gimbal_update_save(&gimbalControl);
         gimbal_control(&gimbalControl);//计算控制值
 
-        HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
-        CAP_AddTxPacket(&cap_tx_test,gimbalControl.can_tx_data);
-        can_tx_data(&hfdcan1,0x210,gimbalControl.can_tx_data,8);
-        //
-        // if (toe_is_error(GIMBAL_YAW_TOE))
-        // {
-        //     DM4310_Clear(gimbalControl.can_tx_data);
-        //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        // }
-        // else90-
-        // if (toe_is_error(GIMBAL_PITCH_TOE))
-        // {
-        //     DM4310_Clear(gimbalControl.can_tx_data);
-        //     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-        // }
-        // else
-        // {
-            // if (gimbalControl.pitchMotor.motor_measurement.state == 1)
-            // {
-            //     DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.can_tx_data);
-            //     gimbalControl.can_tx_status = can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-            // }
-            // else
-            // {
-            //     DM4310_Enable(gimbalControl.can_tx_data);
-            //     can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
-            // }
-        // }
+        //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
+        // CAP_AddTxPacket(&cap_tx_test,gimbalControl.can_tx_data);
+        // can_tx_data(&hfdcan1,0x210,gimbalControl.can_tx_data,8);
+        if (gimbalControl.yawMotor.motor_measurement.state == 1)
+        {
+            DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
+            gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        }
+        else
+        {
+            DM_Enable(gimbalControl.can_tx_data);
+            can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
+        }
+
+        if (gimbalControl.pitchMotor.motor_measurement.state == 1)
+        {
+            DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.can_tx_data);
+            gimbalControl.can_tx_status = can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
+        }
+        else
+        {
+            DM_Enable(gimbalControl.can_tx_data);
+            can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
+        }
         osDelay(2);
     }
 }
@@ -90,19 +89,19 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.relative_angle_min = PITCH_REL_MIN;
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
     //初始化视觉控制pid
-    PID_init(&init->vision_point->x_err_pid,PID_POSITION,)
-    PID_init(&init->vision_point->y_err_pid,PID_POSITION,)
+    //PID_init(&init->vision_point->x_err_pid,PID_POSITION,x_err_k,);
+    //PID_init(&init->vision_point->y_err_pid,PID_POSITION,y_err_k,);
 
     //电机清除
     DM_Clear(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
     osDelay(50);
-    can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+    can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
     //电机使能
     DM_Enable(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
     osDelay(50);
-    can_tx_data(&hfdcan2,0x206,gimbalControl.can_tx_data,8);
+    can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
 }
 
 //编码值转弧度
@@ -307,6 +306,8 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
 
     }
 }
+
+
 //电机编码值控制
 static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {

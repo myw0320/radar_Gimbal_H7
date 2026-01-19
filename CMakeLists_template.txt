@@ -80,6 +80,7 @@ user/bsp/Inc
 user/modules/bmi088
 user/modules/can_comm
 user/modules/cap
+user/modules/crc16
 user/modules/lcd
 user/modules/message
 user/modules/motor

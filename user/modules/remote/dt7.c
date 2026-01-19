@@ -76,12 +76,10 @@ void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         /* Reset the receive count */
         __HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_DT_RX_LEN);
 
-        // if(Size == REMOTE_RX_LEN)
+        // if(Size == DT7_RX_LEN)
         // {
-        /* Memory 1 to data update to remote_ctrl*/
-        Dt7_RxPacketUpdate(dt7_rx_buf[1],&dt7Data);
+            Dt7_RxPacketUpdate(dt7_rx_buf[1],&dt7Data);
         // }
 
     }
-
 }

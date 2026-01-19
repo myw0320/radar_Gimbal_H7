@@ -35,8 +35,9 @@
 #include "bsp_dwt.h"
 #include "bsp_can.h"
 #include "fsi6.h"
-#include "dt7.h"+
+#include "dt7.h"
 #include "radar_task.h"
+#include "vision_task.h"
 #include "BMI088Middleware.h"
 /* USER CODE END Includes */
 
@@ -130,9 +131,10 @@ int main(void)
   FDCAN1_Config_Init();
   FDCAN2_Config_Init();
   Power_OUT1_OFF;
-  Power_OUT2_OFF;
+  Power_OUT1_OFF;
 
-  radar_init();
+  vision_init();
+  Dt7_Init();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */

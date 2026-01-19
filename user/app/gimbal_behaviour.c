@@ -23,21 +23,22 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
     {
         return;
     }
-    uint8_t mode_bit = ((behaver->rc_point->rc.sw[0]<<1) | behaver->rc_point->rc.sw[1]);
-
+    //uint8_t mode_bit = ((behaver->rc_point->rc.sw[0]<<1) | behaver->rc_point->rc.sw[1]);
+    uint8_t mode_bit = behaver->rc_point->rc.sw[0];
+    static gimbal_mode_enum currentMode = GIMBAL_AUTO_SCAN_MODE;//初始化为扫描
     switch (mode_bit)
     {
         case 0:
             gimbalControlMode = GIMBAL_STOP;
             break;
         case 1:
-            gimbalControlMode = GIMBAL_INIT;
+            gimbalControlMode = GIMBAL_STOP;
             break;
         case 2:
-            gimbalControlMode = GIMBAL_MANUAL;
+            gimbalControlMode = GIMBAL_AUTO;
             break;
         case 3:
-            gimbalControlMode = GIMBAL_AUTO;
+            gimbalControlMode = GIMBAL_MANUAL;
             break;
     }
     gimbalControlModeLast = gimbalControlMode;//保存上次数据
@@ -61,17 +62,31 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         }
         case GIMBAL_AUTO://自动移动
         {
-            switch (behaver->rc_point->rc.sw[2])
+            switch (currentMode)
             {
-                case 0:
+                case GIMBAL_AUTO_SCAN_MODE:
+                {
+                    gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+                    // if ()
+                    // {
+                    //     currentMode = GIMBAL_AUTO_ATTACK_MODE;//跳过雷达
+                    // }
+                    break;
+                }
+                // case GIMBAL_AUTO_MOVE_MODE:
+                // {
+                //     gimbalMode = GIMBAL_AUTO_MOVE_MODE;
+                //     if ()
+                //     {
+                //         currentMode = GIMBAL_AUTO_ATTACK_MODE;
+                //     }
+                //     break;
+                // }
+                case GIMBAL_AUTO_ATTACK_MODE:
+                {
                     gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
                     break;
-                case 1:
-                    gimbalMode = GIMBAL_AUTO_MOVE_MODE;
-                    break;
-                case 2:
-                    gimbalMode = GIMBAL_AUTO_SCAN_MODE;
-                    break;
+                }
             }
             break;
         }
@@ -101,24 +116,9 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
             break;
         }
         case GIMBAL_MANUAL_RC_MODE:
-        {
-            motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
-            motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
-            break;
-        }
-        case GIMBAL_AUTO_MOVE_MODE:
-        {
-            motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
-            motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
-            break;
-        }
         case GIMBAL_AUTO_SCAN_MODE:
-        {
-            motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
-            motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
-            break;
-        }
         case GIMBAL_AUTO_ATTACK_MODE:
+        case GIMBAL_AUTO_MOVE_MODE:
         {
             motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
             motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
@@ -172,6 +172,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         }
         case GIMBAL_AUTO_ATTACK_MODE://自动攻击
         {
+            gimbal_auto_attack_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
 
@@ -215,8 +216,8 @@ static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_str
     rc_deadband_limit(control->rc_point->rc.ch[0],yaw_channel,10);
     rc_deadband_limit(control->rc_point->rc.ch[1],pitch_channel,10);
     //遥控器数据处理
-    *yaw = (float) -yaw_channel* YAW_RC_SEN;//衰减系数
-    *pitch = (float)pitch_channel * PITCH_RC_SEN;
+    *yaw = (float)yaw_channel* YAW_RC_SEN;//衰减系数
+    *pitch = (float)-pitch_channel * PITCH_RC_SEN;
 
 }
 static void gimbal_relative_control(float *yaw, float *pitch, gimbal_control_struct *control)
@@ -299,8 +300,8 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
     control->gimbalScan.scan_run_time = HAL_GetTick()*0.001f - control->gimbalScan.scan_begin_time;
 
     // 云台自动扫描,设置浮动值
-    scan_control_set(&auto_scan_AC_set_yaw, 0.5f, 6, control->gimbalScan.scan_run_time);
-    scan_control_set(&auto_scan_AC_set_pitch,0.3f, 5, control->gimbalScan.scan_run_time);
+    scan_control_set(&auto_scan_AC_set_yaw, 0.5f, 8, control->gimbalScan.scan_run_time);
+    scan_control_set(&auto_scan_AC_set_pitch,0.2f, 5, control->gimbalScan.scan_run_time);
     // 赋值控制值  = 中心值 + 加上浮动函数
     yaw_set_angle = auto_scan_AC_set_yaw;
     pitch_set_angle = auto_scan_AC_set_pitch;
@@ -309,6 +310,7 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
     *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
 }
 
+//
 //自动攻击模式
 static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
@@ -323,4 +325,6 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     //pid处理
     PID_calc(&control->vision_point->x_err_pid,control->vision_point->receive_packet.x_error,0);
     PID_calc(&control->vision_point->y_err_pid,control->vision_point->receive_packet.y_error,0);
+     *yaw = control->vision_point->x_err_pid.out;
+     *pitch = control->vision_point->y_err_pid.out;
 }

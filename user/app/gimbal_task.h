@@ -28,25 +28,25 @@
 #define YAW_REL_MAX 3.14f
 #define YAW_REL_MIN -3.14f
 //pitch轴数据限幅值
-#define PITCH_ABS_MAX 0.4f
+#define PITCH_ABS_MAX 0.17f
 #define PITCH_ABS_MIN -0.5f
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
 
-#define YAW_POS_P 8.0
+#define YAW_POS_P 12.0
 #define YAW_POS_I 0.0
-#define YAW_POS_D 2.0
-#define YAW_POS_MAX_OUT 10.0
-#define YAW_POS_MIN_OUT -10.0
+#define YAW_POS_D 4.0
+#define YAW_POS_MAX_OUT 6.0
+#define YAW_POS_MIN_OUT -12.0
 #define YAW_POS_MAX_IOUT 0
 #define YAW_POS_MIN_IOUT 0
 
-#define PITCH_POS_P 8.0
+#define PITCH_POS_P 12.0
 #define PITCH_POS_I 0
-#define PITCH_POS_D 2.0
-#define PITCH_POS_MAX_OUT 10.0
-#define PITCH_POS_MIN_OUT -10.0
+#define PITCH_POS_D 4.0
+#define PITCH_POS_MAX_OUT 12.0
+#define PITCH_POS_MIN_OUT -12.0
 #define PITCH_POS_MAX_IOUT 0
 #define PITCH_POS_MIN_IOUT 0
 

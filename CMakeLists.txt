@@ -81,6 +81,7 @@ user/bsp/Inc
 user/modules/bmi088
 user/modules/can_comm
 user/modules/cap
+user/modules/crc16
 user/modules/lcd
 user/modules/message
 user/modules/motor
@@ -93,9 +94,7 @@ add_definitions(-DDEBUG -DUSE_PWR_LDO_SUPPLY -DUSE_HAL_DRIVER -DSTM32H723xx)
 
 file(GLOB_RECURSE SOURCES "Core/*.*" "Drivers/*.*" "Middlewares/*.*" "USB_DEVICE/*.*" "user/*.*")
 
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32H723VGTX_FLASH.ld
-        user/modules/remote/vt13.c
-        user/modules/remote/vt13.h)
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32H723VGTX_FLASH.ld)
 
 add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
 add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork)

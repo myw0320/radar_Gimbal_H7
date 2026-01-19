@@ -3,8 +3,16 @@
 #include "usart.h"
 #include "bsp_uart.h"
 
-#define SBUS_DT_RX_LEN 50U
-#define DT7_RX_LEN 25u
+#define SBUS_DT_RX_LEN 36U
+#define DT7_RX_LEN 18u
+
+#define RC_SW_UP                ((uint16_t)1)
+#define RC_SW_MID               ((uint16_t)3)
+#define RC_SW_DOWN              ((uint16_t)2)
+#define switch_is_down(s)       (s == RC_SW_DOWN)
+#define switch_is_mid(s)        (s == RC_SW_MID)
+#define switch_is_up(s)         (s == RC_SW_UP)
+
 
 #define RC_CH_VALUE_MIN         ((uint16_t)364)
 #define RC_CH_VALUE_OFFSET      ((uint16_t)1024)
