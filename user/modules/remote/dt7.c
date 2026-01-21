@@ -1,5 +1,7 @@
 #include "dt7.h"
 
+#include "detect_task.h"
+
 
 uint8_t dt7_rx_buf[2][SBUS_DT_RX_LEN];//¿ØÊý¾Ý°ü
 dt7_data_struct dt7Data;
@@ -41,27 +43,26 @@ void Dt7_RxPacketUpdate(volatile const uint8_t *sbus_buf, dt7_data_struct *rc_ct
 
 void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 {
+    static uint16_t this_time_rx_len = 0;
     /* Current memory buffer used is Memory 0 */
     if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
     {
 
         /* Disable DMA */
         __HAL_DMA_DISABLE(huart->hdmarx);
-
+        this_time_rx_len = SBUS_DT_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = SBUS_DT_RX_LEN;
         /* Switch Memory 0 to Memory 1*/
         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
 
         /* Reset the receive count */
-        __HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_DT_RX_LEN);
-
+        __HAL_DMA_ENABLE(huart->hdmarx);
         /* Juge whether size is equal to the length of the received data */
-        // if(Size == REMOTE_RX_LEN)
-        // {
-
-        /* Memory 0 data update to remote_ctrl*/
-        Dt7_RxPacketUpdate(dt7_rx_buf[0],&dt7Data);
-
-        // }
+        if(this_time_rx_len == DT7_RX_LEN)
+        {
+            Dt7_RxPacketUpdate(dt7_rx_buf[0],&dt7Data);
+            detect_hook(DBUS_TOE);
+        }
 
     }
     /* Current memory buffer used is Memory 1 */
@@ -69,17 +70,16 @@ void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
     {
         /* Disable DMA */
         __HAL_DMA_DISABLE(huart->hdmarx);
-
+        this_time_rx_len = SBUS_DT_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = SBUS_DT_RX_LEN;
         /* Switch Memory 1 to Memory 0*/
         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
-
         /* Reset the receive count */
-        __HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_DT_RX_LEN);
-
-        // if(Size == DT7_RX_LEN)
-        // {
+        __HAL_DMA_ENABLE(huart->hdmarx);
+        if(this_time_rx_len == DT7_RX_LEN)
+        {
             Dt7_RxPacketUpdate(dt7_rx_buf[1],&dt7Data);
-        // }
-
+            detect_hook(DBUS_TOE);
+        }
     }
 }

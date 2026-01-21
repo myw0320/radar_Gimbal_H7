@@ -133,9 +133,9 @@ uint8_t BMI088_init(SPI_HandleTypeDef *bmi088_SPI, uint8_t calibrate)
         BMI088.GyroOffset[1] = GyOFFSET;
         BMI088.GyroOffset[2] = GzOFFSET;
 			
-				// BMI088.AccelOffset[0]= AxOFFSET;
-			 //  BMI088.AccelOffset[1]= AyOFFSET;
-			 //  BMI088.AccelOffset[2]= AzOFFSET;
+        BMI088.AccelOffset[0]= AxOFFSET;
+        BMI088.AccelOffset[1]= AyOFFSET;
+        BMI088.AccelOffset[2]= AzOFFSET;
 			
         BMI088.gNorm = gNORM;
         BMI088.AccelScale = 9.81f / BMI088.gNorm;

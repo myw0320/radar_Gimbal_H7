@@ -16,8 +16,17 @@ void Radar_GetRxPacket(const uint8_t *rx_data,radar_receive_packet_t *packet)
     if (rx_data[0] == 0xA5 && rx_data[2] == 0x00 && rx_data[21] == 0xFE)
     {
         packet->header = rx_data[1];
-        //packet->x = rx_data[]<<8|rx_data[]|
-        // packet->current_receive_time
+
+        memcpy(&(packet->yaw), &rx_data[3], 4);
+
+        memcpy(&(packet->pitch), &rx_data[7], 4);
+
+        memcpy(&(packet->current_receive_time), &rx_data[15], 4);
+
+        packet->check_crc16 = (uint16_t)(rx_data[20] << 8 | rx_data[19]);
+
+        //packet->yaw_error =
+        //packet->pitch_error =
     }
 }
 

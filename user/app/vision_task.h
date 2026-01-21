@@ -15,12 +15,12 @@ typedef struct __attribute__((packed))
     uint8_t header;//包头
     float x;
     float y;
+    float current_receive_time;//两次间隔时间
+    uint16_t check_crc16;
+
     float x_error;
     float y_error;
 
-    float current_receive_time;//两次间隔时间
-
-    uint16_t check_crc16;
 }vision_receive_packet_t;//像素点数据
 
 typedef struct __attribute__((packed))

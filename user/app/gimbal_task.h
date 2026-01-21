@@ -6,8 +6,8 @@
 #include "stdbool.h"
 #include "ins_task.h"
 #include "vision_task.h"
-// #include "radar_task.h"
-#include "detect_task.h"
+#include "radar_task.h"
+
 #include "fsi6.h"
 #include "dt7.h"
 #include "Dji_motor.h"
@@ -23,39 +23,47 @@
 //pitch电机零点编码值
 #define PITCH_ZERO_ENCODER 4096
 //yaw轴数据限幅值
-#define YAW_ABS_MAX 3.14f
-#define YAW_ABS_MIN -3.14f
+#define YAW_ABS_MAX 0.5f
+#define YAW_ABS_MIN -0.5f
 #define YAW_REL_MAX 3.14f
 #define YAW_REL_MIN -3.14f
 //pitch轴数据限幅值
-#define PITCH_ABS_MAX 0.17f
+#define PITCH_ABS_MAX 0.33f
 #define PITCH_ABS_MIN -0.5f
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-
-#define YAW_POS_P 12.0
+#define YAW_POS_P 10.0f
 #define YAW_POS_I 0.0
-#define YAW_POS_D 4.0
+#define YAW_POS_D 4.0f
 #define YAW_POS_MAX_OUT 6.0
 #define YAW_POS_MIN_OUT -12.0
 #define YAW_POS_MAX_IOUT 0
 #define YAW_POS_MIN_IOUT 0
 
-#define PITCH_POS_P 12.0
+#define PITCH_POS_P 10.0f
 #define PITCH_POS_I 0
-#define PITCH_POS_D 4.0
+#define PITCH_POS_D 4.0f
 #define PITCH_POS_MAX_OUT 12.0
 #define PITCH_POS_MIN_OUT -12.0
 #define PITCH_POS_MAX_IOUT 0
 #define PITCH_POS_MIN_IOUT 0
 
+#define X_ERR_MAX_OUT 1.0f
+#define X_ERR_MIN_OUT -1.0f
+#define X_ERR_MAX_IOUT 1.0f
+#define X_ERR_MIN_IOUT -1.0f
 
+#define Y_ERR_MAX_OUT 1.0f
+#define Y_ERR_MIN_OUT -1.0f
+#define Y_ERR_MAX_IOUT 1.0f
+#define Y_ERR_MIN_IOUT -1.0f
 typedef enum
 {
     MOTOR_INIT = 0,
-    MOTOR_GYRO = 1,
-    MOTOR_ENCODER = 2,
+    MOTOR_GYRO,
+    MOTOR_ENCODER,
+    MOTOR_STOP
 }motor_mode_enum;
 //单个欧拉角结构体
 typedef struct
@@ -66,6 +74,7 @@ typedef struct
     pid_struct euler_pos_control;//角度环
     pid_struct euler_omega_control;//角速度环
 
+    float absolute_zero_angle;
     float absolute_angle;
     float absolute_angle_set;
     float absolute_angle_max;
@@ -106,10 +115,10 @@ typedef struct
 }scan_struct;
 typedef struct
 {
-    INS_t *imu_point;//陀螺仪数据
-    //radar_data_struct *radar_point;
+    const INS_t *imu_point;//陀螺仪数据
+    radar_data_t *radar_point;
     vision_data_t *vision_point;//视觉数据
-    dt7_data_struct *rc_point;//遥控器数据
+    const dt7_data_struct *rc_point;//遥控器数据
 
     gimbal_motor_t yawEuler;
     dm_control_t yawMotor;//yaw电机结构体

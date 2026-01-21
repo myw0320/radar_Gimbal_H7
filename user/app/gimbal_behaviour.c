@@ -12,6 +12,7 @@ gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;//云台模式
 
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_struct *control);
+static void gimbal_cail_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_struct *control);
@@ -31,10 +32,10 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         case 0:
             gimbalControlMode = GIMBAL_STOP;
             break;
-        case 1:
+        case 2:
             gimbalControlMode = GIMBAL_STOP;
             break;
-        case 2:
+        case 1:
             gimbalControlMode = GIMBAL_AUTO;
             break;
         case 3:
@@ -62,15 +63,19 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         }
         case GIMBAL_AUTO://自动移动
         {
+            if (behaver->rc_point->rc.sw[1] == 3)
+            {
+                currentMode = GIMBAL_AUTO_SCAN_MODE;
+            }
+            else if (behaver->rc_point->rc.sw[1] == 1)
+            {
+                currentMode = GIMBAL_AUTO_ATTACK_MODE;
+            }
             switch (currentMode)
             {
                 case GIMBAL_AUTO_SCAN_MODE:
                 {
                     gimbalMode = GIMBAL_AUTO_SCAN_MODE;
-                    // if ()
-                    // {
-                    //     currentMode = GIMBAL_AUTO_ATTACK_MODE;//跳过雷达
-                    // }
                     break;
                 }
                 // case GIMBAL_AUTO_MOVE_MODE:
@@ -198,7 +203,7 @@ static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct 
 }
 static void gimbal_cail_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
-    //云台初始化
+    //云台初始化校准
     if (yaw == NULL || pitch == NULL || control == NULL)
     {
         return;
@@ -216,7 +221,7 @@ static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_str
     rc_deadband_limit(control->rc_point->rc.ch[0],yaw_channel,10);
     rc_deadband_limit(control->rc_point->rc.ch[1],pitch_channel,10);
     //遥控器数据处理
-    *yaw = (float)yaw_channel* YAW_RC_SEN;//衰减系数
+    *yaw = (float)-yaw_channel* YAW_RC_SEN;//衰减系数
     *pitch = (float)-pitch_channel * PITCH_RC_SEN;
 
 }
@@ -241,7 +246,10 @@ static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_st
         return;
     }
     //雷达控制云台
-    //radar_to_gimbal(yaw,pitch,control->radar_point);
+    PID_calc(&control->radar_point->yaw_err_pid,control->radar_point->receive_packet.yaw,0);
+    PID_calc(&control->radar_point->pitch_err_pid,control->radar_point->receive_packet.pitch,0);
+    *yaw = control->radar_point->yaw_err_pid.out;
+    *pitch = control->radar_point->pitch_err_pid.out;
 }
 //自动扫描模式
 void scan_control_set(float *gimbal_set, float range, float period, float run_time)
@@ -318,13 +326,18 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     {
         return;
     }
+
+    float current_x = control->vision_point->receive_packet.x;
+    float current_y = control->vision_point->receive_packet.y;
+    // current_x = Math_Constrain(&current_x,-800,640);
+    // current_y = Math_Constrain(&current_y,-804,276);
     //视觉控制云台
-    //vision_to_gimbal(yaw,pitch,control->vision_point);
     Power_OUT1_ON;
     Power_OUT1_ON;//开启激光
     //pid处理
-    PID_calc(&control->vision_point->x_err_pid,control->vision_point->receive_packet.x_error,0);
-    PID_calc(&control->vision_point->y_err_pid,control->vision_point->receive_packet.y_error,0);
-     *yaw = control->vision_point->x_err_pid.out;
-     *pitch = control->vision_point->y_err_pid.out;
+    PID_calc(&control->vision_point->x_err_pid,current_x,0);
+    PID_calc(&control->vision_point->y_err_pid,current_y,0);
+
+     *yaw = control->vision_point->x_err_pid.out / 180 * PI;
+     *pitch = -control->vision_point->y_err_pid.out / 180 * PI;;
 }

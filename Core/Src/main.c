@@ -123,6 +123,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Dt7_Init();
 
+  vision_init();
+
   DWT_Init(480);
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)
   {
@@ -132,9 +134,7 @@ int main(void)
   FDCAN2_Config_Init();
   Power_OUT1_OFF;
   Power_OUT1_OFF;
-
-  vision_init();
-  Dt7_Init();
+  //vision_init();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
