@@ -118,6 +118,8 @@ static void gimbal_init(gimbal_control_struct *init)
     first_order_filter_init(&init->visionToGimbal.y_LFT,0.001f,y_err_a);
     init->visionToGimbal.target_x = 50;
     init->visionToGimbal.target_y = 150;
+    init->gimbalScan.scan_begin_time =  HAL_GetTick() * 0.001f;
+
     //µç»úÇå³ý
     DM_Clear(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
@@ -400,7 +402,6 @@ static void gimbal_motor_stop_control(gimbal_control_struct *gimbal_control,gimb
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-
         gimbal_control->pitchMotor.give_vel = 0;
     }
 }

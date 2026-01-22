@@ -117,6 +117,12 @@ typedef struct
     //pitch轴扫描周期  单位s
     float scan_pitch_period;
 
+    // 自动扫描设置浮动值
+    float auto_scan_AC_set_yaw;
+    float auto_scan_AC_set_pitch;
+
+    int8_t last_yaw_dir;
+    float pitch_accumulated; // 用于记录蛇形扫描中 Pitch 轴当前走到了哪里
 }scan_struct;
 
 typedef struct

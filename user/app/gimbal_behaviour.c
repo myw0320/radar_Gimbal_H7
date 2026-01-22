@@ -74,6 +74,10 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
                     gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
                 }
             }
+            else if (behaver->rc_point->rc.sw[1] == 3)
+            {
+                gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+            }
             break;
         }
         default:
@@ -230,71 +234,79 @@ static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_st
     *yaw = control->radar_point->yaw_err_pid.out;
     *pitch = control->radar_point->pitch_err_pid.out;
 }
+
 //自动扫描模式
-void scan_control_set(float *gimbal_set, float range, float period, float run_time)
+//range_yaw：yaw范围
+//range_pitch：pitch范围
+// period：周期
+void scan_control_set(scan_struct *scan_control,float range_yaw, float range_pitch, float period_yaw, float run_time)
 {
-    // 计算单次运行的步长
-    float step = 4.0f * range / period;
+    // 1. 计算 Yaw 轴当前的绝对位置 (三角波逻辑)
+    float step_yaw = 4.0f * range_yaw / period_yaw;
+    float calc_time = run_time - period_yaw * ((int16_t)(run_time / period_yaw));
 
-    // 判断云台设置浮动角度是否超过最大值,限制最大值
-    if (*gimbal_set >= range)
-    {
-        *gimbal_set = range;
+    float next_yaw = 0;
+    int8_t current_dir = 1; // 记录当前运动方向
+
+    if (calc_time < 0.25f * period_yaw) {
+        next_yaw = step_yaw * calc_time;
+        current_dir = 1;
     }
-    else if (*gimbal_set <= -range)
-    {
-        *gimbal_set = -range;
+    else if (calc_time < 0.75f * period_yaw) {
+        next_yaw = -step_yaw * calc_time + 2.0f * range_yaw;
+        current_dir = -1;
     }
-    // 处理运行时间，将运行时间处理到一个周期内
-    float calc_time = run_time - period * ((int16_t)(run_time / period));
-    // 判断当前时间所处的位置，根据当前位置，判断数值计算方向
-    if (calc_time < 0.25f * period)
-    {
-        *gimbal_set = step * calc_time;
+    else {
+        next_yaw = step_yaw * calc_time - 4.0f * range_yaw;
+        current_dir = 1;
     }
-    else if (0.25f * period <= calc_time && calc_time < 0.75f * period)
+
+    // 2. 检查是否触发“换行”（方向改变瞬间）
+    // 通过判断上一时刻方向和这一时刻方向是否一致
+    if (current_dir != scan_control->last_yaw_dir)
     {
-        *gimbal_set = -(step * calc_time) + 2 * range;
+        // 方向发生改变，Pitch 轴向下移动一格 (例如移动 0.1 rad)
+        float pitch_step_per_line = 0.05f;
+        scan_control->pitch_accumulated += pitch_step_per_line;
+
+        // 如果 Pitch 超过范围，重置回顶部
+        if (scan_control->pitch_accumulated > range_pitch)
+        {
+            scan_control->pitch_accumulated = -range_pitch;
+        }
     }
-    else if (0.75f * period <= calc_time)
-    {
-        *gimbal_set = step * calc_time - 4 * range;
-    }
+    // 3. 更新辅助变量
+    scan_control->last_yaw_dir = current_dir;
+
+    // 4. 赋值输出
+    scan_control->auto_scan_AC_set_yaw = next_yaw;
+    scan_control->auto_scan_AC_set_pitch = scan_control->pitch_accumulated;
+
 }
-
+//自动扫描
 static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
     if (yaw == NULL || pitch == NULL || control == NULL)
     {
         return;
     }
-    float pitch_error = 0;
-    float yaw_error = 0;
-
     // pitch轴yaw轴设定角度
     float pitch_set_angle = 0;
     float yaw_set_angle = 0;
+    // 记录本次计算前的“旧”设定值，用于计算增量
+    float old_set_yaw = control->gimbalScan.auto_scan_AC_set_yaw;
+    float old_set_pitch = control->gimbalScan.auto_scan_AC_set_pitch;
 
-
-    // 计算过去设定角度与当前角度之间的差值
-    yaw_error = control->yawEuler.absolute_angle_set - control->yawEuler.absolute_angle;
-    pitch_error = control->pitchEuler.absolute_angle_set - control->pitchEuler.absolute_angle;
-
-    // 自动扫描设置浮动值
-    float auto_scan_AC_set_yaw = 0;
-    float auto_scan_AC_set_pitch = 0;
     // 计算运行时间
     control->gimbalScan.scan_run_time = HAL_GetTick()*0.001f - control->gimbalScan.scan_begin_time;
 
-    // 云台自动扫描,设置浮动值
-    scan_control_set(&auto_scan_AC_set_yaw, 1.4f, 6, control->gimbalScan.scan_run_time);
-    scan_control_set(&auto_scan_AC_set_pitch,0.2f, 4, control->gimbalScan.scan_run_time);
-    // 赋值控制值  = 中心值 + 加上浮动函数
-    yaw_set_angle = auto_scan_AC_set_yaw;
-    pitch_set_angle = auto_scan_AC_set_pitch;
+    scan_control_set(&control->gimbalScan, 0.4f, 0.2f, 5.0f, control->gimbalScan.scan_run_time);
+    //赋值控制值  = 中心值 + 加上浮动函数
+    yaw_set_angle = control->gimbalScan.auto_scan_AC_set_yaw;
+    pitch_set_angle = control->gimbalScan.auto_scan_AC_set_pitch;
     // 赋值增量
-    *yaw = yaw_set_angle - control->yawEuler.absolute_angle- yaw_error;
-    *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
+    *yaw = control->gimbalScan.auto_scan_AC_set_yaw - old_set_yaw;
+    *pitch = control->gimbalScan.auto_scan_AC_set_pitch - old_set_pitch;
 }
 
 
@@ -306,6 +318,10 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     {
         return;
     }
+    // yaw pitch 轴设定值与当前值的差值
+    float yaw_error = 0,pitch_error = 0;
+    // pitch轴yaw轴设定角度
+    float yaw_set_angle = 0,pitch_set_angle = 0;
     //获取时间
     control->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
     // current_x = Math_Constrain(&current_x,-800,640);
@@ -323,11 +339,15 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
         Power_OUT1_OFF;
         Power_OUT1_OFF;
     }
-
+    yaw_error = control->yawEuler.absolute_angle_set - control->yawEuler.absolute_angle;
+    pitch_error = control->pitchEuler.absolute_angle_set - control->pitchEuler.absolute_angle;
     //pid处理
     PID_calc(&control->visionToGimbal.x_err_pid,control->visionToGimbal.now_x,control->visionToGimbal.target_x);
     PID_calc(&control->visionToGimbal.y_err_pid,control->visionToGimbal.now_y,control->visionToGimbal.target_y);
-
-    *yaw = control->visionToGimbal.x_err_pid.out / 180.0f * PI;
-    *pitch = -control->visionToGimbal.y_err_pid.out / 180.0f * PI;
+    //获取视觉数据
+    yaw_set_angle = control->visionToGimbal.x_err_pid.out / 180.0f * PI;
+    pitch_set_angle = -control->visionToGimbal.y_err_pid.out / 180.0f * PI;
+    //赋值增量
+    *yaw = yaw_set_angle - control->yawEuler.absolute_angle - yaw_error;
+    *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
 }
