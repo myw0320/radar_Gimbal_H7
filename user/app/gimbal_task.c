@@ -2,7 +2,6 @@
 #include "gimbal_behaviour.h"
 #include "can_comm_task.h"
 #include "detect_task.h"
-#include "ws2812.h"
 #include "cmsis_os.h"
 //#include "cap_comm.h"
 
@@ -25,8 +24,11 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
 
-const float x_err_k[3] = {0.003f,0.0f,0.02f};
-const float y_err_k[3] = {0.003f,0.0f,0.02f};
+const float x_err_k[3] = {0.003f,0.0002f,0.15f};
+const float y_err_k[3] = {0.0025f,0.0002f,0.15f};
+
+const float x_err_a[1] = {0.4f};
+const float y_err_a[1] = {0.4f};
 // cap_tx_data_t cap_tx_test;
 
 void Gimbal_Task(void const *pvParameters)
@@ -109,9 +111,13 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.absolute_zero_angle = init->pitchEuler.absolute_angle_set = 0.0f;
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
     //初始化视觉控制pid
-    PID_init(&init->vision_point->x_err_pid,PID_POSITION,x_err_k,X_ERR_MAX_OUT,X_ERR_MIN_OUT,X_ERR_MAX_IOUT,X_ERR_MIN_IOUT);
-    PID_init(&init->vision_point->y_err_pid,PID_POSITION,y_err_k,Y_ERR_MAX_OUT,Y_ERR_MIN_OUT,Y_ERR_MAX_IOUT,Y_ERR_MIN_IOUT);
-
+    PID_init(&init->visionToGimbal.x_err_pid,PID_DELTA,x_err_k,X_ERR_MAX_OUT,X_ERR_MIN_OUT,X_ERR_MAX_IOUT,X_ERR_MIN_IOUT);
+    PID_init(&init->visionToGimbal.y_err_pid,PID_DELTA,y_err_k,Y_ERR_MAX_OUT,Y_ERR_MIN_OUT,Y_ERR_MAX_IOUT,Y_ERR_MIN_IOUT);
+    //初始化视觉LFT
+    first_order_filter_init(&init->visionToGimbal.x_LFT,0.001f,x_err_a);
+    first_order_filter_init(&init->visionToGimbal.y_LFT,0.001f,y_err_a);
+    init->visionToGimbal.target_x = 50;
+    init->visionToGimbal.target_y = 150;
     //电机清除
     DM_Clear(init->can_tx_data);
     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
@@ -149,6 +155,12 @@ static void gimbal_update(gimbal_control_struct *update)
     //pitch数据更新
     update->pitchEuler.absolute_angle = update->imu_point->Pitch;//获取绝对角
     update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;//获取相对角
+    //对数据进行一阶低通
+    first_order_filter_cali(&update->visionToGimbal.x_LFT,update->vision_point->receive_packet.x);
+    first_order_filter_cali(&update->visionToGimbal.y_LFT,update->vision_point->receive_packet.y);
+
+    update->visionToGimbal.now_x = update->visionToGimbal.x_LFT.out;
+    update->visionToGimbal.now_y = update->visionToGimbal.y_LFT.out;
 }
 
 //模式切换保存数据
@@ -336,14 +348,31 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
     static float euler_yaw_set =0,euler_pitch_set = 0;
     if (motor_control == &gimbal_control->yawEuler)
     {
-        euler_yaw_set = motor_control->absolute_angle_set;
-        motor_control->absolute_angle_set = fmodf(euler_yaw_set + add,PI);
+        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE)
+        {
+            euler_yaw_set = motor_control->absolute_angle;
+            motor_control->absolute_angle_set = rad_format(euler_yaw_set + add);
+        }
+        else
+        {
+            euler_yaw_set = motor_control->absolute_angle_set;
+            motor_control->absolute_angle_set = rad_format(euler_yaw_set + add);
+        }
         motor_control->absolute_angle_set = Math_Constrain(&motor_control->absolute_angle_set,YAW_ABS_MIN,YAW_ABS_MAX);
+
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-        euler_pitch_set = motor_control->absolute_angle_set;
-        motor_control->absolute_angle_set = fmodf(euler_pitch_set + add,PI);
+        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE)
+        {
+            euler_pitch_set = motor_control->absolute_angle;
+            motor_control->absolute_angle_set = rad_format(euler_pitch_set + add);
+        }
+        else
+        {
+            euler_pitch_set = motor_control->absolute_angle_set;
+            motor_control->absolute_angle_set = rad_format(euler_pitch_set + add);
+        }
         motor_control->absolute_angle_set = Math_Constrain(&motor_control->absolute_angle_set,PITCH_ABS_MIN,PITCH_ABS_MAX);
 
     }

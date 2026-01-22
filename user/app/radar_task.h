@@ -10,8 +10,15 @@
 #include "pid.h"
 #include "arm_math.h"
 
+#define RADAR_UART huart10
+
 #define RADAR_RX_LEN  28u
 
+typedef struct
+{
+    uint8_t robot_id;
+
+}referee_receive_packet_t;
 /******** 雷达数据包 ********/
 typedef struct __attribute__((packed))
 {
@@ -20,7 +27,7 @@ typedef struct __attribute__((packed))
     float pitch;
     float current_receive_time;//两次间隔时间
     uint16_t check_crc16;
-
+    referee_receive_packet_t referee_receive_packet;
     // float yaw_error;
     // float pitch_error;
 

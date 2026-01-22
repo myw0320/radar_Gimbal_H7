@@ -1,6 +1,5 @@
 #include "radar_task.h"
 
-#include "usart.h"
 
 uint8_t radar_rx_buf[2][RADAR_RX_LEN];//
 
@@ -8,7 +7,7 @@ radar_data_t radarData;
 
 void radar_init(void)
 {
-    USART_RxDMA_MultiBuffer_Init(&huart10, (uint32_t *)radar_rx_buf[0], (uint32_t *)radar_rx_buf[1], RADAR_RX_LEN);
+    USART_RxDMA_MultiBuffer_Init(&RADAR_UART, (uint32_t *)radar_rx_buf[0], (uint32_t *)radar_rx_buf[1], RADAR_RX_LEN);
 }
 
 void Radar_GetRxPacket(const uint8_t *rx_data,radar_receive_packet_t *packet)
@@ -25,8 +24,6 @@ void Radar_GetRxPacket(const uint8_t *rx_data,radar_receive_packet_t *packet)
 
         packet->check_crc16 = (uint16_t)(rx_data[20] << 8 | rx_data[19]);
 
-        //packet->yaw_error =
-        //packet->pitch_error =
     }
 }
 

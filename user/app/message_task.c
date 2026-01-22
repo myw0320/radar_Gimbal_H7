@@ -1,8 +1,5 @@
-//
-// Created by myw04 on 2025/11/10.
-//
-
 #include "message_task.h"
+#include "detect_task.h"
 #include "cmsis_os.h"
 
 ws2812_rgb_t ws2812_rgb;
@@ -19,9 +16,9 @@ void Message_Task(void const * argument)
     while (1)
     {
         //Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
-        osDelay(1);
+
         current_time++;
-        if (current_time >= 100)
+        if (current_time >= 10)
         {
             ws2812_bink(ws2812_rgb.r, ws2812_rgb.g, ws2812_rgb.b);
             ws2812_rgb.r++;
@@ -32,7 +29,13 @@ void Message_Task(void const * argument)
             ws2812_rgb.b++;
             current_time = 0;
         }
-        osDelay(1);
+
+        if (toe_is_error(DBUS_TOE))
+        {
+
+            //Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
+        }
+        osDelay(10);
     }
 
 }

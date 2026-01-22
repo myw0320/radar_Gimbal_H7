@@ -7,14 +7,19 @@
 #include "ins_task.h"
 #include "vision_task.h"
 #include "radar_task.h"
-
+#include "user_lib.h"
 #include "fsi6.h"
 #include "dt7.h"
 #include "Dji_motor.h"
 #include "DM_motor.h"
 #include "pid.h"
 #include "Mathh.h"
-#include "user_lib.h"
+
+
+//弧度格式化为-PI~PI
+#define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
+
+
 #define ECD_RANGE 8191
 #define HALF_ECD_RANGE 4096
 #define MOTOR_ECD_TO_RAD 0.000766990394f //编码值转换为弧度值  2*PI/8192
@@ -49,15 +54,15 @@
 #define PITCH_POS_MAX_IOUT 0
 #define PITCH_POS_MIN_IOUT 0
 
-#define X_ERR_MAX_OUT 1.0f
-#define X_ERR_MIN_OUT -1.0f
-#define X_ERR_MAX_IOUT 1.0f
-#define X_ERR_MIN_IOUT -1.0f
+#define X_ERR_MAX_OUT 0.5f
+#define X_ERR_MIN_OUT -0.5f
+#define X_ERR_MAX_IOUT 0.2f
+#define X_ERR_MIN_IOUT -0.2f
 
-#define Y_ERR_MAX_OUT 1.0f
-#define Y_ERR_MIN_OUT -1.0f
-#define Y_ERR_MAX_IOUT 1.0f
-#define Y_ERR_MIN_IOUT -1.0f
+#define Y_ERR_MAX_OUT 0.5f
+#define Y_ERR_MIN_OUT -0.5f
+#define Y_ERR_MAX_IOUT 0.2f
+#define Y_ERR_MIN_IOUT -0.2f
 typedef enum
 {
     MOTOR_INIT = 0,
@@ -113,13 +118,31 @@ typedef struct
     float scan_pitch_period;
 
 }scan_struct;
+
+typedef struct
+{
+    pid_struct x_err_pid;
+    pid_struct y_err_pid;
+
+    float target_x;//x设定值
+    float target_y;
+    float now_x;
+    float now_y;
+    //低通滤波器
+    first_order_filter_type_t x_LFT;
+    first_order_filter_type_t y_LFT;
+    //时间
+    float current_time;
+}vision_to_gimbal_t;
+
+
 typedef struct
 {
     const INS_t *imu_point;//陀螺仪数据
     radar_data_t *radar_point;
     vision_data_t *vision_point;//视觉数据
     const dt7_data_struct *rc_point;//遥控器数据
-
+    vision_to_gimbal_t visionToGimbal;
     gimbal_motor_t yawEuler;
     dm_control_t yawMotor;//yaw电机结构体
     gimbal_motor_t pitchEuler;

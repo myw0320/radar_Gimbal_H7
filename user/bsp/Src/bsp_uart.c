@@ -112,10 +112,10 @@ __weak void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
   */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
 {
-	if(huart == &huart1)
-	{
-		USER_USART1_RxHandler(huart,Size);
-	}
+	// if(huart == &huart1)
+	// {
+	// 	USER_USART1_RxHandler(huart,Size);
+	// }
 	if(huart == &huart5)
 	{
 	 	USER_USART5_RxHandler(huart,Size);
