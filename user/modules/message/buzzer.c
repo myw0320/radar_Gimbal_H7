@@ -10,39 +10,68 @@
 /**开机音效序列**/
 sound_struct startSound[16] =
 {
-    { 466, 100 },
-    { 587, 150 },
+    { 466, 10 },
+    { 587, 15 },
 
-    { 740, 150 },
-    { 880, 150 },
-    { 1175, 200 },
+    { 740, 15 },
+    { 880, 15 },
+    { 1175, 20 },
 
-    { 0, 100 },
-    { 1175, 240 },
-    { 0, 100 }
+    { 0, 10 },
+    { 1175, 24 },
+    { 0, 10 }
+};
+/**欠压警报音效序列**/
+/**di..di...**/
+sound_struct underVoltSound[8] =
+{
+    { 880, 40 },
+    { 0, 20 },
+    { 880, 40 },
+    { 0, 30 },
+
 };
 /**过压警报音效序列**/
+/**di..di..di......**/
 sound_struct overVoltSound[12] =
 {
-    { 880, 150 },
+    { 880, 15 },
+    { 0, 5 },
+    { 880, 15 },
+    { 0, 5 },
+    { 880, 15 },
     { 0, 50 },
-    { 880, 150 },
-    { 0, 50 },
-    { 880, 150 },
-    { 0, 500 },
 };
-
-
-sound_struct underVoltSound[12] =
+/**过流警报音效序列**/
+/**di---..di..di..**/
+sound_struct overCurrSound[12] =
 {
-    { 880, 150 },
+    { 880, 50 },
+    { 0, 5 },
+    { 880, 15 },
+    { 0, 5 },
+    { 880, 15 },
     { 0, 50 },
-    { 880, 150 },
-    { 0, 50 },
-    { 880, 150 },
-    { 0, 500 },
 };
+/**短路警报音效序列**/
+sound_struct shortCircuit[12] =
+{
+    { 880, 15 },
+    { 0, 5 },
+    { 880, 15 },
+    { 0, 5 },
+    { 880, 50 },
+    { 0, 30 },
+};
+/**CAN丢失警报音效序列**/
+sound_struct canLostSound[10] =
+{
+    { 880, 15 },
+    { 0, 5 },
+    { 880, 55 },
+    { 0, 40 },
 
+};
 
 void Buzzer_Init(void)
 {
@@ -63,6 +92,11 @@ void Buzzer_FreqSet(uint16_t freq)
         __HAL_TIM_SET_AUTORELOAD(&htim12,pwm_period);
         __HAL_TIM_SET_COMPARE(&htim12,TIM_CHANNEL_2,pwm_period / 2);
     }
+}
+
+void Buzzer_FreqReset(buzzer_struct *reset)
+{
+    reset->buzzerStatus = BUZZER_IDLE;
 }
 
 //音调更新

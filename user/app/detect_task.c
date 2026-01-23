@@ -247,18 +247,11 @@ static void detect_init(uint32_t time)
     //设置离线时间，上线稳定工作时间，优先级 offlineTime onlinetime priority
     uint16_t set_item[ERROR_LIST_LENGHT][3] =
         {
-            {30, 40, 15},   //SBUS
-            {10, 10, 11},   //motor1
-            {10, 10, 10},   //motor2
-            {10, 10, 9},    //motor3
-            {10, 10, 8},    //motor4
+            {30, 30, 15},   //SBUS
             {2, 3, 14},     //yaw
             {2, 3, 13},     //pitch
-            {10, 10, 12},   //trigger
-            // {2, 3, 7},      //board gyro
-            // {5, 5, 7},      //board accel
-            // {40, 200, 7},   //board mag
-            {100, 100, 5},  //referee
+            {30, 30, 12},   //vision
+            {30, 30, 10},  //referee
         };
 
     for (uint8_t i = 0; i < ERROR_LIST_LENGHT; i++)

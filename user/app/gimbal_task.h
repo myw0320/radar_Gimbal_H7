@@ -28,31 +28,31 @@
 //pitch电机零点编码值
 #define PITCH_ZERO_ENCODER 4096
 //yaw轴数据限幅值
-#define YAW_ABS_MAX 0.5f
-#define YAW_ABS_MIN -0.5f
+#define YAW_ABS_MAX 0.6f
+#define YAW_ABS_MIN -0.6f
 #define YAW_REL_MAX 3.14f
 #define YAW_REL_MIN -3.14f
 //pitch轴数据限幅值
-#define PITCH_ABS_MAX 0.33f
-#define PITCH_ABS_MIN -0.5f
+#define PITCH_ABS_MAX 0.39f
+#define PITCH_ABS_MIN -0.43f
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-#define YAW_POS_P 10.0f
-#define YAW_POS_I 0.0
-#define YAW_POS_D 4.0f
-#define YAW_POS_MAX_OUT 6.0
-#define YAW_POS_MIN_OUT -12.0
-#define YAW_POS_MAX_IOUT 0
-#define YAW_POS_MIN_IOUT 0
+#define YAW_POS_P 15.0f
+#define YAW_POS_I 0.05
+#define YAW_POS_D 6.0f
+#define YAW_POS_MAX_OUT 20.0
+#define YAW_POS_MIN_OUT -20.0
+#define YAW_POS_MAX_IOUT 5.0
+#define YAW_POS_MIN_IOUT -5.0
 
-#define PITCH_POS_P 10.0f
-#define PITCH_POS_I 0
-#define PITCH_POS_D 4.0f
-#define PITCH_POS_MAX_OUT 12.0
-#define PITCH_POS_MIN_OUT -12.0
-#define PITCH_POS_MAX_IOUT 0
-#define PITCH_POS_MIN_IOUT 0
+#define PITCH_POS_P 15.0f
+#define PITCH_POS_I 0.05
+#define PITCH_POS_D 6.0f
+#define PITCH_POS_MAX_OUT 20.0
+#define PITCH_POS_MIN_OUT -20.0
+#define PITCH_POS_MAX_IOUT 5.0
+#define PITCH_POS_MIN_IOUT -5.0
 
 #define X_ERR_MAX_OUT 0.5f
 #define X_ERR_MIN_OUT -0.5f
@@ -139,6 +139,7 @@ typedef struct
     first_order_filter_type_t y_LFT;
     //时间
     float current_time;
+    uint8_t ok_flag;
 }vision_to_gimbal_t;
 
 

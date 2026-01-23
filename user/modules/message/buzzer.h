@@ -35,11 +35,14 @@ typedef struct
 }buzzer_struct;
 
 extern sound_struct startSound[16];
+extern sound_struct underVoltSound[8];
 extern sound_struct overVoltSound[12];
-extern sound_struct underVoltSound[12];
+extern sound_struct overCurrSound[12];
+extern sound_struct shortCircuit[12];
+extern sound_struct canLostSound[10];
 
 void Buzzer_Init(void);
-void Buzzer_Reset(buzzer_struct *reset);
+void Buzzer_FreqReset(buzzer_struct *reset);
 void Buzzer_FreqUpdate(buzzer_struct *sound,buzzer_mode_enum mode,sound_struct *type,uint8_t len);
 
 #endif //RADAR_GIMBAL_BUZZER_H

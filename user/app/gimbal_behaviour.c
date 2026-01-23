@@ -11,7 +11,7 @@ gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;//云台模式
 
 
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);
-static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_struct *control);
+static void gimbal_manual_rc_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_stop_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_struct *control);
@@ -65,13 +65,24 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         {
             if (behaver->rc_point->rc.sw[1] == 1)
             {
-                if (!behaver->vision_point->receive_packet.x && !behaver->vision_point->receive_packet.y && !behaver->vision_point->receive_packet.ok_flag)
+                if (behaver->vision_point->receive_packet.x == 0 && behaver->vision_point->receive_packet.y == 0 && behaver->visionToGimbal.ok_flag == 0)
                 {
                     gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+
                 }
                 else
                 {
                     gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
+                    behaver->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
+                }
+
+                if (fabs(behaver->visionToGimbal.current_time - behaver->vision_point->receive_packet.receive_time) > 1.5f)
+                {
+                    behaver->visionToGimbal.ok_flag = 0;
+                }
+                else
+                {
+                    behaver->visionToGimbal.ok_flag = 1;
                 }
             }
             else if (behaver->rc_point->rc.sw[1] == 3)
@@ -146,7 +157,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         }
         case GIMBAL_MANUAL_RC_MODE:
         {
-            gimbal_absolute_control(add_yaw,add_pitch,gimbal_control_set);
+            gimbal_manual_rc_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
         case GIMBAL_AUTO_MOVE_MODE://自动移动
@@ -182,6 +193,7 @@ static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct 
     *yaw = control->yawEuler.absolute_zero_angle;
     *pitch = control->pitchEuler.absolute_zero_angle;
 }
+
 static void gimbal_stop_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
     //云台初始化校准
@@ -193,7 +205,7 @@ static void gimbal_stop_control(float *yaw, float *pitch, gimbal_control_struct 
     *pitch = 0.0f;
 }
 //手动控制
-static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_struct *control)
+static void gimbal_manual_rc_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
     if (yaw == NULL || pitch == NULL || control == NULL)
     {
@@ -208,19 +220,8 @@ static void gimbal_absolute_control(float *yaw, float *pitch, gimbal_control_str
     *pitch = (float)-pitch_channel * PITCH_RC_SEN;
 
 }
-static void gimbal_relative_control(float *yaw, float *pitch, gimbal_control_struct *control)
-{
 
-}
-static void gimbal_motionless_control(float *yaw, float *pitch, gimbal_control_struct *control)
-{
-    if (yaw == NULL || pitch == NULL || control == NULL)
-    {
-        return;
-    }
-    *yaw = 0.0f;
-    *pitch = 0.0f;
-}
+
 //自动移动模式
 static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
@@ -300,7 +301,7 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
     // 计算运行时间
     control->gimbalScan.scan_run_time = HAL_GetTick()*0.001f - control->gimbalScan.scan_begin_time;
 
-    scan_control_set(&control->gimbalScan, 0.4f, 0.2f, 5.0f, control->gimbalScan.scan_run_time);
+    scan_control_set(&control->gimbalScan, 0.5f, 0.3f, 5.0f, control->gimbalScan.scan_run_time);
     //赋值控制值  = 中心值 + 加上浮动函数
     yaw_set_angle = control->gimbalScan.auto_scan_AC_set_yaw;
     pitch_set_angle = control->gimbalScan.auto_scan_AC_set_pitch;
@@ -327,27 +328,27 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     // current_x = Math_Constrain(&current_x,-800,640);
     // current_y = Math_Constrain(&current_y,-804,276);
     // //视觉控制云台
-    if (fabs(control->visionToGimbal.now_x - control->visionToGimbal.target_x) < 10 &&
-        fabs(control->visionToGimbal.now_y - control->visionToGimbal.target_x) <10 &&
-        fabs(control->visionToGimbal.current_time - control->vision_point->receive_packet.receive_time) <1.0f)//判断是否开启激光
-    {
+    // if (fabs(control->visionToGimbal.now_x - control->visionToGimbal.target_x) < 10 &&
+    //     fabs(control->visionToGimbal.now_y - control->visionToGimbal.target_x) <10)
+    //     //fabs(control->visionToGimbal.current_time - control->vision_point->receive_packet.receive_time) <1.0f)//判断是否开启激光
+    // {
         Power_OUT1_ON;
         Power_OUT1_ON;
-    }
-    else
-    {
-        Power_OUT1_OFF;
-        Power_OUT1_OFF;
-    }
+    // }
+    // else
+    // {
+    //     Power_OUT1_OFF;
+    //     Power_OUT1_OFF;
+    // }
     yaw_error = control->yawEuler.absolute_angle_set - control->yawEuler.absolute_angle;
     pitch_error = control->pitchEuler.absolute_angle_set - control->pitchEuler.absolute_angle;
     //pid处理
-    PID_calc(&control->visionToGimbal.x_err_pid,control->visionToGimbal.now_x,control->visionToGimbal.target_x);
-    PID_calc(&control->visionToGimbal.y_err_pid,control->visionToGimbal.now_y,control->visionToGimbal.target_y);
+    PID_calc(&control->visionToGimbal.x_err_pid,control->vision_point->receive_packet.x,-85);
+    PID_calc(&control->visionToGimbal.y_err_pid,control->vision_point->receive_packet.y,330);
     //获取视觉数据
-    yaw_set_angle = control->visionToGimbal.x_err_pid.out / 180.0f * PI;
-    pitch_set_angle = -control->visionToGimbal.y_err_pid.out / 180.0f * PI;
+    *yaw = control->visionToGimbal.x_err_pid.out / 180.0f * PI;
+    *pitch = -control->visionToGimbal.y_err_pid.out / 180.0f * PI;
     //赋值增量
-    *yaw = yaw_set_angle - control->yawEuler.absolute_angle - yaw_error;
-    *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
+    // *yaw = yaw_set_angle - control->yawEuler.absolute_angle - yaw_error;
+    // *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
 }

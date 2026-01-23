@@ -24,8 +24,8 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
 
-const float x_err_k[3] = {0.003f,0.0002f,0.15f};
-const float y_err_k[3] = {0.0025f,0.0002f,0.15f};
+const float x_err_k[3] = {0.0032f,0.00f,0.18f};
+const float y_err_k[3] = {0.003f,0.0f,0.18f};
 
 const float x_err_a[1] = {0.4f};
 const float y_err_a[1] = {0.4f};
@@ -111,8 +111,8 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.absolute_zero_angle = init->pitchEuler.absolute_angle_set = 0.0f;
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
     //初始化视觉控制pid
-    PID_init(&init->visionToGimbal.x_err_pid,PID_DELTA,x_err_k,X_ERR_MAX_OUT,X_ERR_MIN_OUT,X_ERR_MAX_IOUT,X_ERR_MIN_IOUT);
-    PID_init(&init->visionToGimbal.y_err_pid,PID_DELTA,y_err_k,Y_ERR_MAX_OUT,Y_ERR_MIN_OUT,Y_ERR_MAX_IOUT,Y_ERR_MIN_IOUT);
+    PID_init(&init->visionToGimbal.x_err_pid,PID_POSITION,x_err_k,X_ERR_MAX_OUT,X_ERR_MIN_OUT,X_ERR_MAX_IOUT,X_ERR_MIN_IOUT);
+    PID_init(&init->visionToGimbal.y_err_pid,PID_POSITION,y_err_k,Y_ERR_MAX_OUT,Y_ERR_MIN_OUT,Y_ERR_MAX_IOUT,Y_ERR_MIN_IOUT);
     //初始化视觉LFT
     first_order_filter_init(&init->visionToGimbal.x_LFT,0.001f,x_err_a);
     first_order_filter_init(&init->visionToGimbal.y_LFT,0.001f,y_err_a);
@@ -332,11 +332,13 @@ static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_contr
     {
         euler_yaw_set = motor_control->relative_angle_set;
         motor_control->relative_angle_set = fmodf(euler_yaw_set + add,PI);
+        motor_control->relative_angle_set = Math_Constrain(&motor_control->relative_angle_set,YAW_REL_MIN,YAW_REL_MAX);
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
         euler_pitch_set = motor_control->relative_angle_set;
         motor_control->relative_angle_set = fmodf(euler_pitch_set + add,PI);
+        motor_control->relative_angle_set = Math_Constrain(&motor_control->relative_angle_set,PITCH_REL_MIN,PITCH_REL_MAX);
     }
 }
 

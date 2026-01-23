@@ -17,41 +17,51 @@ void vision_init(void)
 
 void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet)
 {
+    static uint16_t x_cnt = 0,y_cnt = 0;
     if (rx_data[0] == 0xA5)//检查包头
     {
-        //视觉开始计时
-        packet->receive_time = HAL_GetTick()/100.0f;
         //解包数据
         memcpy(&(packet->header), &rx_data[0], 1);
         memcpy(&(packet->reserved), &rx_data[1], 1);
         packet->current_x = (int16_t)(rx_data[3] << 8 | rx_data[2]);
         packet->current_y = (int16_t)(rx_data[5] << 8 | rx_data[4]);
         //数据判断
-        if (fabs(packet->current_x) < 7750)
+        if (fabs(packet->current_x) > 7750)
+        {
+            x_cnt++;
+            if (x_cnt > 50)
+            {
+                x_cnt = 51;
+                packet->x = 0.0f;
+            }
+        }
+        else
         {
             packet->x = (float)packet->current_x/10.0f;
-            packet->ok_flag = 1;
-        }
-        else
-        {
-            packet->x = 0.0f;
-            packet->ok_flag = 0;
+            packet->receive_time = HAL_GetTick()/1000.0f;
+            x_cnt = 0;
+            //packet->ok_flag = 0;
         }
 
-        if (fabs(packet->current_y) < 7450)
+        if (fabs(packet->current_y) > 7450)
         {
-            packet->y = (float)packet->current_y/10.0f;
-            packet->ok_flag = 1;
+            y_cnt++;
+            if (y_cnt > 50)
+            {
+                y_cnt  = 51;
+                packet->y = 0.0f;
+            }
         }
         else
         {
-            packet->y = 0.0f;
-            packet->ok_flag = 0;
+            packet->y = (float)packet->current_y/10.0f;
+            packet->receive_time = HAL_GetTick()/1000.0f;
+            y_cnt = 0;
+            //packet->ok_flag = 0;
         }
         memcpy(&(packet->current_receive_time), &rx_data[10], 4);
         //CRC校验
         packet->check_crc16 = (uint16_t)(rx_data[12] << 8 | rx_data[11]);
-
     }
     else
     {
@@ -59,7 +69,7 @@ void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet)
         packet->current_y = 0;
         packet->x = 0.0f;
         packet->y = 0.0f;
-        packet->ok_flag = 0;
+        //packet->ok_flag = 0;
     }
 }
 

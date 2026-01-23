@@ -15,7 +15,6 @@ void Message_Task(void const * argument)
     static uint16_t current_time = 0;
     while (1)
     {
-        //Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
 
         current_time++;
         if (current_time >= 10)
@@ -32,8 +31,19 @@ void Message_Task(void const * argument)
 
         if (toe_is_error(DBUS_TOE))
         {
-
-            //Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
+            Buzzer_FreqUpdate(&buzzerMessage,SINGLE,underVoltSound,8);
+        }
+        // else if (toe_is_error(VISION_TOE))
+        // {
+        //     Buzzer_FreqUpdate(&buzzerMessage,CIRCLES,overCurrSound,12);
+        // }
+        // else if ()
+        // {
+        //Buzzer_FreqUpdate(&buzzerMessage,CIRCLES,shortCircuit,12);
+        // }
+        else
+        {
+            Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
         }
         osDelay(10);
     }

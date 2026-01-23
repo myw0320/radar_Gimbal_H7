@@ -27,7 +27,7 @@ typedef struct __attribute__((packed))
     float x;
     float y;
     float receive_time;
-    uint8_t ok_flag;
+    //uint8_t ok_flag;
 }vision_receive_packet_t;//ÏñËØµãÊı¾İ
 
 typedef struct __attribute__((packed))
