@@ -124,9 +124,9 @@ uint8_t BMI088_init(SPI_HandleTypeDef *bmi088_SPI, uint8_t calibrate)
     error |= bmi088_accel_init();
     error |= bmi088_gyro_init();
     if (calibrate)
-			{//需要校准，进入这里，imu校准的时候要保持水平静止不动
+    {//需要校准，进入这里，imu校准的时候要保持水平静止不动
 		   Calibrate_MPU_Offset(&BMI088);
-		}      
+    }
     else
     {
         BMI088.GyroOffset[0] = GxOFFSET;
@@ -150,7 +150,7 @@ void Calibrate_MPU_Offset(IMU_Data_t *bmi088)
 {
     static float startTime;
     static uint16_t CaliTimes = 6000; // 需要足够多的数据才能得到有效陀螺仪零偏校准结果
-	  static uint16_t acc_CaliTimes = 6000; // 需要足够多的数据才能得到有效加速度计零偏校准结果
+    static uint16_t acc_CaliTimes = 6000; // 需要足够多的数据才能得到有效加速度计零偏校准结果
     uint8_t buf[8] = {0, 0, 0, 0, 0, 0};
     int16_t bmi088_raw_temp;
     float gyroMax[3], gyroMin[3];

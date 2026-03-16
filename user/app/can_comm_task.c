@@ -23,6 +23,7 @@ HAL_StatusTypeDef can_tx_data(FDCAN_HandleTypeDef *hcan, uint16_t id, uint8_t *t
 
 
 cap_rx_data_t cap_rx_tset;
+
 uint8_t rx1_data[8];
 uint8_t rx2_data[8];
 uint8_t rx3_data[8];

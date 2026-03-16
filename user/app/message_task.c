@@ -17,34 +17,33 @@ void Message_Task(void const * argument)
     {
 
         current_time++;
-        if (current_time >= 10)
-        {
-            ws2812_bink(ws2812_rgb.r, ws2812_rgb.g, ws2812_rgb.b);
-            ws2812_rgb.r++;
-            ws2812_rgb.g += 5;
-            ws2812_rgb.b += 10;
-            ws2812_rgb.r++;
-            ws2812_rgb.g++;
-            ws2812_rgb.b++;
-            current_time = 0;
-        }
-
-        if (toe_is_error(DBUS_TOE))
-        {
-            Buzzer_FreqUpdate(&buzzerMessage,SINGLE,underVoltSound,8);
-        }
-        // else if (toe_is_error(VISION_TOE))
+        // if (toe_is_error(DBUS_TOE))
         // {
-        //     Buzzer_FreqUpdate(&buzzerMessage,CIRCLES,overCurrSound,12);
+        //     Buzzer_FreqUpdate(&buzzerMessage,SINGLE,underVoltSound,8);
         // }
-        // else if ()
+        //  // else if (toe_is_error(VISION_TOE))
+        //  // {
+        //  //     Buzzer_FreqUpdate(&buzzerMessage,CIRCLES,overCurrSound,12);
+        //  // }
+        //  // else if ()
+        //  // {
+        //  //    Buzzer_FreqUpdate(&buzzerMessage,CIRCLES,shortCircuit,12);
+        //  // }
+        // else
         // {
-        //Buzzer_FreqUpdate(&buzzerMessage,CIRCLES,shortCircuit,12);
-        // }
-        else
-        {
             Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
-        }
+            if (current_time >= 10)
+            {
+                ws2812_bink(ws2812_rgb.r, ws2812_rgb.g, ws2812_rgb.b);
+                ws2812_rgb.r++;
+                ws2812_rgb.g += 5;
+                ws2812_rgb.b += 10;
+                ws2812_rgb.r++;
+                ws2812_rgb.g++;
+                ws2812_rgb.b++;
+                current_time = 0;
+            }
+        // }
         osDelay(10);
     }
 

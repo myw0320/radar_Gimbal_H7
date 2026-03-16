@@ -25,12 +25,12 @@ void Dt7_RxPacketUpdate(volatile const uint8_t *sbus_buf, dt7_data_struct *rc_ct
     rc_ctrl->rc.ch[3] = ((sbus_buf[4] >> 1) | (sbus_buf[5] << 7)) & 0x07ff; //!< Channel 3
     rc_ctrl->rc.sw[0] = ((sbus_buf[5] >> 4) & 0x0003);                  //!< Switch left
     rc_ctrl->rc.sw[1] = ((sbus_buf[5] >> 4) & 0x000C) >> 2;                       //!< Switch right
-    // rc_ctrl->mouse.x = sbus_buf[6] | (sbus_buf[7] << 8);                    //!< Mouse X axis
-    // rc_ctrl->mouse.y = sbus_buf[8] | (sbus_buf[9] << 8);                    //!< Mouse Y axis
-    // rc_ctrl->mouse.z = sbus_buf[10] | (sbus_buf[11] << 8);                  //!< Mouse Z axis
-    // rc_ctrl->mouse.press_l = sbus_buf[12];                                  //!< Mouse Left Is Press ?
-    // rc_ctrl->mouse.press_r = sbus_buf[13];                                  //!< Mouse Right Is Press ?
-    // rc_ctrl->key.v = sbus_buf[14] | (sbus_buf[15] << 8);                    //!< KeyBoard value
+    rc_ctrl->mouse.x = sbus_buf[6] | (sbus_buf[7] << 8);                    //!< Mouse X axis
+    rc_ctrl->mouse.y = sbus_buf[8] | (sbus_buf[9] << 8);                    //!< Mouse Y axis
+    rc_ctrl->mouse.z = sbus_buf[10] | (sbus_buf[11] << 8);                  //!< Mouse Z axis
+    rc_ctrl->mouse.press_l = sbus_buf[12];                                  //!< Mouse Left Is Press ?
+    rc_ctrl->mouse.press_r = sbus_buf[13];                                  //!< Mouse Right Is Press ?
+    rc_ctrl->key.v = sbus_buf[14] | (sbus_buf[15] << 8);                    //!< KeyBoard value
     rc_ctrl->rc.ch[4] = sbus_buf[16] | (sbus_buf[17] << 8);                 //NULL
 
     rc_ctrl->rc.ch[0] -= RC_CH_VALUE_OFFSET;
@@ -58,11 +58,11 @@ void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         /* Reset the receive count */
         __HAL_DMA_ENABLE(huart->hdmarx);
         /* Juge whether size is equal to the length of the received data */
-        if(this_time_rx_len == DT7_RX_LEN)
-        {
-            Dt7_RxPacketUpdate(dt7_rx_buf[0],&dt7Data);
-            detect_hook(DBUS_TOE);
-        }
+         if(this_time_rx_len == DT7_RX_LEN)
+         {
+             Dt7_RxPacketUpdate(dt7_rx_buf[0],&dt7Data);
+             detect_hook(DBUS_TOE);
+         }
 
     }
     /* Current memory buffer used is Memory 1 */
@@ -77,9 +77,9 @@ void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         /* Reset the receive count */
         __HAL_DMA_ENABLE(huart->hdmarx);
         if(this_time_rx_len == DT7_RX_LEN)
-        {
+         {
             Dt7_RxPacketUpdate(dt7_rx_buf[1],&dt7Data);
             detect_hook(DBUS_TOE);
-        }
+         }
     }
 }

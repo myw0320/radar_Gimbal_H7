@@ -1,7 +1,5 @@
 #ifndef RADAR_GIMBAL_H7_REMOTE_H
 #define RADAR_GIMBAL_H7_REMOTE_H
-#include "main.h"
-#include "usart.h"
 #include "bsp_uart.h"
 
 
@@ -38,13 +36,13 @@
     }
 typedef struct __attribute__((packed))
 {
-    __attribute__((packed)) struct
+    struct __attribute__((packed))
     {
         int16_t ch[4];
         uint8_t sw[4];
         uint16_t rotory_sw[2];
     }rc;
-    __attribute__((packed)) struct
+    struct __attribute__((packed))
     {
         int16_t x;
         int16_t y;
@@ -53,21 +51,21 @@ typedef struct __attribute__((packed))
         uint8_t press_r;
         uint8_t middle;
     } mouse;
-    __attribute__((packed)) struct
+    struct __attribute__((packed))
     {
         uint16_t v;
     } key;
     uint16_t crc16;
-    __attribute__((packed)) struct
+    struct __attribute__((packed))
     {
         uint16_t CH[16];
     } SBUS;
-}fs_data_struct;
+}fsi6_data_struct;
 
 
-extern fs_data_struct fsData;
+extern fsi6_data_struct fsi6Data;
 extern uint8_t fsi6_rx_buf[2][SBUS_FS_RX_LEN];//¿ØÊý¾Ý°ü
 void Fsi6_Init(void);
-void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fs_data_struct *rc_ctrl);
+void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fsi6_data_struct *rc_ctrl);
 void Remote_IRQHandler(UART_HandleTypeDef *huart,uint16_t Size);
 #endif //RADAR_GIMBAL_H7_REMOTE_H

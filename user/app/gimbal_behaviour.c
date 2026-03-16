@@ -25,8 +25,10 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         return;
     }
     //uint8_t mode_bit = ((behaver->rc_point->rc.sw[0]<<1) | behaver->rc_point->rc.sw[1]);
+    gimbalControlModeLast = gimbalControlMode;//保存上次数据
+
     uint8_t mode_bit = behaver->rc_point->rc.sw[0];
-    static gimbal_mode_enum currentMode = GIMBAL_AUTO_SCAN_MODE;//初始化为扫描
+
     switch (mode_bit)
     {
         case 0:
@@ -42,7 +44,7 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
             gimbalControlMode = GIMBAL_MANUAL;
             break;
     }
-    gimbalControlModeLast = gimbalControlMode;//保存上次数据
+
 
     switch(gimbalControlMode)
     {
@@ -63,31 +65,45 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         }
         case GIMBAL_AUTO://自动移动
         {
-            if (behaver->rc_point->rc.sw[1] == 1)
+            switch (gimbalMode)
             {
-                if (behaver->vision_point->receive_packet.x == 0 && behaver->vision_point->receive_packet.y == 0 && behaver->visionToGimbal.ok_flag == 0)
+                case GIMBAL_AUTO_SCAN_MODE:
                 {
-                    gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+                    break;
+                }
+                case GIMBAL_AUTO_ATTACK_MODE:
+                {
+                    break;
+                }
+                default:
+                {
+                    if (behaver->rc_point->rc.sw[1] == 1)
+                    {
+                        if (behaver->vision_point->receive_packet.x == 0 && behaver->vision_point->receive_packet.y == 0 && behaver->visionToGimbal.ok_flag == 0)
+                        {
+                            gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+                        }
+                        else
+                        {
+                            gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
+                            behaver->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
+                        }
 
+                        if (fabs(behaver->visionToGimbal.current_time - behaver->vision_point->receive_packet.receive_time) > 1.5f)
+                        {
+                            behaver->visionToGimbal.ok_flag = 0;
+                        }
+                        else
+                        {
+                            behaver->visionToGimbal.ok_flag = 1;
+                        }
+                    }
+                    else if (behaver->rc_point->rc.sw[1] == 3)
+                    {
+                        gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+                    }
+                    break;
                 }
-                else
-                {
-                    gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
-                    behaver->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
-                }
-
-                if (fabs(behaver->visionToGimbal.current_time - behaver->vision_point->receive_packet.receive_time) > 1.5f)
-                {
-                    behaver->visionToGimbal.ok_flag = 0;
-                }
-                else
-                {
-                    behaver->visionToGimbal.ok_flag = 1;
-                }
-            }
-            else if (behaver->rc_point->rc.sw[1] == 3)
-            {
-                gimbalMode = GIMBAL_AUTO_SCAN_MODE;
             }
             break;
         }
@@ -150,7 +166,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
             gimbal_stop_control(add_yaw,add_pitch,gimbal_control_set);
             break;
         }
-        case GIMBAL_INIT_MODE:
+        case GIMBAL_INIT_MODE://初始化
         {
             gimbal_init_control(add_yaw,add_pitch,gimbal_control_set);
             break;
@@ -189,11 +205,11 @@ static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct 
     {
         return;
     }
-    //初始化状态控制量计算
+    //初始化云台零点
     *yaw = control->yawEuler.absolute_zero_angle;
     *pitch = control->pitchEuler.absolute_zero_angle;
 }
-
+//云台停止
 static void gimbal_stop_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
     //云台初始化校准

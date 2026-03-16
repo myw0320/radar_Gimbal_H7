@@ -2,7 +2,7 @@
 
 
 uint8_t fsi6_rx_buf[2][SBUS_FS_RX_LEN];//¿ØÊý¾Ý°ü
-fs_data_struct fsData;
+fsi6_data_struct fsi6Data;
 
 void Fsi6_Init(void)
 {
@@ -10,7 +10,7 @@ void Fsi6_Init(void)
 }
 
 
-void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fs_data_struct *rc_ctrl)
+void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fsi6_data_struct *rc_ctrl)
 {
     if (sbus_buf == NULL || rc_ctrl == NULL)
     {

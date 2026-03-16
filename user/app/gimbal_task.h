@@ -14,7 +14,7 @@
 #include "DM_motor.h"
 #include "pid.h"
 #include "Mathh.h"
-
+#include "cap_comm.h"
 
 //弧度格式化为-PI~PI
 #define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
@@ -28,13 +28,17 @@
 //pitch电机零点编码值
 #define PITCH_ZERO_ENCODER 4096
 //yaw轴数据限幅值
+#define YAW_ABS_ZERO 0.0f
 #define YAW_ABS_MAX 0.6f
 #define YAW_ABS_MIN -0.6f
+#define YAW_REL_ZERO 0.0f
 #define YAW_REL_MAX 3.14f
 #define YAW_REL_MIN -3.14f
 //pitch轴数据限幅值
+#define PITCH_ABS_ZERO 0.0f
 #define PITCH_ABS_MAX 0.39f
 #define PITCH_ABS_MIN -0.43f
+#define PITCH_REL_ZERO 0.0f
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
@@ -85,6 +89,7 @@ typedef struct
     float absolute_angle_max;
     float absolute_angle_min;
 
+    float relative_zero_angle;
     float relative_angle;
     float relative_angle_set;
     float relative_angle_max;
