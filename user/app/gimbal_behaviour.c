@@ -24,10 +24,10 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
     {
         return;
     }
-    //uint8_t mode_bit = ((behaver->rc_point->rc.sw[0]<<1) | behaver->rc_point->rc.sw[1]);
+    uint8_t mode_bit = ((behaver->rc_fsi6_point->rc.sw[0]<<1) | behaver->rc_fsi6_point->rc.sw[1]);
     gimbalControlModeLast = gimbalControlMode;//保存上次数据
 
-    uint8_t mode_bit = behaver->rc_point->rc.sw[0];
+    //uint8_t mode_bit = behaver->rc_fsi6_point->rc.sw[0];
 
     switch (mode_bit)
     {
@@ -65,47 +65,65 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         }
         case GIMBAL_AUTO://自动移动
         {
-            switch (gimbalMode)
+            switch (behaver->rc_fsi6_point->rc.sw[2])
             {
-                case GIMBAL_AUTO_SCAN_MODE:
+                case 1:
                 {
+                    gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
                     break;
                 }
-                case GIMBAL_AUTO_ATTACK_MODE:
+                case 2:
                 {
+                    gimbalMode = GIMBAL_AUTO_SCAN_MODE;
                     break;
                 }
-                default:
+                case 0:
                 {
-                    if (behaver->rc_point->rc.sw[1] == 1)
-                    {
-                        if (behaver->vision_point->receive_packet.x == 0 && behaver->vision_point->receive_packet.y == 0 && behaver->visionToGimbal.ok_flag == 0)
-                        {
-                            gimbalMode = GIMBAL_AUTO_SCAN_MODE;
-                        }
-                        else
-                        {
-                            gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
-                            behaver->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
-                        }
-
-                        if (fabs(behaver->visionToGimbal.current_time - behaver->vision_point->receive_packet.receive_time) > 1.5f)
-                        {
-                            behaver->visionToGimbal.ok_flag = 0;
-                        }
-                        else
-                        {
-                            behaver->visionToGimbal.ok_flag = 1;
-                        }
-                    }
-                    else if (behaver->rc_point->rc.sw[1] == 3)
-                    {
-                        gimbalMode = GIMBAL_AUTO_SCAN_MODE;
-                    }
+                    // gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
                     break;
                 }
             }
-            break;
+        //     switch (gimbalMode)
+        //     {
+        //         case GIMBAL_AUTO_SCAN_MODE:
+        //         {
+        //             break;
+        //         }
+        //         case GIMBAL_AUTO_ATTACK_MODE:
+        //         {
+        //             break;
+        //         }
+        //         default:
+        //         {
+        //             if (behaver->rc_point->rc.sw[1] == 1)
+        //             {
+        //                 if (behaver->vision_point->receive_packet.x == 0 && behaver->vision_point->receive_packet.y == 0 && behaver->visionToGimbal.ok_flag == 0)
+        //                 {
+        //                     gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+        //                 }
+        //                 else
+        //                 {
+        //                     gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
+        //                     behaver->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
+        //                 }
+        //
+        //                 if (fabs(behaver->visionToGimbal.current_time - behaver->vision_point->receive_packet.receive_time) > 1.5f)
+        //                 {
+        //                     behaver->visionToGimbal.ok_flag = 0;
+        //                 }
+        //                 else
+        //                 {
+        //                     behaver->visionToGimbal.ok_flag = 1;
+        //                 }
+        //             }
+        //             else if (behaver->rc_fsi6_point->rc.sw[1] == 3)
+        //             {
+        //                 gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+        //             }
+        //             break;
+        //         }
+        //     }
+        //     break;
         }
         default:
         {
@@ -229,8 +247,8 @@ static void gimbal_manual_rc_control(float *yaw, float *pitch, gimbal_control_st
     }
     static int16_t yaw_channel = 0, pitch_channel = 0;
 
-    rc_deadband_limit(control->rc_point->rc.ch[0],yaw_channel,10);
-    rc_deadband_limit(control->rc_point->rc.ch[1],pitch_channel,10);
+    rc_deadband_limit(control->rc_fsi6_point->rc.ch[0],yaw_channel,10);
+    rc_deadband_limit(control->rc_fsi6_point->rc.ch[1],pitch_channel,10);
     //遥控器数据处理
     *yaw = (float)-yaw_channel* YAW_RC_SEN;//衰减系数
     *pitch = (float)-pitch_channel * PITCH_RC_SEN;
@@ -348,8 +366,7 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     //     fabs(control->visionToGimbal.now_y - control->visionToGimbal.target_x) <10)
     //     //fabs(control->visionToGimbal.current_time - control->vision_point->receive_packet.receive_time) <1.0f)//判断是否开启激光
     // {
-        Power_OUT1_ON;
-        Power_OUT1_ON;
+        Power_5V_ON;
     // }
     // else
     // {
@@ -359,8 +376,8 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     yaw_error = control->yawEuler.absolute_angle_set - control->yawEuler.absolute_angle;
     pitch_error = control->pitchEuler.absolute_angle_set - control->pitchEuler.absolute_angle;
     //pid处理
-    PID_calc(&control->visionToGimbal.x_err_pid,control->vision_point->receive_packet.x,-85);
-    PID_calc(&control->visionToGimbal.y_err_pid,control->vision_point->receive_packet.y,330);
+    PID_calc(&control->visionToGimbal.x_err_pid,control->vision_point->receive_packet.x,-283);
+    PID_calc(&control->visionToGimbal.y_err_pid,control->vision_point->receive_packet.y,419);
     //获取视觉数据
     *yaw = control->visionToGimbal.x_err_pid.out / 180.0f * PI;
     *pitch = -control->visionToGimbal.y_err_pid.out / 180.0f * PI;

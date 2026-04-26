@@ -20,8 +20,8 @@ typedef enum
 {
     GIMBAL_STOP = 0,
     GIMBAL_INIT,
-    GIMBAL_MANUAL,//手动控制
     GIMBAL_AUTO,
+    GIMBAL_MANUAL,//手动控制
 }gimbal_control_mode_enum;
 typedef enum
 {

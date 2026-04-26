@@ -8,7 +8,7 @@ dt7_data_struct dt7Data;
 
 void Dt7_Init(void)
 {
-    USART_RxDMA_MultiBuffer_Init(&huart5,(uint32_t *)dt7_rx_buf[0],(uint32_t *)dt7_rx_buf[1],SBUS_DT_RX_LEN);
+    USART_RxDMA_MultiBuffer_Init(&huart9,(uint32_t *)dt7_rx_buf[0],(uint32_t *)dt7_rx_buf[1],SBUS_DT_RX_LEN);
 }
 
 
@@ -40,46 +40,46 @@ void Dt7_RxPacketUpdate(volatile const uint8_t *sbus_buf, dt7_data_struct *rc_ct
     rc_ctrl->rc.ch[4] -= RC_CH_VALUE_OFFSET;
 }
 
-
-void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
-{
-    static uint16_t this_time_rx_len = 0;
-    /* Current memory buffer used is Memory 0 */
-    if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
-    {
-
-        /* Disable DMA */
-        __HAL_DMA_DISABLE(huart->hdmarx);
-        this_time_rx_len = SBUS_DT_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
-        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = SBUS_DT_RX_LEN;
-        /* Switch Memory 0 to Memory 1*/
-        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
-
-        /* Reset the receive count */
-        __HAL_DMA_ENABLE(huart->hdmarx);
-        /* Juge whether size is equal to the length of the received data */
-         if(this_time_rx_len == DT7_RX_LEN)
-         {
-             Dt7_RxPacketUpdate(dt7_rx_buf[0],&dt7Data);
-             detect_hook(DBUS_TOE);
-         }
-
-    }
-    /* Current memory buffer used is Memory 1 */
-    else
-    {
-        /* Disable DMA */
-        __HAL_DMA_DISABLE(huart->hdmarx);
-        this_time_rx_len = SBUS_DT_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
-        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = SBUS_DT_RX_LEN;
-        /* Switch Memory 1 to Memory 0*/
-        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
-        /* Reset the receive count */
-        __HAL_DMA_ENABLE(huart->hdmarx);
-        if(this_time_rx_len == DT7_RX_LEN)
-         {
-            Dt7_RxPacketUpdate(dt7_rx_buf[1],&dt7Data);
-            detect_hook(DBUS_TOE);
-         }
-    }
-}
+//
+// void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
+// {
+//     static uint16_t this_time_rx_len = 0;
+//     /* Current memory buffer used is Memory 0 */
+//     if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
+//     {
+//
+//         /* Disable DMA */
+//         __HAL_DMA_DISABLE(huart->hdmarx);
+//         this_time_rx_len = SBUS_DT_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
+//         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = SBUS_DT_RX_LEN;
+//         /* Switch Memory 0 to Memory 1*/
+//         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+//
+//         /* Reset the receive count */
+//         __HAL_DMA_ENABLE(huart->hdmarx);
+//         /* Juge whether size is equal to the length of the received data */
+//          if(this_time_rx_len == DT7_RX_LEN)
+//          {
+//              Dt7_RxPacketUpdate(dt7_rx_buf[0],&dt7Data);
+//              detect_hook(DBUS_TOE);
+//          }
+//
+//     }
+//     /* Current memory buffer used is Memory 1 */
+//     else
+//     {
+//         /* Disable DMA */
+//         __HAL_DMA_DISABLE(huart->hdmarx);
+//         this_time_rx_len = SBUS_DT_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
+//         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = SBUS_DT_RX_LEN;
+//         /* Switch Memory 1 to Memory 0*/
+//         ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
+//         /* Reset the receive count */
+//         __HAL_DMA_ENABLE(huart->hdmarx);
+//         if(this_time_rx_len == DT7_RX_LEN)
+//          {
+//             Dt7_RxPacketUpdate(dt7_rx_buf[1],&dt7Data);
+//             detect_hook(DBUS_TOE);
+//          }
+//     }
+// }

@@ -55,6 +55,8 @@ osThreadId INS_TASKHandle;
 osThreadId GIMBAL_TASKHandle;
 osThreadId DETECT_TASKHandle;
 osThreadId MESSAGE_TASKHandle;
+osThreadId CAN_TASKHandle;
+osThreadId HIPNUC_TASKHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -66,6 +68,8 @@ void INS_Task(void const * argument);
 void Gimbal_Task(void const * argument);
 void Detect_Task(void const * argument);
 void Message_Task(void const * argument);
+void Can_Task(void const * argument);
+void HIPNUC_Task(void const * argument);
 
 extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -116,6 +120,14 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of MESSAGE_TASK */
   osThreadDef(MESSAGE_TASK, Message_Task, osPriorityLow, 0, 128);
   MESSAGE_TASKHandle = osThreadCreate(osThread(MESSAGE_TASK), NULL);
+
+  /* definition and creation of CAN_TASK */
+  osThreadDef(CAN_TASK, Can_Task, osPriorityHigh, 0, 128);
+  CAN_TASKHandle = osThreadCreate(osThread(CAN_TASK), NULL);
+
+  /* definition and creation of HIPNUC_TASK */
+  osThreadDef(HIPNUC_TASK, HIPNUC_Task, osPriorityHigh, 0, 512);
+  HIPNUC_TASKHandle = osThreadCreate(osThread(HIPNUC_TASK), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -213,6 +225,42 @@ __weak void Message_Task(void const * argument)
     osDelay(1);
   }
   /* USER CODE END Message_Task */
+}
+
+/* USER CODE BEGIN Header_Can_Task */
+/**
+* @brief Function implementing the CAN_TASK thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Can_Task */
+__weak void Can_Task(void const * argument)
+{
+  /* USER CODE BEGIN Can_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END Can_Task */
+}
+
+/* USER CODE BEGIN Header_HIPNUC_Task */
+/**
+* @brief Function implementing the HIPNUC_TASK thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_HIPNUC_Task */
+__weak void HIPNUC_Task(void const * argument)
+{
+  /* USER CODE BEGIN HIPNUC_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END HIPNUC_Task */
 }
 
 /* Private application code --------------------------------------------------*/

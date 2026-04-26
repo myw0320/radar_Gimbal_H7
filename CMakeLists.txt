@@ -1,7 +1,7 @@
 #此文件从模板自动生成! 请勿更改!
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 4.2)
 
 # specify cross-compilers and tools
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
@@ -82,8 +82,10 @@ user/modules/bmi088
 user/modules/can_comm
 user/modules/cap
 user/modules/crc16
+user/modules/hi04
 user/modules/lcd
 user/modules/message
+user/modules/ps2
 user/modules/motor
 user/modules/remote
 )

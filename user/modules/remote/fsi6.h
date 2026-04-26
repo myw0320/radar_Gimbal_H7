@@ -42,19 +42,6 @@ typedef struct __attribute__((packed))
         uint8_t sw[4];
         uint16_t rotory_sw[2];
     }rc;
-    struct __attribute__((packed))
-    {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t press_l;
-        uint8_t press_r;
-        uint8_t middle;
-    } mouse;
-    struct __attribute__((packed))
-    {
-        uint16_t v;
-    } key;
     uint16_t crc16;
     struct __attribute__((packed))
     {

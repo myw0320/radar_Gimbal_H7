@@ -94,6 +94,7 @@ void DM_Init(dm_control_t *init,dm_motor_type_enum type, dm_mode_enum mode, uint
 
 void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data)
 {
+
 	motor->id = (rx_data[0])&0x0F;
 	motor->state = (rx_data[0])>>4;
 	motor->p_int=(rx_data[1]<<8)|rx_data[2];
@@ -106,6 +107,14 @@ void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data)
 	motor->Tcoil = (float)(rx_data[7]);
 }
 
+void DM1TO4_GetRxPacket(dm1to4_motor_t *motor,uint8_t *rx_data)
+{
+	motor->last_encoder = motor->encoder;
+	motor->encoder = (uint16_t)(rx_data[0]<<8|rx_data[1]);
+	motor->rpm = (uint16_t)(rx_data[2]<<8|rx_data[3]);
+	motor->torque_current = (uint16_t)(rx_data[4]<<8|rx_data[5]);
+	motor->temperature = rx_data[6];
+}
 
 
 void DM_AddTxPacket(dm_control_t *motor, uint8_t *tx_data)
@@ -156,4 +165,15 @@ void DM_AddTxPacket(dm_control_t *motor, uint8_t *tx_data)
 			break;
 		}
 	}
+}
+void DM1TO4_AddTxPacket(uint8_t *tx_data, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
+{
+	tx_data[0] = current1 >> 8;
+	tx_data[1] = current1;
+	tx_data[2] = current2 >> 8;
+	tx_data[3] = current2;
+	tx_data[4] = current3 >> 8;
+	tx_data[5] = current3;
+	tx_data[6] = current4 >> 8;
+	tx_data[7] = current4;
 }

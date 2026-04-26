@@ -1,14 +1,11 @@
-//
-// Created by myw04 on 2025/11/19.
-//
 
-#ifndef RADAR_GIMBAL_H7_LCD_H
-#define RADAR_GIMBAL_H7_LCD_H
+#ifndef _LCD_H
+#define _LCD_H
 #include "main.h"
-#include "tim.h"
+#include "spi.h"
 
 
 
 
 
-#endif //RADAR_GIMBAL_H7_LCD_H
+#endif //_LCD_H

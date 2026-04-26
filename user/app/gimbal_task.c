@@ -25,8 +25,8 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
 
-const float x_err_k[3] = {0.0032f,0.00f,0.18f};
-const float y_err_k[3] = {0.003f,0.0f,0.18f};
+const float x_err_k[3] = {0.003f,0.000005f,0.35f};
+const float y_err_k[3] = {0.0032f,0.00002f,0.2f};
 
 const float x_err_a[1] = {0.4f};
 const float y_err_a[1] = {0.4f};
@@ -40,67 +40,69 @@ void Gimbal_Task(void const *pvParameters)
     }
     //初始化
     gimbal_init(&gimbalControl);
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
     while(1)
     {
         gimbal_update(&gimbalControl);//更新数据
         gimbal_control_set(&gimbalControl);//设置
         gimbal_update_save(&gimbalControl);
         gimbal_control(&gimbalControl);//计算控制值
-
-        if (HAL_GPIO_ReadPin(USER_KEY_GPIO_Port,USER_KEY_Pin) == 0)
+        osDelay(2);
+    }
+}
+void UserGimbal_AddTxPacket(void)
+{
+    if (!gimbalControl.rc_fsi6_point->rc.sw[0] && !gimbalControl.rc_fsi6_point->rc.sw[1])//((toe_is_error(DBUS_TOE)) || gimbalControl.rc_point->rc.sw[0] == 2 && gimbalControl.rc_point->rc.sw[1] == 2)
+    {
+        DM_Disable(gimbalControl.yaw_can_tx_data);
+        can_tx_data(&hfdcan1,0x201,gimbalControl.yaw_can_tx_data);
+        DM_Disable(gimbalControl.pitch_can_tx_data);
+        can_tx_data(&hfdcan2,0x202,gimbalControl.pitch_can_tx_data);
+    }
+    else
+    {
+        if (gimbalControl.yawMotor.motor_measurement.state == 1)
         {
-            HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_RESET);
+            DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.yaw_can_tx_data);
+            can_tx_data(&hfdcan1,0x201,gimbalControl.yaw_can_tx_data);
         }
         else
         {
-            HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_SET);
-            HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
+            DM_Enable(gimbalControl.yaw_can_tx_data);
+            can_tx_data(&hfdcan1,0x201,gimbalControl.yaw_can_tx_data);
         }
 
-
-        cap_tx_test.cap_set_power = 500;
-        cap_tx_test.cap_flag  = 0;
-        cap_tx_test.cap_set_buffer = 30;
-        cap_tx_test.chassis_now_buffer = 60;
-        CAP_AddTxPacket(&cap_tx_test,gimbalControl.can_tx_data);
-        can_tx_data(&hfdcan1,0x210,gimbalControl.can_tx_data,8);
-
-        // if ((toe_is_error(DBUS_TOE)) || gimbalControl.rc_point->rc.sw[0] == 2 && gimbalControl.rc_point->rc.sw[0] == 2)
+        if (gimbalControl.pitchMotor.motor_measurement.state == 1)
+        {
+            DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.pitch_can_tx_data);
+            can_tx_data(&hfdcan2,0x202,gimbalControl.pitch_can_tx_data);
+        }
+        else
+        {
+            DM_Enable(gimbalControl.pitch_can_tx_data);
+            can_tx_data(&hfdcan2,0x202,gimbalControl.pitch_can_tx_data);
+        }
+    }
+        // if (HAL_GPIO_ReadPin(USER_KEY_GPIO_Port,USER_KEY_Pin) == 0)
         // {
-        //     DM_Disable(gimbalControl.can_tx_data);
-        //     can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        //     can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
+        //     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
+        //     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_RESET);
         // }
         // else
         // {
-        //     if (gimbalControl.yawMotor.motor_measurement.state == 1)
-        //     {
-        //         DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.can_tx_data);
-        //         gimbalControl.can_tx_status = can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        //     }
-        //     else
-        //     {
-        //         DM_Enable(gimbalControl.can_tx_data);
-        //         can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-        //     }
-        //
-        //     if (gimbalControl.pitchMotor.motor_measurement.state == 1)
-        //     {
-        //         DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.can_tx_data);
-        //         gimbalControl.can_tx_status = can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
-        //     }
-        //     else
-        //     {
-        //         DM_Enable(gimbalControl.can_tx_data);
-        //         can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
-        //     }
+        //     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_SET);
+        //     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
         // }
 
-        osDelay(2);
-    }
+        //
+        // cap_tx_test.cap_set_power = 500;
+        // cap_tx_test.cap_flag  = 0;
+        // cap_tx_test.cap_set_buffer = 30;
+        // cap_tx_test.chassis_now_buffer = 60;
+        // CAP_AddTxPacket(&cap_tx_test,gimbalControl.can_tx_data);
+        // can_tx_data(&hfdcan1,0x210,gimbalControl.can_tx_data);
+
 }
 
 void gimbal_clear()
@@ -114,10 +116,10 @@ static void gimbal_init(gimbal_control_struct *init)
     init->imu_point = &INS;
     init->vision_point = &visionData;
     //init->radar_point = &radarData;
-    init->rc_point = &dt7Data;
-
+    init->rc_dt7_point = &dt7Data;
+    init->rc_fsi6_point = &fsi6Data;
     //yaw数据初始化
-    DM_Init(&init->yawMotor,DM4310,OMEGA,0x01);//电机控制初始化
+    DM_Init(&init->yawMotor,DM4310,MIT,0x01);//电机控制初始化
 
     init->yawEuler.absolute_angle_max = YAW_ABS_MAX;
     init->yawEuler.absolute_angle_min = YAW_ABS_MIN;
@@ -129,7 +131,7 @@ static void gimbal_init(gimbal_control_struct *init)
     init->yawEuler.relative_angle_set = YAW_REL_ZERO;
     PID_init(&init->yawEuler.euler_pos_control,PID_POSITION,yaw_pos_k,YAW_POS_MAX_OUT,YAW_POS_MIN_OUT,YAW_POS_MAX_IOUT,YAW_POS_MIN_IOUT);
     //pitch数据初始化
-    DM_Init(&init->pitchMotor,DM4310,OMEGA,0x06);//电机控制初始化
+    DM_Init(&init->pitchMotor,DM4310,MIT,0x06);//电机控制初始化
     init->pitchEuler.absolute_angle_max = PITCH_ABS_MAX;
     init->pitchEuler.absolute_angle_min = PITCH_ABS_MIN;
     init->pitchEuler.absolute_zero_angle = PITCH_ABS_ZERO;
@@ -149,16 +151,18 @@ static void gimbal_init(gimbal_control_struct *init)
     init->visionToGimbal.target_y = 150;
     init->gimbalScan.scan_begin_time =  HAL_GetTick() * 0.001f;
 
-    //电机清除
-    DM_Clear(init->can_tx_data);
-    can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-    osDelay(50);
-    can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
-    //电机使能
-    DM_Enable(init->can_tx_data);
-    can_tx_data(&hfdcan1,0x201,gimbalControl.can_tx_data,8);
-    osDelay(50);
-    can_tx_data(&hfdcan2,0x202,gimbalControl.can_tx_data,8);
+    // //电机清除
+    DM_Clear(init->yaw_can_tx_data);
+    can_tx_data(&hfdcan1,0x201,gimbalControl.yaw_can_tx_data);
+    osDelay(10);
+    DM_Clear(init->pitch_can_tx_data);
+    can_tx_data(&hfdcan2,0x202,gimbalControl.pitch_can_tx_data);
+    // 电机使能
+    DM_Enable(init->yaw_can_tx_data);
+    can_tx_data(&hfdcan1,0x201,gimbalControl.yaw_can_tx_data);
+    osDelay(10);
+    DM_Enable(init->pitch_can_tx_data);
+    can_tx_data(&hfdcan2,0x202,gimbalControl.pitch_can_tx_data);
 }
 
 
@@ -422,7 +426,7 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
         if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE)
         {
             euler_pitch_set = motor_control->absolute_angle;
-            motor_control->absolute_angle_set = rad_format(euler_pitch_set + add);
+            motor_control->absolute_angle_set = rad_format(euler_pitch_set+add);
         }
         else
         {
@@ -452,7 +456,6 @@ static void gimbal_motor_stop_control(gimbal_control_struct *gimbal_control,gimb
 {
     if (motor_control == &gimbal_control->yawEuler)
     {
-
         gimbal_control->yawMotor.give_vel = 0;
     }
     else if (motor_control == &gimbal_control->pitchEuler)

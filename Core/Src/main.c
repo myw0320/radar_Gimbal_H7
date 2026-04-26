@@ -40,6 +40,7 @@
 #include "radar_task.h"
 #include "vision_task.h"
 #include "BMI088Middleware.h"
+#include "hipnuc_imu_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -118,12 +119,16 @@ int main(void)
   MX_TIM15_Init();
   MX_USART10_UART_Init();
   MX_TIM12_Init();
-  MX_UART5_Init();
   MX_UART7_Init();
   MX_ADC1_Init();
+  MX_TIM1_Init();
+  MX_SPI3_Init();
+  MX_UART8_Init();
+  MX_UART9_Init();
   /* USER CODE BEGIN 2 */
-  Dt7_Init();
-
+  // Dt7_Init();
+  HIPNUC_Init();
+  Fsi6_Init();
   vision_init();
 
   DWT_Init(480);
@@ -135,6 +140,7 @@ int main(void)
   FDCAN2_Config_Init();
   Power_OUT1_OFF;
   Power_OUT1_OFF;
+  Power_5V_ON;
   //vision_init();
   /* USER CODE END 2 */
 
@@ -249,7 +255,7 @@ void PeriphCommonClock_Config(void)
 
 /**
   * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
+  * @note   This function is called  when TIM2 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
   * a global variable "uwTick" used as application time base.
   * @param  htim : TIM handle
@@ -260,7 +266,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1)
+  if (htim->Instance == TIM2)
   {
     HAL_IncTick();
   }

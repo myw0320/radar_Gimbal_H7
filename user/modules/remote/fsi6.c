@@ -6,7 +6,7 @@ fsi6_data_struct fsi6Data;
 
 void Fsi6_Init(void)
 {
-	USART_RxDMA_MultiBuffer_Init(&huart5,(uint32_t *)fsi6_rx_buf[0],(uint32_t *)fsi6_rx_buf[1],SBUS_FS_RX_LEN);
+	USART_RxDMA_MultiBuffer_Init(&huart9,(uint32_t *)fsi6_rx_buf[0],(uint32_t *)fsi6_rx_buf[1],SBUS_FS_RX_LEN);
 }
 
 
@@ -86,49 +86,49 @@ void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fsi6_data_struct *rc_
 }
 
 //
-// void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
-// {
-// 	/* Current memory buffer used is Memory 0 */
-// 	if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
-// 	{
-//
-// 		/* Disable DMA */
-// 		__HAL_DMA_DISABLE(huart->hdmarx);
-//
-// 		/* Switch Memory 0 to Memory 1*/
-// 		((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
-//
-// 		/* Reset the receive count */
-// 		__HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_FS_RX_LEN);
-//
-// 		/* Juge whether size is equal to the length of the received data */
-// 		// if(Size == REMOTE_RX_LEN)
-// 		// {
-//
-// 			/* Memory 0 data update to remote_ctrl*/
-// 			Fsi6_RxPacketUpdate(fsi6_rx_buf[0],&fsData);
-//
-// 		// }
-//
-// 	}
-// 	/* Current memory buffer used is Memory 1 */
-// 	else
-// 	{
-// 		/* Disable DMA */
-// 		__HAL_DMA_DISABLE(huart->hdmarx);
-//
-// 		/* Switch Memory 1 to Memory 0*/
-// 		((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
-//
-// 		/* Reset the receive count */
-// 		__HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_FS_RX_LEN);
-//
-// 		// if(Size == REMOTE_RX_LEN)
-// 		// {
-// 			/* Memory 1 to data update to remote_ctrl*/
-// 			Fsi6_RxPacketUpdate(fsi6_rx_buf[1],&fsData);
-// 		// }
-//
-// 	}
-//
-// }
+void USER_USART9_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
+{
+	/* Current memory buffer used is Memory 0 */
+	if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
+	{
+
+		/* Disable DMA */
+		__HAL_DMA_DISABLE(huart->hdmarx);
+
+		/* Switch Memory 0 to Memory 1*/
+		((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+
+		/* Reset the receive count */
+		__HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_FS_RX_LEN);
+
+		/* Juge whether size is equal to the length of the received data */
+		// if(Size == REMOTE_RX_LEN)
+		// {
+
+			/* Memory 0 data update to remote_ctrl*/
+			Fsi6_RxPacketUpdate(fsi6_rx_buf[0],&fsi6Data);
+
+		// }
+
+	}
+	/* Current memory buffer used is Memory 1 */
+	else
+	{
+		/* Disable DMA */
+		__HAL_DMA_DISABLE(huart->hdmarx);
+
+		/* Switch Memory 1 to Memory 0*/
+		((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
+
+		/* Reset the receive count */
+		__HAL_DMA_SET_COUNTER(huart->hdmarx,SBUS_FS_RX_LEN);
+
+		// if(Size == REMOTE_RX_LEN)
+		// {
+			/* Memory 1 to data update to remote_ctrl*/
+			Fsi6_RxPacketUpdate(fsi6_rx_buf[1],&fsi6Data);
+		// }
+
+	}
+
+}

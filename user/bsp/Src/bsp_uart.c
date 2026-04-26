@@ -80,19 +80,16 @@ __weak void USER_USART1_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 {
 
 }
-__weak void USER_USART2_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
-{
 
-}
-__weak void USER_USART3_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
-{
-
-}
-__weak void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
-{
-
-}
 __weak void USER_USART7_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
+{
+
+}
+__weak void USER_USART8_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
+{
+
+}
+__weak void USER_USART9_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 {
 
 }
@@ -116,17 +113,22 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
 	// {
 	// 	USER_USART1_RxHandler(huart,Size);
 	// }
-	if(huart == &huart5)
+	if (huart == &huart7)
 	{
-	 	USER_USART5_RxHandler(huart,Size);
+		USER_USART7_RxHandler(huart,Size);
+	}
+
+	if(huart == &huart8)
+	{
+		USER_USART8_RxHandler(huart,Size);
+	}
+	if(huart == &huart9)
+	{
+	 	USER_USART9_RxHandler(huart,Size);
 	}
 	if (huart == &huart10)
 	{
 		USER_USART10_RxHandler(huart,Size);
-	}
-	if (huart == &huart7)
-	{
-		USER_USART7_RxHandler(huart,Size);
 	}
 
 

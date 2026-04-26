@@ -81,8 +81,10 @@ user/modules/bmi088
 user/modules/can_comm
 user/modules/cap
 user/modules/crc16
+user/modules/hi04
 user/modules/lcd
 user/modules/message
+user/modules/ps2
 user/modules/motor
 user/modules/remote
 )

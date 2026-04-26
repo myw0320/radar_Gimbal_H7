@@ -36,23 +36,23 @@
 #define YAW_REL_MIN -3.14f
 //pitch轴数据限幅值
 #define PITCH_ABS_ZERO 0.0f
-#define PITCH_ABS_MAX 0.39f
+#define PITCH_ABS_MAX 0.36f
 #define PITCH_ABS_MIN -0.43f
 #define PITCH_REL_ZERO 0.0f
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-#define YAW_POS_P 15.0f
-#define YAW_POS_I 0.05
-#define YAW_POS_D 6.0f
+#define YAW_POS_P 10.0f
+#define YAW_POS_I 0.015
+#define YAW_POS_D 5.0f
 #define YAW_POS_MAX_OUT 20.0
 #define YAW_POS_MIN_OUT -20.0
 #define YAW_POS_MAX_IOUT 5.0
 #define YAW_POS_MIN_IOUT -5.0
 
-#define PITCH_POS_P 15.0f
-#define PITCH_POS_I 0.05
-#define PITCH_POS_D 6.0f
+#define PITCH_POS_P 10.0f
+#define PITCH_POS_I 0.02f
+#define PITCH_POS_D 5.0f
 #define PITCH_POS_MAX_OUT 20.0
 #define PITCH_POS_MIN_OUT -20.0
 #define PITCH_POS_MAX_IOUT 5.0
@@ -153,7 +153,8 @@ typedef struct
     const INS_t *imu_point;//陀螺仪数据
     radar_data_t *radar_point;
     vision_data_t *vision_point;//视觉数据
-    const dt7_data_struct *rc_point;//遥控器数据
+    const dt7_data_struct *rc_dt7_point;//遥控器数据
+    const fsi6_data_struct *rc_fsi6_point;
     vision_to_gimbal_t visionToGimbal;
     gimbal_motor_t yawEuler;
     dm_control_t yawMotor;//yaw电机结构体
@@ -161,13 +162,12 @@ typedef struct
     dm_control_t pitchMotor;//pitch电机结构体
 
     scan_struct gimbalScan;//自动扫描
-
     bool enable;
 
-    HAL_StatusTypeDef can_tx_status;
-    uint8_t can_tx_data[8];
+    uint8_t yaw_can_tx_data[8];
+    uint8_t pitch_can_tx_data[8];
 }gimbal_control_struct;
 
 extern gimbal_control_struct gimbalControl;//云台控制
-
+void UserGimbal_AddTxPacket(void);
 #endif //RADAR_GIMBAL_H7_GIMBAL_TASK_H
