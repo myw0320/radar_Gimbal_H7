@@ -122,12 +122,9 @@ int main(void)
   MX_UART7_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
-  MX_SPI3_Init();
-  MX_UART8_Init();
-  MX_UART9_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
   // Dt7_Init();
-  HIPNUC_Init();
   Fsi6_Init();
   vision_init();
 

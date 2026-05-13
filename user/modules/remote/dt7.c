@@ -8,7 +8,7 @@ dt7_data_struct dt7Data;
 
 void Dt7_Init(void)
 {
-    USART_RxDMA_MultiBuffer_Init(&huart9,(uint32_t *)dt7_rx_buf[0],(uint32_t *)dt7_rx_buf[1],SBUS_DT_RX_LEN);
+    USART_RxDMA_MultiBuffer_Init(&huart5,(uint32_t *)dt7_rx_buf[0],(uint32_t *)dt7_rx_buf[1],SBUS_DT_RX_LEN);
 }
 
 

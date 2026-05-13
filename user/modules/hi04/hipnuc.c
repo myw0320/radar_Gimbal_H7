@@ -13,7 +13,7 @@ uint16_t uart_rx_index = 0;
 
 void hi04_init(hi04_imu_data_t *init)
 {
-    USART_RxDMA_MultiBuffer_Init(&huart8,(uint32_t*)hi04_rx_buf[0],(uint32_t*)hi04_rx_buf[1],UART8_RX_LEN);
+    //USART_RxDMA_MultiBuffer_Init(&huart8,(uint32_t*)hi04_rx_buf[0],(uint32_t*)hi04_rx_buf[1],UART8_RX_LEN);
     init->hipnuc_date = &hipnuc_raw.hi91;
 }
 

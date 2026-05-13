@@ -12,7 +12,7 @@
 
 #define RADAR_UART huart10
 
-#define RADAR_RX_LEN  28u
+#define RADAR_RX_LEN  18u
 
 typedef struct
 {
@@ -20,24 +20,35 @@ typedef struct
 
 }referee_receive_packet_t;
 /******** 雷达数据包 ********/
+
 typedef struct __attribute__((packed))
 {
-    uint8_t header;//包头
+    uint8_t sod;
+    uint8_t header;
+    uint8_t reserved;
     float yaw;
     float pitch;
-    float current_receive_time;//两次间隔时间
+    float latency_time;
     uint16_t check_crc16;
-    referee_receive_packet_t referee_receive_packet;
-    // float yaw_error;
-    // float pitch_error;
-
-}radar_receive_packet_t;//像素点数据
-
+    uint8_t end;
+} radar_receive_packet_t;
+//
+// typedef struct __attribute__((packed))
+// {
+//     uint8_t header;
+//     uint8_t reserved;
+//     float yaw;
+//     float pitch;
+//     float roll;
+//     uint16_t checksum;
+// } radar_transmit_packet_t;
 typedef struct
 {
     radar_receive_packet_t receive_packet;
-    pid_struct yaw_err_pid;
-    pid_struct pitch_err_pid;
+    //vision_transmit_packet_t transmit_packet;
+    //
+    // pid_struct yaw_err_pid;
+    // pid_struct pitch_err_pid;
 }radar_data_t;
 
 void radar_init(void);

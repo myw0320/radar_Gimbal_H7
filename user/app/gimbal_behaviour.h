@@ -8,8 +8,8 @@
 #include "gimbal_task.h"
 #include "controller.h"
 #include "user_lib.h"
-#define YAW_RC_SEN  0.000005f
-#define PITCH_RC_SEN  0.000005f
+#define YAW_RC_SEN  0.000001f//提高雷达角度分辨率
+#define PITCH_RC_SEN  0.000001f
 
 #define YAW_MOUSE_SEN  0.00005f
 #define PITCH_MOUSE_SEN  0.00005f

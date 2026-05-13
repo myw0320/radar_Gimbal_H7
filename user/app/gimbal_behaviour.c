@@ -27,8 +27,6 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
     uint8_t mode_bit = ((behaver->rc_fsi6_point->rc.sw[0]<<1) | behaver->rc_fsi6_point->rc.sw[1]);
     gimbalControlModeLast = gimbalControlMode;//保存上次数据
 
-    //uint8_t mode_bit = behaver->rc_fsi6_point->rc.sw[0];
-
     switch (mode_bit)
     {
         case 0:
@@ -67,12 +65,12 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         {
             switch (behaver->rc_fsi6_point->rc.sw[2])
             {
-                case 1:
+                case 2:
                 {
                     gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
                     break;
                 }
-                case 2:
+                case 1:
                 {
                     gimbalMode = GIMBAL_AUTO_SCAN_MODE;
                     break;
@@ -165,6 +163,7 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
             motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
             break;
         }
+
     }
     //保存
     motor_mode_update->yawEuler.last_motorMode = motor_mode_update->yawEuler.motorMode;
@@ -247,8 +246,8 @@ static void gimbal_manual_rc_control(float *yaw, float *pitch, gimbal_control_st
     }
     static int16_t yaw_channel = 0, pitch_channel = 0;
 
-    rc_deadband_limit(control->rc_fsi6_point->rc.ch[0],yaw_channel,10);
-    rc_deadband_limit(control->rc_fsi6_point->rc.ch[1],pitch_channel,10);
+    rc_deadband_limit(control->rc_fsi6_point->rc.ch[0],yaw_channel,20);
+    rc_deadband_limit(control->rc_fsi6_point->rc.ch[1],pitch_channel,20);
     //遥控器数据处理
     *yaw = (float)-yaw_channel* YAW_RC_SEN;//衰减系数
     *pitch = (float)-pitch_channel * PITCH_RC_SEN;
@@ -264,10 +263,8 @@ static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_st
         return;
     }
     //雷达控制云台
-    PID_calc(&control->radar_point->yaw_err_pid,control->radar_point->receive_packet.yaw,0);
-    PID_calc(&control->radar_point->pitch_err_pid,control->radar_point->receive_packet.pitch,0);
-    *yaw = control->radar_point->yaw_err_pid.out;
-    *pitch = control->radar_point->pitch_err_pid.out;
+    *yaw = control->radar_point->receive_packet.yaw;
+    *pitch = control->radar_point->receive_packet.pitch;
 }
 
 //自动扫描模式
@@ -357,31 +354,25 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     float yaw_error = 0,pitch_error = 0;
     // pitch轴yaw轴设定角度
     float yaw_set_angle = 0,pitch_set_angle = 0;
-    //获取时间
-    control->visionToGimbal.current_time = HAL_GetTick()/1000.0f;
-    // current_x = Math_Constrain(&current_x,-800,640);
-    // current_y = Math_Constrain(&current_y,-804,276);
-    // //视觉控制云台
-    // if (fabs(control->visionToGimbal.now_x - control->visionToGimbal.target_x) < 10 &&
-    //     fabs(control->visionToGimbal.now_y - control->visionToGimbal.target_x) <10)
-    //     //fabs(control->visionToGimbal.current_time - control->vision_point->receive_packet.receive_time) <1.0f)//判断是否开启激光
-    // {
-        Power_5V_ON;
-    // }
-    // else
-    // {
-    //     Power_OUT1_OFF;
-    //     Power_OUT1_OFF;
-    // }
+
+    Power_5V_ON;
+
     yaw_error = control->yawEuler.absolute_angle_set - control->yawEuler.absolute_angle;
     pitch_error = control->pitchEuler.absolute_angle_set - control->pitchEuler.absolute_angle;
+
     //pid处理
-    PID_calc(&control->visionToGimbal.x_err_pid,control->vision_point->receive_packet.x,-283);
-    PID_calc(&control->visionToGimbal.y_err_pid,control->vision_point->receive_packet.y,419);
-    //获取视觉数据
-    *yaw = control->visionToGimbal.x_err_pid.out / 180.0f * PI;
-    *pitch = -control->visionToGimbal.y_err_pid.out / 180.0f * PI;
-    //赋值增量
-    // *yaw = yaw_set_angle - control->yawEuler.absolute_angle - yaw_error;
-    // *pitch = pitch_set_angle - control->pitchEuler.absolute_angle - pitch_error;
+    if (control->vision_point->receive_packet.yaw >= 6.28f &&
+        control->vision_point->receive_packet.pitch >= 6.28f)
+    {
+        *yaw = 0;
+        *pitch = 0;
+    }
+    else
+    {
+
+        //实际返回速度值
+        *yaw = control->vision_point->receive_packet.yaw;
+        *pitch = control->vision_point->receive_packet.pitch;
+    }
+
 }

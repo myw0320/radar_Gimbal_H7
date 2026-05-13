@@ -1,7 +1,4 @@
 #include "vision_task.h"
-
-#include <sys/_intsup.h>
-
 #include "usart.h"
 
 
@@ -15,82 +12,41 @@ void vision_init(void)
     USART_RxDMA_MultiBuffer_Init(&VISION_UART,(uint32_t *)vision_rx_buf[0],(uint32_t *)vision_rx_buf[1],UART7_RX_LEN);
 }
 
+static uint16_t vision_calc_checksum(const uint8_t *data, uint16_t len)
+{
+    uint16_t sum = 0;
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        sum += data[i];
+    }
+
+    return sum;
+}
+
 void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet)
 {
-    static uint16_t x_cnt = 0,y_cnt = 0;
-    if (rx_data[0] == 0xA5)//检查包头
+    if (packet->header == 0xA5)
     {
-        //解包数据
-        memcpy(&(packet->header), &rx_data[0], 1);
-        memcpy(&(packet->reserved), &rx_data[1], 1);
-        packet->current_x = (int16_t)(rx_data[3] << 8 | rx_data[2]);
-        packet->current_y = (int16_t)(rx_data[5] << 8 | rx_data[4]);
-        //数据判断
-        if (fabs(packet->current_x) > 7750)
-        {
-            x_cnt++;
-            if (x_cnt > 50)
-            {
-                x_cnt = 51;
-                packet->x = 0.0f;
-            }
-        }
-        else
-        {
-            packet->x = (float)packet->current_x/10.0f;
-            packet->receive_time = HAL_GetTick()/1000.0f;
-            x_cnt = 0;
-            //packet->ok_flag = 0;
-        }
+        memcpy(&packet, rx_data, sizeof(vision_receive_packet_t));
+    }
 
-        if (fabs(packet->current_y) > 7450)
-        {
-            y_cnt++;
-            if (y_cnt > 50)
-            {
-                y_cnt  = 51;
-                packet->y = 0.0f;
-            }
-        }
-        else
-        {
-            packet->y = (float)packet->current_y/10.0f;
-            packet->receive_time = HAL_GetTick()/1000.0f;
-            y_cnt = 0;
-            //packet->ok_flag = 0;
-        }
-        memcpy(&(packet->current_receive_time), &rx_data[10], 4);
-        //CRC校验
-        packet->check_crc16 = (uint16_t)(rx_data[12] << 8 | rx_data[11]);
-    }
-    else
-    {
-        packet->current_x = 0;
-        packet->current_y = 0;
-        packet->x = 0.0f;
-        packet->y = 0.0f;
-        //packet->ok_flag = 0;
-    }
 }
 
 void Vision_AddTxPacket(uint8_t *tx_data,vision_transmit_packet_t *pactet)
 {
-    tx_data[0] = pactet->header;
-    tx_data[1] = pactet->target_colors;
-    tx_data[2] = pactet->check_crc16;//低位
-    tx_data[3] = pactet->check_crc16 >> 8;//高位
-    /***未使用***/
+    memcpy(&tx_data, pactet, sizeof(vision_transmit_packet_t));
 }
 
-void Vision_SendData(vision_data_t *send)
+void Vision_SendData(vision_data_t *send,float yaw,
+    float pitch,float roll)
 {
     static uint8_t tx_buf[8];
     send->transmit_packet.header = 0x5A;
     //0:red;1:blue
-    send->transmit_packet.target_colors = 1;
-
-    //send->transmit_packet.check_crc16 =
-
+    send->transmit_packet.yaw = yaw;
+    send->transmit_packet.pitch = pitch;
+    send->transmit_packet.roll = 0;
     Vision_AddTxPacket (tx_buf,&send->transmit_packet);
     //发送
     HAL_UART_Transmit_DMA(&VISION_UART,(uint8_t *)tx_buf,sizeof(tx_buf));

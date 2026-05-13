@@ -1,11 +1,11 @@
 /**
   ****************************(C) COPYRIGHT 2016 DJI****************************
   * @file       pid.c/h
-  * @brief      pidÊµÏÖº¯Êı£¬°üÀ¨³õÊ¼»¯£¬PID¼ÆËãº¯Êı£¬
+  * @brief      pidÊµï¿½Öºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½PIDï¿½ï¿½ï¿½ãº¯ï¿½ï¿½ï¿½ï¿½
   * @note       
   * @history
   *  Version    Date            Author          Modification
-  *  V1.0.0     Dec-26-2018     RM              1. Íê³É
+  *  V1.0.0     Dec-26-2018     RM              1. ï¿½ï¿½ï¿½
   *
   @verbatim
   ==============================================================================
@@ -27,14 +27,14 @@ enum PID_MODE
 typedef struct
 {
     uint8_t mode;
-    //PID Èı²ÎÊı
+    //PID ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     float Kp;
     float Ki;
     float Kd;
 
-    float max_out;  //×î´óÊä³ö
+    float max_out;  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     float min_out;
-    float max_iout; //×î´ó»ı·ÖÊä³ö
+    float max_iout; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     float min_iout;
 
     float set;
@@ -44,12 +44,24 @@ typedef struct
     float Pout;
     float Iout;
     float Dout;
-    float Dbuf[3];  //Î¢·ÖÏî 0×îĞÂ 1ÉÏÒ»´Î 2ÉÏÉÏ´Î
-    float error[3]; //Îó²îÏî 0×îĞÂ 1ÉÏÒ»´Î 2ÉÏÉÏ´Î
+    float Dbuf[3];  //Î¢ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½Ò»ï¿½ï¿½ 2ï¿½ï¿½ï¿½Ï´ï¿½
+    float error[3]; //ï¿½ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½Ò»ï¿½ï¿½ 2ï¿½ï¿½ï¿½Ï´ï¿½
+
+    // é«˜çº§PID
+    uint8_t IntegralSeparationEn;   // ç§¯åˆ†åˆ†ç¦»ä½¿èƒ½
+    float IntegralSeparationErr;    // ç§¯åˆ†åˆ†ç¦»/å˜é€Ÿç§¯åˆ†è¯¯å·®é˜ˆå€¼
+    uint8_t VariableIntegralEn;     // å˜é€Ÿç§¯åˆ†ä½¿èƒ½ï¼ˆä¼˜å…ˆçº§é«˜äºç§¯åˆ†åˆ†ç¦»ï¼‰
+
+    // æŠ—ä½é¢‘éœ‡è¡
+    uint8_t LeakyIntegralEn;        // ç§¯åˆ†é—å¿˜å› å­ä½¿èƒ½
+    float Ki_decay;                 // ç§¯åˆ†è¡°å‡ç³»æ•° (0.95~0.99, 1.0=ä¸è¡°å‡)
+    uint8_t TrapezoidalIntegralEn;  // æ¢¯å½¢ç§¯åˆ†ä½¿èƒ½
 
 }pid_struct;
 
 void PID_init(pid_struct *pid, uint8_t mode, const float PID[3], float max_out, float min_out, float max_iout, float min_iout);
+void PID_advanced_config(pid_struct *pid, uint8_t integral_sep_en, float integral_sep_err, uint8_t variable_integral_en);
+void PID_integral_config(pid_struct *pid, uint8_t leaky_en, float ki_decay, uint8_t trapezoidal_en);
 float PID_calc(pid_struct *pid, float ref, float set);
 void PID_clear(pid_struct *pid);
 #endif

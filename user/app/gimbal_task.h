@@ -42,31 +42,31 @@
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-#define YAW_POS_P 10.0f
-#define YAW_POS_I 0.015
-#define YAW_POS_D 5.0f
+#define YAW_POS_P 30.0f
+#define YAW_POS_I 0.065f
+#define YAW_POS_D 2.0f
 #define YAW_POS_MAX_OUT 20.0
 #define YAW_POS_MIN_OUT -20.0
 #define YAW_POS_MAX_IOUT 5.0
 #define YAW_POS_MIN_IOUT -5.0
 
-#define PITCH_POS_P 10.0f
-#define PITCH_POS_I 0.02f
-#define PITCH_POS_D 5.0f
+#define PITCH_POS_P 30.0f
+#define PITCH_POS_I 0.07f
+#define PITCH_POS_D 2.0f
 #define PITCH_POS_MAX_OUT 20.0
 #define PITCH_POS_MIN_OUT -20.0
 #define PITCH_POS_MAX_IOUT 5.0
 #define PITCH_POS_MIN_IOUT -5.0
 
-#define X_ERR_MAX_OUT 0.5f
-#define X_ERR_MIN_OUT -0.5f
-#define X_ERR_MAX_IOUT 0.2f
-#define X_ERR_MIN_IOUT -0.2f
+#define X_ERR_MAX_OUT 15.0f
+#define X_ERR_MIN_OUT -15.0f
+#define X_ERR_MAX_IOUT 0.50f
+#define X_ERR_MIN_IOUT -0.5f
 
-#define Y_ERR_MAX_OUT 0.5f
-#define Y_ERR_MIN_OUT -0.5f
-#define Y_ERR_MAX_IOUT 0.2f
-#define Y_ERR_MIN_IOUT -0.2f
+#define Y_ERR_MAX_OUT 10.0f
+#define Y_ERR_MIN_OUT -10.0f
+#define Y_ERR_MAX_IOUT 0.5f
+#define Y_ERR_MIN_IOUT -0.5f
 typedef enum
 {
     MOTOR_INIT = 0,
@@ -82,6 +82,8 @@ typedef struct
 
     pid_struct euler_pos_control;//角度环
     pid_struct euler_omega_control;//角速度环
+
+    float vel_set;
 
     float absolute_zero_angle;
     float absolute_angle;
@@ -130,32 +132,19 @@ typedef struct
     float pitch_accumulated; // 用于记录蛇形扫描中 Pitch 轴当前走到了哪里
 }scan_struct;
 
-typedef struct
-{
-    pid_struct x_err_pid;
-    pid_struct y_err_pid;
 
-    float target_x;//x设定值
-    float target_y;
-    float now_x;
-    float now_y;
-    //低通滤波器
-    first_order_filter_type_t x_LFT;
-    first_order_filter_type_t y_LFT;
-    //时间
-    float current_time;
-    uint8_t ok_flag;
-}vision_to_gimbal_t;
 
 
 typedef struct
 {
     const INS_t *imu_point;//陀螺仪数据
-    radar_data_t *radar_point;
-    vision_data_t *vision_point;//视觉数据
     const dt7_data_struct *rc_dt7_point;//遥控器数据
     const fsi6_data_struct *rc_fsi6_point;
-    vision_to_gimbal_t visionToGimbal;
+
+    radar_data_t *radar_point;
+    vision_data_t *vision_point;//视觉数据
+
+
     gimbal_motor_t yawEuler;
     dm_control_t yawMotor;//yaw电机结构体
     gimbal_motor_t pitchEuler;

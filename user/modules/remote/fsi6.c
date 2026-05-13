@@ -6,7 +6,7 @@ fsi6_data_struct fsi6Data;
 
 void Fsi6_Init(void)
 {
-	USART_RxDMA_MultiBuffer_Init(&huart9,(uint32_t *)fsi6_rx_buf[0],(uint32_t *)fsi6_rx_buf[1],SBUS_FS_RX_LEN);
+	USART_RxDMA_MultiBuffer_Init(&huart5,(uint32_t *)fsi6_rx_buf[0],(uint32_t *)fsi6_rx_buf[1],SBUS_FS_RX_LEN);
 }
 
 
@@ -86,7 +86,7 @@ void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fsi6_data_struct *rc_
 }
 
 //
-void USER_USART9_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
+void USER_USART5_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 {
 	/* Current memory buffer used is Memory 0 */
 	if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)

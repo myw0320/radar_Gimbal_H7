@@ -65,12 +65,12 @@ extern DMA_HandleTypeDef hdma_spi2_rx;
 extern DMA_HandleTypeDef hdma_spi2_tx;
 extern SPI_HandleTypeDef hspi2;
 extern TIM_HandleTypeDef htim15;
+extern DMA_HandleTypeDef hdma_uart5_rx;
 extern DMA_HandleTypeDef hdma_uart7_rx;
-extern DMA_HandleTypeDef hdma_uart8_rx;
-extern DMA_HandleTypeDef hdma_uart9_rx;
+extern DMA_HandleTypeDef hdma_uart7_tx;
 extern DMA_HandleTypeDef hdma_usart10_rx;
+extern UART_HandleTypeDef huart5;
 extern UART_HandleTypeDef huart7;
-extern UART_HandleTypeDef huart8;
 extern UART_HandleTypeDef huart10;
 extern TIM_HandleTypeDef htim2;
 
@@ -184,7 +184,7 @@ void DMA1_Stream0_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
 
   /* USER CODE END DMA1_Stream0_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_uart8_rx);
+  HAL_DMA_IRQHandler(&hdma_uart5_rx);
   /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
 
   /* USER CODE END DMA1_Stream0_IRQn 1 */
@@ -240,7 +240,7 @@ void DMA1_Stream4_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Stream4_IRQn 0 */
 
   /* USER CODE END DMA1_Stream4_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_uart9_rx);
+  HAL_DMA_IRQHandler(&hdma_uart7_tx);
   /* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
 
   /* USER CODE END DMA1_Stream4_IRQn 1 */
@@ -332,6 +332,20 @@ void EXTI15_10_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles UART5 global interrupt.
+  */
+void UART5_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART5_IRQn 0 */
+
+  /* USER CODE END UART5_IRQn 0 */
+  HAL_UART_IRQHandler(&huart5);
+  /* USER CODE BEGIN UART5_IRQn 1 */
+
+  /* USER CODE END UART5_IRQn 1 */
+}
+
+/**
   * @brief This function handles USB On The Go HS global interrupt.
   */
 void OTG_HS_IRQHandler(void)
@@ -357,20 +371,6 @@ void UART7_IRQHandler(void)
   /* USER CODE BEGIN UART7_IRQn 1 */
 
   /* USER CODE END UART7_IRQn 1 */
-}
-
-/**
-  * @brief This function handles UART8 global interrupt.
-  */
-void UART8_IRQHandler(void)
-{
-  /* USER CODE BEGIN UART8_IRQn 0 */
-
-  /* USER CODE END UART8_IRQn 0 */
-  HAL_UART_IRQHandler(&huart8);
-  /* USER CODE BEGIN UART8_IRQn 1 */
-
-  /* USER CODE END UART8_IRQn 1 */
 }
 
 /**
