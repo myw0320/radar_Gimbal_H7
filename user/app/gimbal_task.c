@@ -17,16 +17,13 @@ static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_contr
 static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add);
 //static void gimbal_motor_init_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 static void gimbal_motor_stop_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
-static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
-static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
+// void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
+// void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 
 //24.03mm
 /******/
 const float yaw_pos_k[3] = {YAW_POS_P,YAW_POS_I,YAW_POS_D};
 const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
-
-// const float x_err_k[3] = {0.0008f,0.00000035f,0.001f};
-// const float y_err_k[3] = {0.0008f,0.00000035f,0.001f};
 
 
 void Gimbal_Task(void const *pvParameters)
@@ -44,14 +41,14 @@ void Gimbal_Task(void const *pvParameters)
         gimbal_control_set(&gimbalControl);//设置
         gimbal_update_save(&gimbalControl);
         gimbal_control(&gimbalControl);//计算控制值
-
-        Vision_SendData(&gimbalControl->INS);
+        //发送视觉数据
+        Vision_SendData(gimbalControl.vision_point,gimbalControl.imu_point->Yaw,gimbalControl.imu_point->Pitch,0);
         osDelay(1);
     }
 }
 void UserGimbal_AddTxPacket(void)
 {
-    if (!gimbalControl.rc_fsi6_point->rc.sw[0] && !gimbalControl.rc_fsi6_point->rc.sw[1])//((toe_is_error(DBUS_TOE)) || gimbalControl.rc_point->rc.sw[0] == 2 && gimbalControl.rc_point->rc.sw[1] == 2)
+    if ((!gimbalControl.rc_fsi6_point->rc.sw[0] && !gimbalControl.rc_fsi6_point->rc.sw[1]) || toe_is_error(DBUS_TOE))// || gimbalControl.rc_point->rc.sw[0] == 2 && gimbalControl.rc_point->rc.sw[1] == 2)
     {
         DM_Disable(gimbalControl.yaw_can_tx_data);
         can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
@@ -176,12 +173,7 @@ static void gimbal_update(gimbal_control_struct *update)
     //pitch数据更新
     update->pitchEuler.absolute_angle = update->imu_point->Pitch;//获取绝对角
     update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;//获取相对角
-    //对数据进行一阶低通
-    // first_order_filter_cali(&update->visionToGimbal.x_LFT,update->vision_point->receive_packet.x);
-    // first_order_filter_cali(&update->visionToGimbal.y_LFT,update->vision_point->receive_packet.y);
-    //
-    // update->visionToGimbal.now_x = update->visionToGimbal.x_LFT.out;
-    // update->visionToGimbal.now_y = update->visionToGimbal.y_LFT.out;
+
 }
 
 //模式切换保存数据
@@ -395,7 +387,7 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
 
     if (motor_control == &gimbal_control->yawEuler)
     {
-        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE)
+        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE || gimbalMode == GIMBAL_MANUAL_ATTACK_MODE)
         {
             euler_yaw_set = add;
             delta_yaw = fmod(euler_yaw_set - motor_control->absolute_angle,2.0f * PI);
@@ -407,7 +399,6 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
         {
 
             euler_yaw_set = motor_control->absolute_angle_set;
-
             delta_yaw = fmod(euler_yaw_set + add - motor_control->absolute_angle,2.0f * PI);
             if (delta_yaw > PI) delta_yaw -= 2.0f * PI;
             else if (delta_yaw < -PI) delta_yaw += 2.0f * PI;
@@ -416,7 +407,7 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE)
+        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE || gimbalMode == GIMBAL_MANUAL_ATTACK_MODE)
         {
             euler_pitch_set = add;
             delta_pitch = fmod(euler_pitch_set - motor_control->absolute_angle,2.0f * PI);
@@ -449,7 +440,7 @@ static void gimbal_motor_stop_control(gimbal_control_struct *gimbal_control,gimb
     }
 }
 //电机编码值控制
-static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
+void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {
     if (gimbal_control == NULL || motor_control == NULL)
     {
@@ -458,17 +449,19 @@ static void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,g
     if (motor_control == &gimbal_control->yawEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->relative_angle,motor_control->relative_angle_set);
+        gimbal_control->yawMotor.give_kd = 1.5f;
         gimbal_control->yawMotor.give_vel = motor_control->euler_pos_control.out;;
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->relative_angle,motor_control->relative_angle_set);
+        gimbal_control->pitchMotor.give_kd = 1.5f;
         gimbal_control->pitchMotor.give_vel = motor_control->euler_pos_control.out;
     }
 }
 
 //电机陀螺仪控制
-static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
+void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {
     if (gimbal_control == NULL || motor_control == NULL)
     {
@@ -478,14 +471,14 @@ static void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimb
     if (motor_control == &gimbal_control->yawEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
-        gimbal_control->yawMotor.give_kd = 1.0f;
+        gimbal_control->yawMotor.give_kd = 1.6f;
         gimbal_control->yawMotor.give_vel = motor_control->euler_pos_control.out;
 
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
         PID_calc(&motor_control->euler_pos_control,motor_control->absolute_angle,motor_control->absolute_angle_set);
-        gimbal_control->pitchMotor.give_kd = 1.0f;
+        gimbal_control->pitchMotor.give_kd = 1.8f;
         gimbal_control->pitchMotor.give_vel = motor_control->euler_pos_control.out;
 
     }

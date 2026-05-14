@@ -1,5 +1,5 @@
 #include "fsi6.h"
-
+#include "detect_task.h"
 
 uint8_t fsi6_rx_buf[2][SBUS_FS_RX_LEN];//¿ØÊý¾Ý°ü
 fsi6_data_struct fsi6Data;
@@ -16,8 +16,10 @@ void Fsi6_RxPacketUpdate(volatile const uint8_t *sbus_buf, fsi6_data_struct *rc_
     {
         return;
     }
+
 	if(sbus_buf[0] == 0x0f && sbus_buf[23] == 0x00)
 	{
+		detect_hook(DBUS_TOE);
 		rc_ctrl-> SBUS .CH[1] =(sbus_buf[1]>>0	  |( sbus_buf[2]<<8)) & 0x07ff;
 		rc_ctrl-> SBUS .CH[2] =(sbus_buf[2]>>3	  | (sbus_buf[3]<<5)) & 0x07ff;
 		rc_ctrl-> SBUS .CH[3] =((sbus_buf[3]>>6)  |(sbus_buf[4]<<2) | (sbus_buf[5]<<10)) & 0x07ff;

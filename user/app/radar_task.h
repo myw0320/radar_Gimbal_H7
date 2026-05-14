@@ -9,9 +9,9 @@
 #include "bsp_uart.h"
 #include "pid.h"
 #include "arm_math.h"
-
+#include "packet_typedef.h"
 #define RADAR_UART huart10
-
+#define UART10_RX_LEN 36u
 #define RADAR_RX_LEN  18u
 
 typedef struct
@@ -31,6 +31,8 @@ typedef struct __attribute__((packed))
     float latency_time;
     uint16_t check_crc16;
     uint8_t end;
+
+    packet_state_e packet_state;
 } radar_receive_packet_t;
 //
 // typedef struct __attribute__((packed))
@@ -46,9 +48,7 @@ typedef struct
 {
     radar_receive_packet_t receive_packet;
     //vision_transmit_packet_t transmit_packet;
-    //
-    // pid_struct yaw_err_pid;
-    // pid_struct pitch_err_pid;
+
 }radar_data_t;
 
 void radar_init(void);

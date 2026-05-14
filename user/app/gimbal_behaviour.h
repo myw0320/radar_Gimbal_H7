@@ -25,12 +25,15 @@ typedef enum
 }gimbal_control_mode_enum;
 typedef enum
 {
-    GIMBAL_NO_MOVE_MODE = 0,//云台无力
-    GIMBAL_INIT_MODE,//云台初始化
-    GIMBAL_MANUAL_RC_MODE,//云台手动控制
-    GIMBAL_AUTO_MOVE_MODE,//自动移动
-    GIMBAL_AUTO_SCAN_MODE,//自动扫描
-    GIMBAL_AUTO_ATTACK_MODE = 5,//自动攻击
+    GIMBAL_NO_MOVE_MODE = 0,
+    GIMBAL_INIT_MODE = 1,
+
+    GIMBAL_MANUAL_MOVE_MODE = 2,//手动移动
+    GIMBAL_MANUAL_ATTACK_MODE = 3,//手动攻击
+
+    GIMBAL_AUTO_MOVE_MODE = 4,//自动移动
+    GIMBAL_AUTO_SCAN_MODE = 5,//自动扫描
+    GIMBAL_AUTO_ATTACK_MODE = 6,//自动攻击
 }gimbal_mode_enum;
 
  extern gimbal_mode_enum gimbalMode;//云台模式

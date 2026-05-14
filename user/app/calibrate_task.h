@@ -1,7 +1,7 @@
 #ifndef __H7_CALIBRATE_TASK_H
 #define __H7_CALIBRATE_TASK_H
 #include "stdint.h"
-
+#include "stdbool.h"
 #include "dt7.h"
 
 //cali device name
@@ -33,5 +33,9 @@ typedef struct
     float scale[3];  //x,y,z
 } imu_cali_t;
 
-
+typedef struct
+{
+    bool gimbal_cali_flag;//云台归为标志位
+    bool imu_start_flag;//imu开始
+}cali_flag_t;
 #endif //__H7_CALIBRATE_TASK_H

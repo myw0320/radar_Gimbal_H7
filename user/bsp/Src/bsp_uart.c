@@ -112,23 +112,20 @@ __weak void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
   */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size)
 {
-	// if(huart == &huart1)
-	// {
-	// 	USER_USART1_RxHandler(huart,Size);
-	// }
+
 	if(huart == &huart5)
 	{
 	 	USER_USART5_RxHandler(huart,Size);
+	}
+
+	if (huart == &huart7)
+	{
+		USER_USART7_RxHandler(huart,Size);
 	}
 	if (huart == &huart10)
 	{
 		USER_USART10_RxHandler(huart,Size);
 	}
-	if (huart == &huart7)
-	{
-		USER_USART7_RxHandler(huart,Size);
-	}
-
 
 	
    huart->ReceptionType = HAL_UART_RECEPTION_TOIDLE;

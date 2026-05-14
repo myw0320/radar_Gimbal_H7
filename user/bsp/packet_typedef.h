@@ -14,7 +14,8 @@
 
 #ifndef NAVIGATION_TASK_PACKET_TYPEDEF_H
 #define NAVIGATION_TASK_PACKET_TYPEDEF_H
-
+#include "main.h"
+#include <stdbool.h>
 typedef enum{
   SOF_RECEIVE = 0x5A,
   SOF_SEND = 0x5A
@@ -382,6 +383,11 @@ typedef struct __attribute__((packed))
   uint16_t checksum;
 }ReceiveRobotCmdData;
 
-
+typedef enum
+{
+  DEC_OK,
+  DEC_ERROR,
+  DEC_DATA_NO,
+}packet_state_e;
 
 #endif  // STANDARD_ROBOT_PP_ROS2__PACKET_TYPEDEF_HPP_

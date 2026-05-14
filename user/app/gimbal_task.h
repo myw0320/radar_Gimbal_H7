@@ -42,7 +42,7 @@
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-#define YAW_POS_P 30.0f
+#define YAW_POS_P 40.0f
 #define YAW_POS_I 0.065f
 #define YAW_POS_D 2.0f
 #define YAW_POS_MAX_OUT 20.0
@@ -50,9 +50,9 @@
 #define YAW_POS_MAX_IOUT 5.0
 #define YAW_POS_MIN_IOUT -5.0
 
-#define PITCH_POS_P 30.0f
-#define PITCH_POS_I 0.07f
-#define PITCH_POS_D 2.0f
+#define PITCH_POS_P 50.0f
+#define PITCH_POS_I 0.085f
+#define PITCH_POS_D 5.0f
 #define PITCH_POS_MAX_OUT 20.0
 #define PITCH_POS_MIN_OUT -20.0
 #define PITCH_POS_MAX_IOUT 5.0
@@ -159,4 +159,6 @@ typedef struct
 
 extern gimbal_control_struct gimbalControl;//ÔÆÌ¨¿ØÖÆ
 void UserGimbal_AddTxPacket(void);
+void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
+void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 #endif //RADAR_GIMBAL_H7_GIMBAL_TASK_H
