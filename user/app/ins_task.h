@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 ******************************************************************************
  * @file    ins_task.h
  * @author  Wang Hongxi
@@ -34,16 +34,17 @@
 #define ANGLE_TO_RADIAN ((2 * PI) / 360.0f)
 typedef struct
 {
-    float q[4]; // ËÄÔªÊı¹À¼ÆÖµ
+    float q[4]; // å››å…ƒæ•°ä¼°è®¡å€¼
 
-    float Gyro[3];  // ½ÇËÙ¶È
-    float Accel[3]; // ¼ÓËÙ¶È
-    float MotionAccel_b[3]; // »úÌå×ø±ê¼ÓËÙ¶È
-    float MotionAccel_n[3]; // ¾ø¶ÔÏµ¼ÓËÙ¶È
+    float Gyro[3];  // è§’é€Ÿåº¦
+    float GyroBias[3]; // å¯åŠ¨åä¼°è®¡çš„æ®‹ä½™é™€èºä»ªé›¶å
+    float Accel[3]; // åŠ é€Ÿåº¦
+    float MotionAccel_b[3]; // æœºä½“åæ ‡åŠ é€Ÿåº¦
+    float MotionAccel_n[3]; // ç»å¯¹ç³»åŠ é€Ÿåº¦
 
-    float AccelLPF; // ¼ÓËÙ¶ÈµÍÍ¨ÂË²¨ÏµÊı
+    float AccelLPF; // åŠ é€Ÿåº¦ä½é€šæ»¤æ³¢ç³»æ•°
 
-    // ¼ÓËÙ¶ÈÔÚ¾ø¶ÔÏµµÄÏòÁ¿±íÊ¾
+    // åŠ é€Ÿåº¦åœ¨ç»å¯¹ç³»çš„å‘é‡è¡¨ç¤º
     float xn[3];
     float yn[3];
     float zn[3];
@@ -51,7 +52,7 @@ typedef struct
     float atanxz;
     float atanyz;
 
-    // Î»×Ë
+    // ä½å§¿
     float Roll;
     float Pitch;
     float Yaw;
@@ -82,22 +83,23 @@ void EularAngleToQuaternion(float Yaw, float Pitch, float Roll, float *q);
 void BodyFrameToEarthFrame(const float *vecBF, float *vecEF, float *q);
 void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q);
 
-//»ñÈ¡imu×ËÌ¬Ö¸Õë
+//è·å–imuå§¿æ€æŒ‡é’ˆ
 const INS_t* get_INS_point(void);
 
 #elif EKF ==0
 typedef struct
 {
-    float q[4]; // ËÄÔªÊı¹À¼ÆÖµ
+    float q[4]; // å››å…ƒæ•°ä¼°è®¡å€¼
 
-    float Gyro[3];  // ½ÇËÙ¶È
-    float Accel[3]; // ¼ÓËÙ¶È
-    float MotionAccel_b[3]; // »úÌå×ø±ê¼ÓËÙ¶È
-    float MotionAccel_n[3]; // ¾ø¶ÔÏµ¼ÓËÙ¶È
+    float Gyro[3];  // è§’é€Ÿåº¦
+    float GyroBias[3]; // å¯åŠ¨åä¼°è®¡çš„æ®‹ä½™é™€èºä»ªé›¶å
+    float Accel[3]; // åŠ é€Ÿåº¦
+    float MotionAccel_b[3]; // æœºä½“åæ ‡åŠ é€Ÿåº¦
+    float MotionAccel_n[3]; // ç»å¯¹ç³»åŠ é€Ÿåº¦
 
-    float AccelLPF; // ¼ÓËÙ¶ÈµÍÍ¨ÂË²¨ÏµÊı
+    float AccelLPF; // åŠ é€Ÿåº¦ä½é€šæ»¤æ³¢ç³»æ•°
 
-    // ¼ÓËÙ¶ÈÔÚ¾ø¶ÔÏµµÄÏòÁ¿±íÊ¾
+    // åŠ é€Ÿåº¦åœ¨ç»å¯¹ç³»çš„å‘é‡è¡¨ç¤º
     float xn[3];
     float yn[3];
     float zn[3];
@@ -105,7 +107,7 @@ typedef struct
     float atanxz;
     float atanyz;
 
-    // Î»×Ë
+    // ä½å§¿
     float Roll;
     float Pitch;
     float Yaw;
@@ -113,15 +115,15 @@ typedef struct
     float YawAngleLast;
     float YawRoundCount;
 
-    float v_n;//¾ø¶ÔÏµÑØ×ÅË®Æ½ÔË¶¯·½ÏòµÄËÙ¶È
-    float x_n;//¾ø¶ÔÏµÑØ×ÅË®Æ½ÔË¶¯·½ÏòµÄÎ»ÒÆ
+    float v_n;//ç»å¯¹ç³»æ²¿ç€æ°´å¹³è¿åŠ¨æ–¹å‘çš„é€Ÿåº¦
+    float x_n;//ç»å¯¹ç³»æ²¿ç€æ°´å¹³è¿åŠ¨æ–¹å‘çš„ä½ç§»
 
     uint8_t ins_flag;
 } INS_t;
 
 
 /**
- * @brief ÓÃÓÚĞŞÕı°²×°Îó²îµÄ²ÎÊı,demoÖĞ¿ÉÎŞÊÓ
+ * @brief ç”¨äºä¿®æ­£å®‰è£…è¯¯å·®çš„å‚æ•°,demoä¸­å¯æ— è§†
  *
  */
 typedef struct

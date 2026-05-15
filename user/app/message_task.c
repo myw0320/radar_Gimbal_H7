@@ -31,7 +31,7 @@ void Message_Task(void const * argument)
         //  // }
         // else
         // {
-            Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
+           // Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
             if (current_time >= 10)
             {
                 ws2812_bink(ws2812_rgb.r, ws2812_rgb.g, ws2812_rgb.b);

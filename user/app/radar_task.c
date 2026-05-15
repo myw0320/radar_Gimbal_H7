@@ -1,6 +1,8 @@
 #include "radar_task.h"
 
 #include "detect_task.h"
+#include <math.h>
+#include <string.h>
 
 
 uint8_t radar_rx_buf[2][UART10_RX_LEN];//
@@ -32,9 +34,19 @@ void Radar_GetRxPacket(const uint8_t *rx_data,radar_receive_packet_t *packet)
 
         detect_hook(RADAR_TOE);
         packet->packet_state = DEC_OK;
-        if (packet->yaw < 6.28f && packet->pitch < 6.28f)
+        if (!isfinite(packet->raw_yaw) || !isfinite(packet->raw_pitch) ||
+            packet->raw_yaw > 6.28f || packet->raw_pitch > 6.28f)
         {
             packet->packet_state = DEC_DATA_NO;
+            packet->yaw = packet->last_yaw;
+            packet->pitch = packet->last_pitch;
+        }
+        else
+        {
+            packet->yaw = packet->raw_yaw;
+            packet->pitch = packet->raw_pitch;
+            packet->last_yaw = packet->yaw;
+            packet->last_pitch = packet->pitch;
         }
     }
 }

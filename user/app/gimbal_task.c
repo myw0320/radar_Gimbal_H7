@@ -1,11 +1,11 @@
-#include "gimbal_task.h"
+ï»¿#include "gimbal_task.h"
 #include "gimbal_behaviour.h"
 #include "can_comm_task.h"
 #include "detect_task.h"
 #include "cmsis_os.h"
 //#include "cap_comm.h"
 
-gimbal_control_struct gimbalControl;//ÔÆÌ¨¿ØÖÆ
+gimbal_control_struct gimbalControl;//äº‘å°æ§åˆ¶
 
 static void gimbal_init(gimbal_control_struct *init);
 static void gimbal_update(gimbal_control_struct *update);
@@ -29,19 +29,19 @@ const float pitch_pos_k[3] = {PITCH_POS_P,PITCH_POS_I,PITCH_POS_D};
 void Gimbal_Task(void const *pvParameters)
 {
     while(INS.ins_flag==0)
-    {//µÈ´ı¼ÓËÙ¶ÈÊÕÁ²
+    {//ç­‰å¾…åŠ é€Ÿåº¦æ”¶æ•›
         osDelay(1);
     }
-    //³õÊ¼»¯
+    //åˆå§‹åŒ–
     gimbal_init(&gimbalControl);
 
     while(1)
     {
-        gimbal_update(&gimbalControl);//¸üĞÂÊı¾İ
-        gimbal_control_set(&gimbalControl);//ÉèÖÃ
+        gimbal_update(&gimbalControl);//æ›´æ–°æ•°æ®
+        gimbal_control_set(&gimbalControl);//è®¾ç½®
         gimbal_update_save(&gimbalControl);
-        gimbal_control(&gimbalControl);//¼ÆËã¿ØÖÆÖµ
-        //·¢ËÍÊÓ¾õÊı¾İ
+        gimbal_control(&gimbalControl);//è®¡ç®—æ§åˆ¶å€¼
+        //å‘é€è§†è§‰æ•°æ®
         Vision_SendData(gimbalControl.vision_point,gimbalControl.imu_point->Yaw,gimbalControl.imu_point->Pitch,0);
         osDelay(1);
     }
@@ -88,14 +88,14 @@ void gimbal_clear()
 
 static void gimbal_init(gimbal_control_struct *init)
 {
-    //»ñÈ¡Ö¸ÕëµØÖ·
+    //è·å–æŒ‡é’ˆåœ°å€
     init->imu_point = &INS;
     init->vision_point = &visionData;
     init->radar_point = &radarData;
     init->rc_dt7_point = &dt7Data;
     init->rc_fsi6_point = &fsi6Data;
-    //yawÊı¾İ³õÊ¼»¯
-    DM_Init(&init->yawMotor,DM4310,MIT,0x01);//µç»ú¿ØÖÆ³õÊ¼»¯
+    //yawæ•°æ®åˆå§‹åŒ–
+    DM_Init(&init->yawMotor,DM4310,MIT,0x01);//ç”µæœºæ§åˆ¶åˆå§‹åŒ–
 
     init->yawEuler.absolute_angle_max = YAW_ABS_MAX;
     init->yawEuler.absolute_angle_min = YAW_ABS_MIN;
@@ -107,8 +107,8 @@ static void gimbal_init(gimbal_control_struct *init)
     init->yawEuler.relative_angle_set = YAW_REL_ZERO;
     PID_init(&init->yawEuler.euler_pos_control,PID_POSITION,yaw_pos_k,YAW_POS_MAX_OUT,YAW_POS_MIN_OUT,YAW_POS_MAX_IOUT,YAW_POS_MIN_IOUT);
     PID_advanced_config(&init->yawEuler.euler_pos_control,1,0.001f,0);
-    //pitchÊı¾İ³õÊ¼»¯
-    DM_Init(&init->pitchMotor,DM4310,MIT,0x06);//µç»ú¿ØÖÆ³õÊ¼»¯
+    //pitchæ•°æ®åˆå§‹åŒ–
+    DM_Init(&init->pitchMotor,DM4310,MIT,0x06);//ç”µæœºæ§åˆ¶åˆå§‹åŒ–
     init->pitchEuler.absolute_angle_max = PITCH_ABS_MAX;
     init->pitchEuler.absolute_angle_min = PITCH_ABS_MIN;
     init->pitchEuler.absolute_zero_angle = PITCH_ABS_ZERO;
@@ -119,7 +119,7 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.relative_angle_set = PITCH_REL_ZERO;
     PID_init(&init->pitchEuler.euler_pos_control,PID_POSITION,pitch_pos_k,PITCH_POS_MAX_OUT,PITCH_POS_MIN_OUT,PITCH_POS_MAX_IOUT,PITCH_POS_MIN_IOUT);
     PID_advanced_config(&init->pitchEuler.euler_pos_control,1,0.001f,0);
-    //³õÊ¼»¯ÊÓ¾õ¿ØÖÆpid
+    //åˆå§‹åŒ–è§†è§‰æ§åˆ¶pid
     // PID_init(&init->visionToGimbal.x_err_pid,PID_POSITION,x_err_k,X_ERR_MAX_OUT,X_ERR_MIN_OUT,X_ERR_MAX_IOUT,X_ERR_MIN_IOUT);
     // PID_advanced_config(&init->visionToGimbal.x_err_pid,1,10,0);
     // //PID_integral_config(&init->visionToGimbal.x_err_pid,0,0.96f,1);
@@ -127,19 +127,19 @@ static void gimbal_init(gimbal_control_struct *init)
     // PID_advanced_config(&init->visionToGimbal.y_err_pid,1,10,0);
     //PID_integral_config(&init->visionToGimbal.y_err_pid,0,0.96f,1);
 
-    //³õÊ¼»¯ÊÓ¾õLFT
+    //åˆå§‹åŒ–è§†è§‰LFT
     // first_order_filter_init(&init->visionToGimbal.x_LFT,0.001f,x_err_a);
     // first_order_filter_init(&init->visionToGimbal.y_LFT,0.001f,y_err_a);
 
     init->gimbalScan.scan_begin_time =  HAL_GetTick() * 0.001f;
 
-    // //µç»úÇå³ı
+    // //ç”µæœºæ¸…é™¤
     DM_Clear(init->yaw_can_tx_data);
     can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
     osDelay(10);
     DM_Clear(init->pitch_can_tx_data);
     can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
-    // µç»úÊ¹ÄÜ
+    // ç”µæœºä½¿èƒ½
     DM_Enable(init->yaw_can_tx_data);
     can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
     osDelay(10);
@@ -148,7 +148,7 @@ static void gimbal_init(gimbal_control_struct *init)
 }
 
 
-//±àÂëÖµ×ª»¡¶È
+//ç¼–ç å€¼è½¬å¼§åº¦
 static float motor_ecd_to_rad(uint16_t ecd, uint16_t zero_ecd)
 {
     uint16_t relative_ecd = ecd - zero_ecd;
@@ -164,19 +164,19 @@ static float motor_ecd_to_rad(uint16_t ecd, uint16_t zero_ecd)
     return (float)relative_ecd * MOTOR_ECD_TO_RAD;
 }
 
-//Êı¾İ¸üĞÂ
+//æ•°æ®æ›´æ–°
 static void gimbal_update(gimbal_control_struct *update)
 {
-    //yawÊı¾İ¸üĞÂ
-    update->yawEuler.absolute_angle = update->imu_point->Yaw;//»ñÈ¡¾ø¶Ô½Ç
-    update->yawEuler.relative_angle = update->yawMotor.motor_measurement.pos;//»ñÈ¡Ïà¶Ô½Ç
-    //pitchÊı¾İ¸üĞÂ
-    update->pitchEuler.absolute_angle = update->imu_point->Pitch;//»ñÈ¡¾ø¶Ô½Ç
-    update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;//»ñÈ¡Ïà¶Ô½Ç
+    //yawæ•°æ®æ›´æ–°
+    update->yawEuler.absolute_angle = update->imu_point->Yaw;//è·å–ç»å¯¹è§’
+    update->yawEuler.relative_angle = update->yawMotor.motor_measurement.pos;//è·å–ç›¸å¯¹è§’
+    //pitchæ•°æ®æ›´æ–°
+    update->pitchEuler.absolute_angle = update->imu_point->Pitch;//è·å–ç»å¯¹è§’
+    update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;//è·å–ç›¸å¯¹è§’
 
 }
 
-//Ä£Ê½ÇĞ»»±£´æÊı¾İ
+//æ¨¡å¼åˆ‡æ¢ä¿å­˜æ•°æ®
 static void gimbal_update_save(gimbal_control_struct *save)
 {
     if (save == NULL)
@@ -201,7 +201,7 @@ static void gimbal_update_save(gimbal_control_struct *save)
         save->pitchEuler.relative_angle_set = save->pitchEuler.relative_angle;
     }
 }
-//¿ØÖÆÉèÖÃ
+//æ§åˆ¶è®¾ç½®
 static void gimbal_control_set(gimbal_control_struct *control)
 {
     if (control == NULL)
@@ -209,7 +209,7 @@ static void gimbal_control_set(gimbal_control_struct *control)
         return;
     }
     static float euler_yaw_add = 0,euler_pitch_add = 0;
-    //ÔÆÌ¨ĞĞÎª¿ØÖÆÉèÖÃ
+    //äº‘å°è¡Œä¸ºæ§åˆ¶è®¾ç½®
     gimbal_behaviour_control_set(&euler_yaw_add,&euler_pitch_add,control);
     switch (control->yawEuler.motorMode)
     {
@@ -272,7 +272,7 @@ static void gimbal_control(gimbal_control_struct *control)
     {
         return;
     }
-    //¸üĞÂÔÆÌ¨¸÷µç»úĞĞÎª
+    //æ›´æ–°äº‘å°å„ç”µæœºè¡Œä¸º
     gimbal_motor_mode_update(control);
     switch (control->yawEuler.motorMode)
     {
@@ -336,7 +336,7 @@ static void gimbal_motor_init_control_set(gimbal_control_struct *gimbal_control,
     {
         return;
     }
-    //Î»ÖÃÊ½
+    //ä½ç½®å¼
     static float euler_yaw_set =0,euler_pitch_set = 0;
     if (motor_control == &gimbal_control->yawEuler)
     {
@@ -352,7 +352,7 @@ static void gimbal_motor_init_control_set(gimbal_control_struct *gimbal_control,
         //motor_control->relative_angle_set = Math_Constrain(&motor_control->relative_angle_set,PITCH_REL_MIN,PITCH_REL_MAX);
     }
 }
-//±àÂëÖµ
+//ç¼–ç å€¼
 static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add)
 {
     if (gimbal_control == NULL || motor_control == NULL)
@@ -375,7 +375,7 @@ static void gimbal_motor_encoder_control_set(gimbal_control_struct *gimbal_contr
 }
 
 
-//ÍÓÂİÒÇ
+//é™€èºä»ª
 static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control,float add)
 {
     if (gimbal_control == NULL || motor_control == NULL)
@@ -387,7 +387,10 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
 
     if (motor_control == &gimbal_control->yawEuler)
     {
-        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE || gimbalMode == GIMBAL_MANUAL_ATTACK_MODE)
+        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE ||
+            gimbalMode == GIMBAL_MANUAL_ATTACK_MODE ||
+            gimbalMode == GIMBAL_AUTO_MOVE_MODE ||
+            gimbalMode == GIMBAL_AUTO_SCAN_MODE)
         {
             euler_yaw_set = add;
             delta_yaw = fmod(euler_yaw_set - motor_control->absolute_angle,2.0f * PI);
@@ -407,7 +410,10 @@ static void gimbal_motor_gyro_control_set(gimbal_control_struct *gimbal_control,
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE || gimbalMode == GIMBAL_MANUAL_ATTACK_MODE)
+        if (gimbalMode == GIMBAL_AUTO_ATTACK_MODE ||
+            gimbalMode == GIMBAL_MANUAL_ATTACK_MODE ||
+            gimbalMode == GIMBAL_AUTO_MOVE_MODE ||
+            gimbalMode == GIMBAL_AUTO_SCAN_MODE)
         {
             euler_pitch_set = add;
             delta_pitch = fmod(euler_pitch_set - motor_control->absolute_angle,2.0f * PI);
@@ -439,7 +445,7 @@ static void gimbal_motor_stop_control(gimbal_control_struct *gimbal_control,gimb
         gimbal_control->pitchMotor.give_vel = 0;
     }
 }
-//µç»ú±àÂëÖµ¿ØÖÆ
+//ç”µæœºç¼–ç å€¼æ§åˆ¶
 void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {
     if (gimbal_control == NULL || motor_control == NULL)
@@ -460,7 +466,7 @@ void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_m
     }
 }
 
-//µç»úÍÓÂİÒÇ¿ØÖÆ
+//ç”µæœºé™€èºä»ªæ§åˆ¶
 void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control)
 {
     if (gimbal_control == NULL || motor_control == NULL)

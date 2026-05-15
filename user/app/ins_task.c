@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 ******************************************************************************
  * @file    ins_task.h
  * @author  Wang Hongxi
@@ -72,33 +72,33 @@ void INS_Task(void const * argument)
 	        INS.Gyro[Y] = BMI088.Gyro[Y];
 	        INS.Gyro[Z] = BMI088.Gyro[Z];
 
-	        // demo function,ÓÃÓÚ??Õı°²×°?????,??ÒÔ²»??,±¾demoÔİÊ±Ã»ÓÃ
+	        // demo function,ç”¨äº??æ­£å®‰è£…?????,??ä»¥ä¸??,æœ¬demoæš‚æ—¶æ²¡ç”¨
 	        IMU_Param_Correction(&IMU_Param, INS.Gyro, INS.Accel);
 
-	        // ¼ÆËãÖØÁ¦¼ÓËÙ¶ÈÊ¸Á¿ºÍbÏµµÄXYÁ½ÖáµÄ¼Ğ??,??ÓÃ×÷¹¦ÄÜÀ©Õ¹,±¾demoÔİÊ±Ã»ÓÃ
+	        // è®¡ç®—é‡åŠ›åŠ é€Ÿåº¦çŸ¢é‡å’Œbç³»çš„XYä¸¤è½´çš„å¤¹??,??ç”¨ä½œåŠŸèƒ½æ‰©å±•,æœ¬demoæš‚æ—¶æ²¡ç”¨
 	        INS.atanxz = -atan2f(INS.Accel[X], INS.Accel[Z]) * 180 / PI;
 	        INS.atanyz = atan2f(INS.Accel[Y], INS.Accel[Z]) * 180 / PI;
 
-	        // ºËĞÄº¯Êı,EKF¸üĞÂËÄÔª??
+	        // æ ¸å¿ƒå‡½æ•°,EKFæ›´æ–°å››å…ƒ??
 	        IMU_QuaternionEKF_Update(INS.Gyro[X], INS.Gyro[Y], INS.Gyro[Z], INS.Accel[X], INS.Accel[Y], INS.Accel[Z], dt);
 
 	        memcpy(INS.q, QEKF_INS.q, sizeof(QEKF_INS.q));
 
-	        // »úÌåÏµ»ùÏòÁ¿??»»µ½µ¼º½×ø±êÏµ£¬??ÀıÑ¡È¡??ĞÔÏµÎª???º½??
+	        // æœºä½“ç³»åŸºå‘é‡??æ¢åˆ°å¯¼èˆªåæ ‡ç³»ï¼Œ??ä¾‹é€‰å–??æ€§ç³»ä¸º???èˆª??
 	        BodyFrameToEarthFrame(xb, INS.xn, INS.q);
 	        BodyFrameToEarthFrame(yb, INS.yn, INS.q);
 	        BodyFrameToEarthFrame(zb, INS.zn, INS.q);
 
-	        // ½«ÖØÁ¦´Óµ¼º½×ø±êÏµn??»»µ½»úÌåÏµb,Ëæºó¸ù¾İ¼ÓËÙ¶È¼ÆÊı??¼ÆËãÔË¶¯¼ÓËÙ¶È
+	        // å°†é‡åŠ›ä»å¯¼èˆªåæ ‡ç³»n??æ¢åˆ°æœºä½“ç³»b,éšåæ ¹æ®åŠ é€Ÿåº¦è®¡æ•°??è®¡ç®—è¿åŠ¨åŠ é€Ÿåº¦
 	        float gravity_b[3];
 	        EarthFrameToBodyFrame(gravity, gravity_b, INS.q);
-	        for (uint8_t i = 0; i < 3; i++) // Í¬Ñù¹ıÒ»??µÍÍ¨ÂË??
+	        for (uint8_t i = 0; i < 3; i++) // åŒæ ·è¿‡ä¸€??ä½é€šæ»¤??
 	        {
 	            INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * dt / (INS.AccelLPF + dt) + INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
 	        }
-	        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // ??»»»Øµ¼º½Ïµn
+	        BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // ??æ¢å›å¯¼èˆªç³»n
 
-	        // »ñÈ¡×îÖÕÊıÖµ
+	        // è·å–æœ€ç»ˆæ•°å€¼
 	        INS.Yaw = QEKF_INS.Yaw * ANGLE_TO_RADIAN;
 	        INS.Pitch = QEKF_INS.Pitch * ANGLE_TO_RADIAN;
 	        INS.Roll = QEKF_INS.Roll * ANGLE_TO_RADIAN;
@@ -133,14 +133,29 @@ uint32_t INS_DWT_Count = 0;
 float ins_dt = 0.0f;
 float ins_time;
 int stop_time;
+
+#define INS_GYRO_BIAS_INIT_SAMPLES 1000u
+#define INS_GYRO_STILL_THRESHOLD 0.08f
+#define INS_ACCEL_STILL_MIN 8.8f
+#define INS_ACCEL_STILL_MAX 10.8f
+#define INS_GYRO_BIAS_TRACK_ALPHA 0.0005f
+
+static void INS_GyroBias_Init(void);
+static void INS_GyroBias_Update(const float gyro[3], const float accel[3]);
+static uint8_t INS_IsStill(const float gyro[3], const float accel[3]);
+
 void INS_Init(void)
 {
-	mahony_init(&mahony,1.0f,0.0f,0.001f);
+	mahony_init(&mahony,1.0f,0.02f,0.001f);
 	INS.AccelLPF = 0.0089f;
+	INS.GyroBias[X] = 0.0f;
+	INS.GyroBias[Y] = 0.0f;
+	INS.GyroBias[Z] = 0.0f;
 }
 void INS_Task(void const * argument)
 {
 	INS_Init();
+	INS_GyroBias_Init();
 	while(1)
 	{
 
@@ -159,9 +174,13 @@ void INS_Task(void const * argument)
 		INS.Gyro[X] = BMI088.Gyro[X];
 		INS.Gyro[Y] = BMI088.Gyro[Y];
 		INS.Gyro[Z] = BMI088.Gyro[Z];
-		Gyro.x=BMI088.Gyro[0];
-		Gyro.y=BMI088.Gyro[1];
-		Gyro.z=BMI088.Gyro[2];
+		INS_GyroBias_Update(INS.Gyro, INS.Accel);
+		INS.Gyro[X] -= INS.GyroBias[X];
+		INS.Gyro[Y] -= INS.GyroBias[Y];
+		INS.Gyro[Z] -= INS.GyroBias[Z];
+		Gyro.x=INS.Gyro[0];
+		Gyro.y=INS.Gyro[1];
+		Gyro.z=INS.Gyro[2];
 
 		mahony_input(&mahony,Gyro,Accel);
 		mahony_update(&mahony);
@@ -173,36 +192,36 @@ void INS_Task(void const * argument)
 		INS.q[2]=mahony.q2;
 		INS.q[3]=mahony.q3;
 
-		// ½«ÖØÁ¦´Óµ¼º½×ø±êÏµn×ª»»µ½»úÌåÏµb,Ëæºó¸ù¾İ¼ÓËÙ¶È¼ÆÊı¾İ¼ÆËãÔË¶¯¼ÓËÙ¶È
+		// å°†é‡åŠ›ä»å¯¼èˆªåæ ‡ç³»nè½¬æ¢åˆ°æœºä½“ç³»b,éšåæ ¹æ®åŠ é€Ÿåº¦è®¡æ•°æ®è®¡ç®—è¿åŠ¨åŠ é€Ÿåº¦
 		float gravity_b[3];
 		EarthFrameToBodyFrame(gravity, gravity_b, INS.q);
-		for (uint8_t i = 0; i < 3; i++) // Í¬Ñù¹ıÒ»¸öµÍÍ¨ÂË²¨
+		for (uint8_t i = 0; i < 3; i++) // åŒæ ·è¿‡ä¸€ä¸ªä½é€šæ»¤æ³¢
 		{
 			INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * ins_dt / (INS.AccelLPF + ins_dt)
 															  + INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + ins_dt);
 			//				INS.MotionAccel_b[i] = (INS.Accel[i] ) * dt / (INS.AccelLPF + dt)
 			//															+ INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
 		}
-		BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // ×ª»»»Øµ¼º½Ïµn
+		BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // è½¬æ¢å›å¯¼èˆªç³»n
 
-		//ËÀÇø´¦Àí
+		//æ­»åŒºå¤„ç†
 		if(fabsf(INS.MotionAccel_n[0])<0.02f)
 		{
-			INS.MotionAccel_n[0]=0.0f;	//xÖá
+			INS.MotionAccel_n[0]=0.0f;	//xè½´
 		}
 		if(fabsf(INS.MotionAccel_n[1])<0.02f)
 		{
-			INS.MotionAccel_n[1]=0.0f;	//yÖá
+			INS.MotionAccel_n[1]=0.0f;	//yè½´
 		}
 		if(fabsf(INS.MotionAccel_n[2])<0.04f)
 		{
-			INS.MotionAccel_n[2]=0.0f;//zÖá
+			INS.MotionAccel_n[2]=0.0f;//zè½´
 		}
 
 		if(ins_time>3000.0f)
 		{
-			INS.ins_flag=1;//ËÄÔªÊı»ù±¾ÊÕÁ²£¬¼ÓËÙ¶ÈÒ²»ù±¾ÊÕÁ²£¬¿ÉÒÔ¿ªÊ¼µ×ÅÌÈÎÎñ
-			// »ñÈ¡×îÖÕÊı¾İ
+			INS.ins_flag=1;//å››å…ƒæ•°åŸºæœ¬æ”¶æ•›ï¼ŒåŠ é€Ÿåº¦ä¹ŸåŸºæœ¬æ”¶æ•›ï¼Œå¯ä»¥å¼€å§‹åº•ç›˜ä»»åŠ¡
+			// è·å–æœ€ç»ˆæ•°æ®
 			INS.Pitch=mahony.roll;
 			INS.Roll=mahony.pitch;
 			INS.Yaw=mahony.yaw;
@@ -225,6 +244,63 @@ void INS_Task(void const * argument)
 			ins_time++;
 		}
 		osDelay(1);
+	}
+}
+
+static uint8_t INS_IsStill(const float gyro[3], const float accel[3])
+{
+	float gyro_norm = sqrtf(gyro[X] * gyro[X] + gyro[Y] * gyro[Y] + gyro[Z] * gyro[Z]);
+	float accel_norm = sqrtf(accel[X] * accel[X] + accel[Y] * accel[Y] + accel[Z] * accel[Z]);
+
+	return gyro_norm < INS_GYRO_STILL_THRESHOLD &&
+		   accel_norm > INS_ACCEL_STILL_MIN &&
+		   accel_norm < INS_ACCEL_STILL_MAX;
+}
+
+static void INS_GyroBias_Init(void)
+{
+	float gyro_sum[3] = {0.0f, 0.0f, 0.0f};
+	float gyro_sample[3];
+	float accel_sample[3];
+	uint16_t valid_count = 0;
+
+	for (uint16_t i = 0; i < INS_GYRO_BIAS_INIT_SAMPLES; i++)
+	{
+		BMI088_Read(&BMI088);
+
+		gyro_sample[X] = BMI088.Gyro[X];
+		gyro_sample[Y] = BMI088.Gyro[Y];
+		gyro_sample[Z] = BMI088.Gyro[Z];
+		accel_sample[X] = BMI088.Accel[X];
+		accel_sample[Y] = BMI088.Accel[Y];
+		accel_sample[Z] = BMI088.Accel[Z];
+
+		if (INS_IsStill(gyro_sample, accel_sample))
+		{
+			gyro_sum[X] += gyro_sample[X];
+			gyro_sum[Y] += gyro_sample[Y];
+			gyro_sum[Z] += gyro_sample[Z];
+			valid_count++;
+		}
+
+		osDelay(1);
+	}
+
+	if (valid_count > (INS_GYRO_BIAS_INIT_SAMPLES / 2u))
+	{
+		INS.GyroBias[X] = gyro_sum[X] / valid_count;
+		INS.GyroBias[Y] = gyro_sum[Y] / valid_count;
+		INS.GyroBias[Z] = gyro_sum[Z] / valid_count;
+	}
+}
+
+static void INS_GyroBias_Update(const float gyro[3], const float accel[3])
+{
+	if (INS_IsStill(gyro, accel))
+	{
+		INS.GyroBias[X] += (gyro[X] - INS.GyroBias[X]) * INS_GYRO_BIAS_TRACK_ALPHA;
+		INS.GyroBias[Y] += (gyro[Y] - INS.GyroBias[Y]) * INS_GYRO_BIAS_TRACK_ALPHA;
+		INS.GyroBias[Z] += (gyro[Z] - INS.GyroBias[Z]) * INS_GYRO_BIAS_TRACK_ALPHA;
 	}
 }
 #endif
@@ -276,12 +352,12 @@ void EarthFrameToBodyFrame(const float *vecEF, float *vecBF, float *q)
 }
 
 /**
- * @brief reserved.ÓÃÓÚ????IMU°²????????Óë±ê¶ÈÒòÊı?????,¼´ÍÓÂİÒÇÖáºÍÔÆÌ¨ÖáµÄ°²???Æ«??
+ * @brief reserved.ç”¨äº????IMUå®‰????????ä¸æ ‡åº¦å› æ•°?????,å³é™€èºä»ªè½´å’Œäº‘å°è½´çš„å®‰???å??
  *
  *
- * @param param IMU²ÎÊı
- * @param gyro  ½ÇËÙ¶È
- * @param accel ¼ÓËÙ¶È
+ * @param param IMUå‚æ•°
+ * @param gyro  è§’é€Ÿåº¦
+ * @param accel åŠ é€Ÿåº¦
  */
 static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[3])
 {
@@ -346,7 +422,7 @@ static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[
 }
 
 /**
- * @brief ÎÂ¶È¿ØÖÆ
+ * @brief æ¸©åº¦æ§åˆ¶
  *
  */
 // void IMU_Temperature_Ctrl(void)

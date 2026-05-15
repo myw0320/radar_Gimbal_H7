@@ -10,16 +10,27 @@
 
 #define UART7_RX_LEN 32u
 #define VISION_RX_LEN 16u
+#define VISION_TX_LEN 16u
 
 #define X_OFFSET 512
 #define Y_OFFSET 512
 
 
 
+typedef enum
+{
+    VISION_HEAD_OFFSET = 0,
+    VISION_RESERVED_OFFSET = 1,
+    VISION_YAW_OFFSET = 2,
+    VISION_PITCH_OFFSET = 6,
+    VISION_LATENCY_OFFSET = 10,
+    VISION_CRC_OFFSET = 14,
+} vision_packet_offset_e;
+
 typedef struct __attribute__((packed))
 {
     uint8_t header;
-    uint8_t reserved:1;
+    uint8_t reserved;
     float raw_yaw;
     float raw_pitch;
     float latency_time;
@@ -35,7 +46,7 @@ typedef struct __attribute__((packed))
 typedef struct __attribute__((packed))
 {
     uint8_t header;
-    uint8_t reserved:1;
+    uint8_t reserved;
     float yaw;
     float pitch;
     float roll;
@@ -53,6 +64,7 @@ typedef struct
 extern vision_data_t visionData;
 
 void Vision_Init(void);
-void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet);
-void Vision_SendData(vision_data_t *send,float yaw,float pitch,float roll);
+void Vision_GetRxPacket(const uint8_t *rx_data, uint16_t len, vision_receive_packet_t *packet);
+HAL_StatusTypeDef Vision_SendData(vision_data_t *send,float yaw,float pitch,float roll);
+HAL_StatusTypeDef Vision_SendTestPacket(void);
 #endif //RADAR_GIMBAL_H7_VISION_TASK_H
