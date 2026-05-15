@@ -26,13 +26,17 @@ typedef struct __attribute__((packed))
     uint8_t sod;
     uint8_t header;
     uint8_t reserved;
-    float yaw;
-    float pitch;
+    float raw_yaw;
+    float raw_pitch;
     float latency_time;
     uint16_t check_crc16;
     uint8_t end;
 
     packet_state_e packet_state;
+    float yaw;
+    float pitch;
+    float last_yaw;
+    float last_pitch;
 } radar_receive_packet_t;
 //
 // typedef struct __attribute__((packed))
@@ -50,6 +54,6 @@ typedef struct
     //vision_transmit_packet_t transmit_packet;
 
 }radar_data_t;
-
-void radar_init(void);
+extern radar_data_t radarData;
+void Radar_Init(void);
 #endif //RADAR_GIMBAL_H7_RADAR_TASK_H

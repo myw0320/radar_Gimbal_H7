@@ -7,25 +7,28 @@ uint8_t radar_rx_buf[2][UART10_RX_LEN];//
 
 radar_data_t radarData;
 
-void radar_init(void)
+void Radar_Init(void)
 {
     USART_RxDMA_MultiBuffer_Init(&RADAR_UART, (uint32_t *)radar_rx_buf[0], (uint32_t *)radar_rx_buf[1], UART10_RX_LEN);
 }
 
 void Radar_GetRxPacket(const uint8_t *rx_data,radar_receive_packet_t *packet)
 {
-    if (rx_data[0] == 0xA5 && rx_data[2] == 0xA5 && rx_data[17] == 0xFE)
+    if (rx_data[0] == 0xA5 && rx_data[1] == 0xA5 && rx_data[17] == 0xFE)
     {
+        packet->sod = rx_data[0];
+
         packet->header = rx_data[1];
 
-        memcpy(&(packet->yaw), &rx_data[3], 4);
+        memcpy(&(packet->raw_yaw), &rx_data[3], 4);
 
-        memcpy(&(packet->pitch), &rx_data[7], 4);
+        memcpy(&(packet->raw_pitch), &rx_data[7], 4);
 
         memcpy(&(packet->latency_time), &rx_data[11], 4);
 
-        packet->check_crc16 = (uint16_t)(rx_data[12] << 8 | rx_data[13]);
+        //packet->check_crc16 = (uint16_t)(rx_data[15] << 8 | rx_data[16]);
 
+        packet->end = rx_data[17];
 
         detect_hook(RADAR_TOE);
         packet->packet_state = DEC_OK;
@@ -54,10 +57,10 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         __HAL_DMA_ENABLE(huart->hdmarx);
 
         /* Juge whether size is equal to the length of the received data */
-        if(Size == RADAR_RX_LEN)
-        {
+        // if(Size == RADAR_RX_LEN)
+        // {
             Radar_GetRxPacket(radar_rx_buf[0],&radarData.receive_packet);
-        }
+        // }
 
     }
     /* Current memory buffer used is Memory 1 */
@@ -73,9 +76,9 @@ void USER_USART10_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
         /* Reset the receive count */
         __HAL_DMA_ENABLE(huart->hdmarx);
 
-        if(Size == RADAR_RX_LEN)
-        {
+        // if(Size == RADAR_RX_LEN)
+        // {
             Radar_GetRxPacket(radar_rx_buf[1],&radarData.receive_packet);
-        }
+        // }
     }
 }

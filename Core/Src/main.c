@@ -122,9 +122,9 @@ int main(void)
   MX_TIM1_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-  // Dt7_Init();
   Fsi6_Init();
-  vision_init();
+  Vision_Init();
+  Radar_Init();
 
   DWT_Init(480);
   while (BMI088_init(&hspi2, 0) != BMI088_NO_ERROR)

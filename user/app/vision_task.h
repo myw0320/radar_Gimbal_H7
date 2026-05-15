@@ -52,7 +52,7 @@ typedef struct
 
 extern vision_data_t visionData;
 
-void vision_init(void);
+void Vision_Init(void);
 void Vision_GetRxPacket(const uint8_t *rx_data,vision_receive_packet_t *packet);
 void Vision_SendData(vision_data_t *send,float yaw,float pitch,float roll);
 #endif //RADAR_GIMBAL_H7_VISION_TASK_H

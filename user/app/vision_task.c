@@ -9,7 +9,7 @@ uint8_t vision_rx_buf[2][UART7_RX_LEN];//视觉数据包
 vision_data_t visionData;
 
 
-void vision_init(void)
+void Vision_Init(void)
 {
     USART_RxDMA_MultiBuffer_Init(&VISION_UART,(uint32_t *)vision_rx_buf[0],(uint32_t *)vision_rx_buf[1],UART7_RX_LEN);
 }

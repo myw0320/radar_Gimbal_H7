@@ -91,7 +91,7 @@ static void gimbal_init(gimbal_control_struct *init)
     //获取指针地址
     init->imu_point = &INS;
     init->vision_point = &visionData;
-    //init->radar_point = &radarData;
+    init->radar_point = &radarData;
     init->rc_dt7_point = &dt7Data;
     init->rc_fsi6_point = &fsi6Data;
     //yaw数据初始化
