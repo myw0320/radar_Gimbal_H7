@@ -122,137 +122,137 @@ static void f_Output_Limit(PID_t *pid);
 static void f_Proportion_Limit(PID_t *pid);
 static void f_PID_ErrorHandle(PID_t *pid);
 
-/**
- * @brief          PID初始化   PID initialize
- * @param[in]      PID结构体   PID structure
- * @param[in]      
- * @retval         返回空      null
- */
-void PID_Init(PID_t *pid, float max_out, float intergral_limit, float deadband,
-            float kp, float Ki, float Kd, float A, float B, float output_lpf_rc, float derivative_lpf_rc, uint16_t ols_order, uint8_t improve)
-{
-    pid->DeadBand = deadband;
-    pid->IntegralLimit = intergral_limit;
-    pid->MaxOut = max_out;
-    pid->Ref = 0;
-
-    pid->Kp = kp;
-    pid->Ki = Ki;
-    pid->Kd = Kd;
-    pid->ITerm = 0;
-
-    // 变速积分参数
-    // coefficient of changing integration rate
-    pid->CoefA = A;
-    pid->CoefB = B;
-
-    pid->Output_LPF_RC = output_lpf_rc;
-
-    pid->Derivative_LPF_RC = derivative_lpf_rc;
-
-    // 最小二乘提取信号微分初始化
-    // differential signal is distilled by OLS
-    pid->OLS_Order = ols_order;
-    OLS_Init(&pid->OLS, ols_order);
-
-    // DWT定时器计数变量清零
-    // reset DWT Timer count counter
-    pid->DWT_CNT = 0;
-
-    // 设置PID优化环节
-    pid->Improve = improve;
-
-    // 设置PID异常处理，现仅包含电机堵转保护
-    pid->ERRORHandler.ERRORCount = 0;
-    pid->ERRORHandler.ERRORType = PID_ERROR_NONE;
-
-    pid->Output = 0;
-}
-
-/**
- * @brief          PID计算
- * @param[in]      PID结构体
- * @param[in]      测量值
- * @param[in]      期望值
- * @retval         返回空
- */
-float PID_Calculate(PID_t *pid, float measure, float ref)
-{
-    if (pid->Improve & ErrorHandle)
-        f_PID_ErrorHandle(pid);
-
-    pid->dt = DWT_GetDeltaT((void *)&pid->DWT_CNT);
-
-    pid->Measure = measure;
-    pid->Ref = ref;
-    pid->Err = pid->Ref - pid->Measure;
-
-    if (pid->User_Func1_f != NULL)
-        pid->User_Func1_f(pid);
-
-    if (abs(pid->Err) > pid->DeadBand)
-    {
-        if (pid->FuzzyRule == NULL)
-        {
-            pid->Pout = pid->Kp * pid->Err;
-            pid->ITerm = pid->Ki * pid->Err * pid->dt;
-            if (pid->OLS_Order > 2)
-                pid->Dout = pid->Kd * OLS_Derivative(&pid->OLS, pid->dt, pid->Err);
-            else
-                pid->Dout = pid->Kd * (pid->Err - pid->Last_Err) / pid->dt;
-        }
-        else
-        {
-            pid->Pout = (pid->Kp + pid->FuzzyRule->KpFuzzy) * pid->Err;
-            pid->ITerm = (pid->Ki + pid->FuzzyRule->KiFuzzy) * pid->Err * pid->dt;
-            if (pid->OLS_Order > 2)
-                pid->Dout = (pid->Kd + pid->FuzzyRule->KdFuzzy) * OLS_Derivative(&pid->OLS, pid->dt, pid->Err);
-            else
-                pid->Dout = (pid->Kd + pid->FuzzyRule->KdFuzzy) * (pid->Err - pid->Last_Err) / pid->dt;
-        }
-
-        if (pid->User_Func2_f != NULL)
-            pid->User_Func2_f(pid);
-
-        // 梯形积分
-        if (pid->Improve & Trapezoid_Intergral)
-            f_Trapezoid_Intergral(pid);
-        // 变速积分
-        if (pid->Improve & ChangingIntegrationRate)
-            f_Changing_Integration_Rate(pid);
-        // 微分先行
-        if (pid->Improve & Derivative_On_Measurement)
-            f_Derivative_On_Measurement(pid);
-        // 微分滤波器
-        if (pid->Improve & DerivativeFilter)
-            f_Derivative_Filter(pid);
-        // 积分限幅
-        if (pid->Improve & Integral_Limit)
-            f_Integral_Limit(pid);
-
-        pid->Iout += pid->ITerm;
-
-        pid->Output = pid->Pout + pid->Iout + pid->Dout;
-
-        // 输出滤波
-        if (pid->Improve & OutputFilter)
-            f_Output_Filter(pid);
-
-        // 输出限幅
-        f_Output_Limit(pid);
-
-        // 无关紧要
-        f_Proportion_Limit(pid);
-    }
-
-    pid->Last_Measure = pid->Measure;
-    pid->Last_Output = pid->Output;
-    pid->Last_Dout = pid->Dout;
-    pid->Last_Err = pid->Err;
-    pid->Last_ITerm = pid->ITerm;
-
-    return pid->Output;
-}
+// /**
+//  * @brief          PID初始化   PID initialize
+//  * @param[in]      PID结构体   PID structure
+//  * @param[in]
+//  * @retval         返回空      null
+//  */
+// void PID_Init(PID_t *pid, float max_out, float intergral_limit, float deadband,
+//             float kp, float Ki, float Kd, float A, float B, float output_lpf_rc, float derivative_lpf_rc, uint16_t ols_order, uint8_t improve)
+// {
+//     pid->DeadBand = deadband;
+//     pid->IntegralLimit = intergral_limit;
+//     pid->MaxOut = max_out;
+//     pid->Ref = 0;
+//
+//     pid->Kp = kp;
+//     pid->Ki = Ki;
+//     pid->Kd = Kd;
+//     pid->ITerm = 0;
+//
+//     // 变速积分参数
+//     // coefficient of changing integration rate
+//     pid->CoefA = A;
+//     pid->CoefB = B;
+//
+//     pid->Output_LPF_RC = output_lpf_rc;
+//
+//     pid->Derivative_LPF_RC = derivative_lpf_rc;
+//
+//     // 最小二乘提取信号微分初始化
+//     // differential signal is distilled by OLS
+//     pid->OLS_Order = ols_order;
+//     OLS_Init(&pid->OLS, ols_order);
+//
+//     // DWT定时器计数变量清零
+//     // reset DWT Timer count counter
+//     pid->DWT_CNT = 0;
+//
+//     // 设置PID优化环节
+//     pid->Improve = improve;
+//
+//     // 设置PID异常处理，现仅包含电机堵转保护
+//     pid->ERRORHandler.ERRORCount = 0;
+//     pid->ERRORHandler.ERRORType = PID_ERROR_NONE;
+//
+//     pid->Output = 0;
+// }
+//
+// /**
+//  * @brief          PID计算
+//  * @param[in]      PID结构体
+//  * @param[in]      测量值
+//  * @param[in]      期望值
+//  * @retval         返回空
+//  */
+// float PID_Calculate(PID_t *pid, float measure, float ref)
+// {
+//     if (pid->Improve & ErrorHandle)
+//         f_PID_ErrorHandle(pid);
+//
+//     pid->dt = DWT_GetDeltaT((void *)&pid->DWT_CNT);
+//
+//     pid->Measure = measure;
+//     pid->Ref = ref;
+//     pid->Err = pid->Ref - pid->Measure;
+//
+//     if (pid->User_Func1_f != NULL)
+//         pid->User_Func1_f(pid);
+//
+//     if (abs(pid->Err) > pid->DeadBand)
+//     {
+//         if (pid->FuzzyRule == NULL)
+//         {
+//             pid->Pout = pid->Kp * pid->Err;
+//             pid->ITerm = pid->Ki * pid->Err * pid->dt;
+//             if (pid->OLS_Order > 2)
+//                 pid->Dout = pid->Kd * OLS_Derivative(&pid->OLS, pid->dt, pid->Err);
+//             else
+//                 pid->Dout = pid->Kd * (pid->Err - pid->Last_Err) / pid->dt;
+//         }
+//         else
+//         {
+//             pid->Pout = (pid->Kp + pid->FuzzyRule->KpFuzzy) * pid->Err;
+//             pid->ITerm = (pid->Ki + pid->FuzzyRule->KiFuzzy) * pid->Err * pid->dt;
+//             if (pid->OLS_Order > 2)
+//                 pid->Dout = (pid->Kd + pid->FuzzyRule->KdFuzzy) * OLS_Derivative(&pid->OLS, pid->dt, pid->Err);
+//             else
+//                 pid->Dout = (pid->Kd + pid->FuzzyRule->KdFuzzy) * (pid->Err - pid->Last_Err) / pid->dt;
+//         }
+//
+//         if (pid->User_Func2_f != NULL)
+//             pid->User_Func2_f(pid);
+//
+//         // 梯形积分
+//         if (pid->Improve & Trapezoid_Intergral)
+//             f_Trapezoid_Intergral(pid);
+//         // 变速积分
+//         if (pid->Improve & ChangingIntegrationRate)
+//             f_Changing_Integration_Rate(pid);
+//         // 微分先行
+//         if (pid->Improve & Derivative_On_Measurement)
+//             f_Derivative_On_Measurement(pid);
+//         // 微分滤波器
+//         if (pid->Improve & DerivativeFilter)
+//             f_Derivative_Filter(pid);
+//         // 积分限幅
+//         if (pid->Improve & Integral_Limit)
+//             f_Integral_Limit(pid);
+//
+//         pid->Iout += pid->ITerm;
+//
+//         pid->Output = pid->Pout + pid->Iout + pid->Dout;
+//
+//         // 输出滤波
+//         if (pid->Improve & OutputFilter)
+//             f_Output_Filter(pid);
+//
+//         // 输出限幅
+//         f_Output_Limit(pid);
+//
+//         // 无关紧要
+//         f_Proportion_Limit(pid);
+//     }
+//
+//     pid->Last_Measure = pid->Measure;
+//     pid->Last_Output = pid->Output;
+//     pid->Last_Dout = pid->Dout;
+//     pid->Last_Err = pid->Err;
+//     pid->Last_ITerm = pid->ITerm;
+//
+//     return pid->Output;
+// }
 
 static void f_Trapezoid_Intergral(PID_t *pid)
 {

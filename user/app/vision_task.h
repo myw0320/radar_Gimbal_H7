@@ -6,6 +6,7 @@
 #include "pid.h"
 #include "arm_math.h"
 #include "packet_typedef.h"
+#include "CRC8_CRC16.h"
 #define VISION_UART huart7
 
 #define UART7_RX_LEN 32u

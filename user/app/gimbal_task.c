@@ -133,7 +133,7 @@ static void gimbal_init(gimbal_control_struct *init)
              GIMBAL_PID_PERIOD, 0.0f, 0.0f, 0.0f, 0.0f, PID_D_First_DISABLE);
 
     //pitch?????
-    DM_Init(&init->pitchMotor,DM4310,MIT,0x06);//???????
+    DM_Init(&init->pitchMotor,DM4310,MIT,0x06);//
     PID_Init(&init->pitchEuler.euler_abs_pos_control, PITCH_ABS_POS_P, PITCH_ABS_POS_I, PITCH_ABS_POS_D,
              PITCH_ABS_POS_F, PITCH_ABS_POS_MAX_IOUT, PITCH_ABS_POS_MAX_OUT,
              GIMBAL_PID_PERIOD, 0.0f, 0.0f, 0.0f, 0.0f, PID_D_First_DISABLE);
@@ -572,7 +572,7 @@ void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_moto
         motor_control->euler_abs_pos_control.Target = motor_control->absolute_angle_set;
         motor_control->euler_rel_pos_control.Now = motor_control->absolute_angle;
         PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_abs_pos_control);
-        gimbal_control->yawMotor.give_kp = 0.0f;
+        // gimbal_control->yawMotor.give_kp = 0.0f;
         gimbal_control->yawMotor.give_kd = 1.8f;
         //gimbal_control->yawMotor.give_pos = motor_control->relative_angle;
         gimbal_control->yawMotor.give_vel = motor_control->euler_abs_pos_control.Out;
@@ -582,7 +582,7 @@ void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_moto
         motor_control->euler_abs_pos_control.Target = motor_control->absolute_angle_set;
         motor_control->euler_rel_pos_control.Now = motor_control->absolute_angle;
         PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_abs_pos_control);
-        gimbal_control->pitchMotor.give_kp = 0.0f;
+        // gimbal_control->pitchMotor.give_kp = 0.0f;
         gimbal_control->pitchMotor.give_kd = 1.8f;
         //gimbal_control->pitchMotor.give_pos = motor_control->relative_angle;
         gimbal_control->pitchMotor.give_vel = motor_control->euler_abs_pos_control.Out;

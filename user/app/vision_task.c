@@ -1,5 +1,4 @@
 ﻿#include "vision_task.h"
-
 #include "detect_task.h"
 #include "usart.h"
 #include "crc16.h"
@@ -14,11 +13,6 @@ vision_data_t visionData;
 void Vision_Init(void)
 {
     USART_RxDMA_MultiBuffer_Init(&VISION_UART,(uint32_t *)vision_rx_buf[0],(uint32_t *)vision_rx_buf[1],UART7_RX_LEN);
-}
-
-static uint16_t Vision_ReadU16Le(const uint8_t *data)
-{
-    return (uint16_t)data[0] | ((uint16_t)data[1] << 8);
 }
 
 static void Vision_WriteU16Le(uint8_t *data, uint16_t value)
@@ -44,25 +38,16 @@ void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet)
     }
 
 
-    if (rx_data[VISION_HEAD_OFFSET] == 0xA5)
+    if (rx_data[0] == 0xA5)
     {
-        rx_crc = Vision_ReadU16Le(&rx_data[VISION_CRC_OFFSET]);
-        calc_crc = CRC16_Check(rx_data, VISION_CRC_OFFSET);
+        packet->header = rx_data[0];
+        packet->reserved = rx_data[1];
 
-        if (rx_crc != calc_crc)
-        {
-            packet->packet_state = DEC_ERROR;
-            return;
-        }
+        memcpy(&(packet->raw_yaw), &rx_data[2], sizeof(packet->raw_yaw));
 
-        packet->header = rx_data[VISION_HEAD_OFFSET];
-        packet->reserved = rx_data[VISION_RESERVED_OFFSET];
+        memcpy(&(packet->raw_pitch), &rx_data[6], sizeof(packet->raw_pitch));
 
-        memcpy(&(packet->raw_yaw), &rx_data[VISION_YAW_OFFSET], sizeof(packet->raw_yaw));
-
-        memcpy(&(packet->raw_pitch), &rx_data[VISION_PITCH_OFFSET], sizeof(packet->raw_pitch));
-
-        memcpy(&(packet->latency_time), &rx_data[VISION_LATENCY_OFFSET], sizeof(packet->latency_time));
+        memcpy(&(packet->latency_time), &rx_data[10], sizeof(packet->latency_time));
 
         packet->check_sum = rx_crc;
 
@@ -82,7 +67,6 @@ void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet)
             packet->last_yaw = packet->yaw;
             packet->last_pitch = packet->pitch;
         }
-
     }
     else
     {
@@ -109,10 +93,11 @@ HAL_StatusTypeDef Vision_SendData(vision_data_t *send,float yaw,float pitch,floa
     send->transmit_packet.yaw = yaw;
     send->transmit_packet.pitch = pitch;
     send->transmit_packet.roll = roll;
-    send->transmit_packet.check_sum = CRC16_Check((uint8_t*)&send->transmit_packet, sizeof(send->transmit_packet) - 2);
+
+    append_CRC16_check_sum((uint8_t*)&send->transmit_packet, sizeof(send->transmit_packet) - 2);
 
     memcpy(tx_buf, &send->transmit_packet, sizeof(send->transmit_packet));
-    Vision_WriteU16Le(&tx_buf[VISION_CRC_OFFSET], send->transmit_packet.check_sum);
+    //Vision_WriteU16Le(&tx_buf[VISION_CRC_OFFSET], send->transmit_packet.check_sum);
     return HAL_UART_Transmit_DMA(&VISION_UART, tx_buf, sizeof(tx_buf));
 }
 
