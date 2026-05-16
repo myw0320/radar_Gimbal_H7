@@ -64,7 +64,7 @@ typedef struct
 extern vision_data_t visionData;
 
 void Vision_Init(void);
-void Vision_GetRxPacket(const uint8_t *rx_data, uint16_t len, vision_receive_packet_t *packet);
+void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet);
 HAL_StatusTypeDef Vision_SendData(vision_data_t *send,float yaw,float pitch,float roll);
 HAL_StatusTypeDef Vision_SendTestPacket(void);
 #endif //RADAR_GIMBAL_H7_VISION_TASK_H

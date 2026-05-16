@@ -83,12 +83,14 @@ typedef struct __attribute__((packed))
 	dm_mode_enum mode;
 	uint16_t can_id;
 
+
+
 	float give_pos;//-PI~PI
 	float give_vel;//rad/s
 	float give_torque;
 	float give_kp;
 	float give_kd;
-	int16_t give_cmd_current;
+	// int16_t give_cmd_current;
 }dm_control_t;//电机控制结构体
 
 typedef struct __attribute__((packed))

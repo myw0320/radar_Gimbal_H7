@@ -158,12 +158,21 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
     {
         return;
     }
+    motor_mode_enum yaw_last_motor_mode = motor_mode_update->yawEuler.motorMode;
+    motor_mode_enum pitch_last_motor_mode = motor_mode_update->pitchEuler.motorMode;
+
     // 更新云台行为模式
     gimbal_behaviour_set(motor_mode_update);
 
     // 根据云台模式设定电机模式
     switch(gimbalMode)
     {
+        case GIMBAL_NO_MOVE_MODE:
+        {
+            motor_mode_update->yawEuler.motorMode = MOTOR_STOP;
+            motor_mode_update->pitchEuler.motorMode = MOTOR_STOP;
+            break;
+        }
         case GIMBAL_INIT_MODE:
         {
             motor_mode_update->yawEuler.motorMode = MOTOR_INIT;
@@ -176,15 +185,23 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
         case GIMBAL_AUTO_SCAN_MODE:
         case GIMBAL_AUTO_ATTACK_MODE:
         {
-            motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
-            motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
+            if (motor_mode_update->rc_fsi6_point->rc.sw[3] == RC_SW_UP)
+            {
+                motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
+                motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
+            }
+            else
+            {
+                motor_mode_update->yawEuler.motorMode = MOTOR_ENCODER;
+                motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
+            }
             break;
         }
     }
 
-    // 记录上一次电机模式
-    motor_mode_update->yawEuler.last_motorMode = motor_mode_update->yawEuler.motorMode;
-    motor_mode_update->pitchEuler.last_motorMode = motor_mode_update->pitchEuler.motorMode;
+    // 记录进入本次更新前的电机模式，用于检测模式切换
+    motor_mode_update->yawEuler.last_motorMode = yaw_last_motor_mode;
+    motor_mode_update->pitchEuler.last_motorMode = pitch_last_motor_mode;
 }
 
 /**

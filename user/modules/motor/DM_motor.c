@@ -94,7 +94,6 @@ void DM_Init(dm_control_t *init,dm_motor_type_enum type, dm_mode_enum mode, uint
 
 void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data)
 {
-
 	motor->id = (rx_data[0])&0x0F;
 	motor->state = (rx_data[0])>>4;
 	motor->p_int=(rx_data[1]<<8)|rx_data[2];

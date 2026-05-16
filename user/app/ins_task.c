@@ -12,6 +12,9 @@
  */
 #include "INS_task.h"
 #include "cmsis_os.h"
+#include "calibrate_task.h"
+
+extern cali_flag_t cali_flag;
 
 #if EKF == 1
 INS_t INS;
@@ -158,7 +161,6 @@ void INS_Task(void const * argument)
 	INS_GyroBias_Init();
 	while(1)
 	{
-
 		ins_dt = DWT_GetDeltaT(&INS_DWT_Count);
 
 		mahony.dt = ins_dt;

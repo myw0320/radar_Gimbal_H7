@@ -33,7 +33,7 @@ static uint8_t Vision_HexChar(uint8_t value)
     return value < 10u ? (uint8_t)('0' + value) : (uint8_t)('A' + value - 10u);
 }
 
-void Vision_GetRxPacket(const uint8_t *rx_data, uint16_t len, vision_receive_packet_t *packet)
+void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet)
 {
     uint16_t rx_crc = 0;
     uint16_t calc_crc = 0;
@@ -43,11 +43,6 @@ void Vision_GetRxPacket(const uint8_t *rx_data, uint16_t len, vision_receive_pac
         return;
     }
 
-    if (len != VISION_RX_LEN)
-    {
-        packet->packet_state = DEC_ERROR;
-        return;
-    }
 
     if (rx_data[VISION_HEAD_OFFSET] == 0xA5)
     {
@@ -161,24 +156,25 @@ HAL_StatusTypeDef Vision_SendTestPacket(void)
 void USER_USART7_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
 {
     static uint16_t this_time_rx_len = 0;
-    DMA_Stream_TypeDef *dma_stream = (DMA_Stream_TypeDef *)huart->hdmarx->Instance;
-
-    (void)Size;
-
     /* Current memory buffer used is Memory 0 */
-    if((dma_stream->CR & DMA_SxCR_CT ) == RESET)
+    if(((((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT ) == RESET)
     {
         /* Disable DMA */
         __HAL_DMA_DISABLE(huart->hdmarx);
-        this_time_rx_len = UART7_RX_LEN - dma_stream->NDTR;
-        dma_stream->NDTR = UART7_RX_LEN;
+        this_time_rx_len = UART7_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = UART7_RX_LEN;
         /* Switch Memory 0 to Memory 1*/
-        dma_stream->CR |= DMA_SxCR_CT;
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
 
         /* Reset the receive count */
         __HAL_DMA_ENABLE(huart->hdmarx);
 
-        Vision_GetRxPacket(vision_rx_buf[0], this_time_rx_len, &visionData.receive_packet);
+        /* Juge whether size is equal to the length of the received data */
+        // if(this_time_rx_len == VISION_RX_LEN)
+        // {
+            Vision_GetRxPacket(vision_rx_buf[0],&visionData.receive_packet);
+
+        // }
 
     }
     /* Current memory buffer used is Memory 1 */
@@ -186,14 +182,17 @@ void USER_USART7_RxHandler(UART_HandleTypeDef *huart,uint16_t Size)
     {
         /* Disable DMA */
         __HAL_DMA_DISABLE(huart->hdmarx);
-        this_time_rx_len = UART7_RX_LEN - dma_stream->NDTR;
-        dma_stream->NDTR = UART7_RX_LEN;
+        this_time_rx_len = UART7_RX_LEN - ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR;
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->NDTR = UART7_RX_LEN;
         /* Switch Memory 0 to Memory 1*/
-        dma_stream->CR &= ~DMA_SxCR_CT;
+        ((DMA_Stream_TypeDef  *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
 
         /* Reset the receive count */
         __HAL_DMA_ENABLE(huart->hdmarx);
 
-        Vision_GetRxPacket(vision_rx_buf[1], this_time_rx_len, &visionData.receive_packet);
+         // if(this_time_rx_len == VISION_RX_LEN)
+         // {
+            Vision_GetRxPacket(vision_rx_buf[1],&visionData.receive_packet);
+         // }
     }
 }

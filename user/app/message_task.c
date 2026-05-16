@@ -1,7 +1,7 @@
 #include "message_task.h"
 #include "detect_task.h"
 #include "cmsis_os.h"
-
+#include "ins_task.h"
 ws2812_rgb_t ws2812_rgb;
 buzzer_struct buzzerMessage;
 void message_init(void)
@@ -11,6 +11,10 @@ void message_init(void)
 
 void Message_Task(void const * argument)
 {
+    while(INS.ins_flag==0)
+    {//等待加速度收敛
+        osDelay(1);
+    }
     message_init();
     static uint16_t current_time = 0;
     while (1)
@@ -31,7 +35,7 @@ void Message_Task(void const * argument)
         //  // }
         // else
         // {
-           // Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
+            Buzzer_FreqUpdate(&buzzerMessage,SINGLE,startSound,16);
             if (current_time >= 10)
             {
                 ws2812_bink(ws2812_rgb.r, ws2812_rgb.g, ws2812_rgb.b);

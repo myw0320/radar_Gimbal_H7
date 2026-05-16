@@ -15,6 +15,7 @@
 #include "pid.h"
 #include "Mathh.h"
 #include "cap_comm.h"
+#include "PID_control.h"
 
 //弧度格式化为-PI~PI
 #define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
@@ -42,31 +43,48 @@
 #define PITCH_REL_MAX 3.14f
 #define PITCH_REL_MIN -3.14f
 
-#define YAW_POS_P 40.0f
-#define YAW_POS_I 0.065f
-#define YAW_POS_D 2.0f
-#define YAW_POS_MAX_OUT 20.0
-#define YAW_POS_MIN_OUT -20.0
-#define YAW_POS_MAX_IOUT 5.0
-#define YAW_POS_MIN_IOUT -5.0
 
-#define PITCH_POS_P 50.0f
-#define PITCH_POS_I 0.085f
-#define PITCH_POS_D 5.0f
-#define PITCH_POS_MAX_OUT 20.0
-#define PITCH_POS_MIN_OUT -20.0
-#define PITCH_POS_MAX_IOUT 5.0
-#define PITCH_POS_MIN_IOUT -5.0
+#define GIMBAL_PID_PERIOD 0.001f
 
-#define X_ERR_MAX_OUT 15.0f
-#define X_ERR_MIN_OUT -15.0f
-#define X_ERR_MAX_IOUT 0.50f
-#define X_ERR_MIN_IOUT -0.5f
+#define YAW_ABS_POS_P 40.0f
+#define YAW_ABS_POS_I 0.085f
+#define YAW_ABS_POS_D 2.0f
+#define YAW_ABS_POS_F 0.0f
+#define YAW_ABS_POS_MAX_OUT 20.0
+#define YAW_ABS_POS_MIN_OUT -20.0
+#define YAW_ABS_POS_MAX_IOUT 5.0
+#define YAW_ABS_POS_MIN_IOUT -5.0
 
-#define Y_ERR_MAX_OUT 10.0f
-#define Y_ERR_MIN_OUT -10.0f
-#define Y_ERR_MAX_IOUT 0.5f
-#define Y_ERR_MIN_IOUT -0.5f
+#define YAW_REL_POS_P 15.0f
+#define YAW_REL_POS_I 0.0f
+#define YAW_REL_POS_D 2.0f
+#define YAW_REL_POS_F 0.0f
+#define YAW_REL_POS_MAX_OUT 2.0f
+#define YAW_REL_POS_MIN_OUT -2.0f
+#define YAW_REL_POS_MAX_IOUT 1.0f
+#define YAW_REL_POS_MIN_IOUT -1.0f
+
+#define PITCH_ABS_POS_P 50.0f
+#define PITCH_ABS_POS_I 0.085f
+#define PITCH_ABS_POS_D 5.0f
+#define PITCH_ABS_POS_F 0.0f
+#define PITCH_ABS_POS_MAX_OUT 20.0f
+#define PITCH_ABS_POS_MIN_OUT -20.0f
+#define PITCH_ABS_POS_MAX_IOUT 5.0f
+#define PITCH_ABS_POS_MIN_IOUT -5.0f
+
+#define PITCH_REL_POS_P 20.0f
+#define PITCH_REL_POS_I 0.025f
+#define PITCH_REL_POS_D 5.0f
+#define PITCH_REL_POS_F 0.0f
+#define PITCH_REL_POS_MAX_OUT 5.0
+#define PITCH_REL_POS_MIN_OUT -5.0
+#define PITCH_REL_POS_MAX_IOUT 1.0
+#define PITCH_REL_POS_MIN_IOUT -1.0
+
+
+
+
 typedef enum
 {
     MOTOR_INIT = 0,
@@ -80,8 +98,9 @@ typedef struct
     motor_mode_enum motorMode;
     motor_mode_enum last_motorMode;
 
-    pid_struct euler_pos_control;//角度环
-    pid_struct euler_omega_control;//角速度环
+    PID_control euler_abs_pos_control;//角度环
+    PID_control euler_rel_pos_control;//角速度环
+    PID_control euler_vel_control;
 
     float vel_set;
 

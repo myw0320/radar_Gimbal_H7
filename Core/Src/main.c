@@ -131,6 +131,7 @@ int main(void)
   {
     ;
   }
+
   FDCAN1_Config_Init();
   FDCAN2_Config_Init();
   Power_OUT1_OFF;

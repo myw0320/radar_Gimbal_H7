@@ -26,12 +26,7 @@ typedef struct
     float pitch_min_angle;
 } gimbal_cali_t;
 
-//gyro, accel, mag device
-typedef struct
-{
-    float offset[3]; //x,y,z
-    float scale[3];  //x,y,z
-} imu_cali_t;
+
 
 typedef struct
 {
