@@ -46,14 +46,14 @@
 
 #define GIMBAL_PID_PERIOD 0.001f
 
-#define YAW_ABS_POS_P 50.0f
-#define YAW_ABS_POS_I 0.8f
-#define YAW_ABS_POS_D 1.0f
-#define YAW_ABS_POS_F 0.0f
-#define YAW_ABS_POS_MAX_OUT 20.0f
-#define YAW_ABS_POS_MIN_OUT -20.0f
-#define YAW_ABS_POS_MAX_IOUT 5.0f
-#define YAW_ABS_POS_MIN_IOUT -5.0f
+#define YAW_ABS_POS_P 60.0f
+#define YAW_ABS_POS_I 15.0f
+#define YAW_ABS_POS_D 10.0f
+#define YAW_ABS_POS_F 0.1f
+#define YAW_ABS_POS_MAX_OUT 10.0f
+#define YAW_ABS_POS_MIN_OUT -10.0f
+#define YAW_ABS_POS_MAX_IOUT 1.0f
+#define YAW_ABS_POS_MIN_IOUT -1.0f
 
 #define YAW_REL_POS_P 15.0f
 #define YAW_REL_POS_I 0.0f
@@ -74,14 +74,14 @@
 #define YAW_VEL_MIN_IOUT -1.0f
 
 
-#define PITCH_ABS_POS_P 55.0f
-#define PITCH_ABS_POS_I 5.0f
-#define PITCH_ABS_POS_D 4.0f
-#define PITCH_ABS_POS_F 0.0f
-#define PITCH_ABS_POS_MAX_OUT 20.0f
-#define PITCH_ABS_POS_MIN_OUT -20.0f
-#define PITCH_ABS_POS_MAX_IOUT 5.0f
-#define PITCH_ABS_POS_MIN_IOUT -5.0f
+#define PITCH_ABS_POS_P 85.0f
+#define PITCH_ABS_POS_I 30.0f
+#define PITCH_ABS_POS_D 20.0f
+#define PITCH_ABS_POS_F 2.0f
+#define PITCH_ABS_POS_MAX_OUT 10.0f
+#define PITCH_ABS_POS_MIN_OUT -10.0f
+#define PITCH_ABS_POS_MAX_IOUT 2.0f
+#define PITCH_ABS_POS_MIN_IOUT -2.0f
 
 #define PITCH_REL_POS_P 15.0f
 #define PITCH_REL_POS_I 0.025f

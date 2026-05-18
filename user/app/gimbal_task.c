@@ -120,7 +120,7 @@ static void gimbal_init(gimbal_control_struct *init)
 
     PID_Init(&init->yawEuler.euler_abs_pos_control, YAW_ABS_POS_P, YAW_ABS_POS_I, YAW_ABS_POS_D,
              YAW_ABS_POS_F, YAW_ABS_POS_MAX_IOUT, YAW_ABS_POS_MAX_OUT,
-             GIMBAL_PID_PERIOD, 0.0f, 0.0f, 0.0f, 0.0f, PID_D_First_ENABLE);
+             GIMBAL_PID_PERIOD, 0.00025f, 0.0f, 0.0f, 0.0f, PID_D_First_ENABLE);
 
     PID_Init(&init->yawEuler.euler_rel_pos_control, YAW_REL_POS_P, YAW_REL_POS_I, YAW_REL_POS_D,
              YAW_REL_POS_F, YAW_REL_POS_MAX_IOUT, YAW_REL_POS_MAX_OUT,
@@ -135,7 +135,7 @@ static void gimbal_init(gimbal_control_struct *init)
 
     PID_Init(&init->pitchEuler.euler_abs_pos_control, PITCH_ABS_POS_P, PITCH_ABS_POS_I, PITCH_ABS_POS_D,
              PITCH_ABS_POS_F, PITCH_ABS_POS_MAX_IOUT, PITCH_ABS_POS_MAX_OUT,
-             GIMBAL_PID_PERIOD, 0.0f, 0.0f, 0.0f, 0.0f, PID_D_First_ENABLE);
+             GIMBAL_PID_PERIOD, 0.00025f, 0.0f, 0.0f, 0.0f, PID_D_First_ENABLE);
 
     PID_Init(&init->pitchEuler.euler_rel_pos_control, PITCH_REL_POS_P, PITCH_REL_POS_I, PITCH_REL_POS_D,
              PITCH_REL_POS_F, PITCH_REL_POS_MAX_IOUT, PITCH_REL_POS_MAX_OUT,
