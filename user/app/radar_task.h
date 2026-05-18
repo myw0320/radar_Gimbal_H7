@@ -37,6 +37,8 @@ typedef struct __attribute__((packed))
     float pitch;
     float last_yaw;
     float last_pitch;
+
+    float receive_time;//接收时间_
 } radar_receive_packet_t;
 //
 // typedef struct __attribute__((packed))

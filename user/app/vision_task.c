@@ -37,7 +37,6 @@ void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet)
         return;
     }
 
-
     if (rx_data[0] == 0xA5)
     {
         packet->header = rx_data[0];
@@ -49,10 +48,10 @@ void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet)
 
         memcpy(&(packet->latency_time), &rx_data[10], sizeof(packet->latency_time));
 
-        packet->check_sum = rx_crc;
+        //packet->check_sum = rx_crc;
 
-        packet->packet_state = DEC_OK;
         detect_hook(VISION_TOE);
+        packet->packet_state = DEC_OK;
         if (!isfinite(packet->raw_yaw) || !isfinite(packet->raw_pitch) ||
             packet->raw_yaw > 6.28f || packet->raw_pitch > 6.28f)
         {
@@ -62,10 +61,13 @@ void Vision_GetRxPacket(const uint8_t *rx_data, vision_receive_packet_t *packet)
         }
         else
         {
+
             packet->yaw = packet->raw_yaw;
             packet->pitch = packet->raw_pitch;
             packet->last_yaw = packet->yaw;
             packet->last_pitch = packet->pitch;
+
+            packet->receive_time = HAL_GetTick() * 0.001f;
         }
     }
     else

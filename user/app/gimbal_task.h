@@ -46,14 +46,14 @@
 
 #define GIMBAL_PID_PERIOD 0.001f
 
-#define YAW_ABS_POS_P 40.0f
-#define YAW_ABS_POS_I 0.085f
-#define YAW_ABS_POS_D 2.0f
+#define YAW_ABS_POS_P 50.0f
+#define YAW_ABS_POS_I 0.8f
+#define YAW_ABS_POS_D 1.0f
 #define YAW_ABS_POS_F 0.0f
-#define YAW_ABS_POS_MAX_OUT 20.0
-#define YAW_ABS_POS_MIN_OUT -20.0
-#define YAW_ABS_POS_MAX_IOUT 5.0
-#define YAW_ABS_POS_MIN_IOUT -5.0
+#define YAW_ABS_POS_MAX_OUT 20.0f
+#define YAW_ABS_POS_MIN_OUT -20.0f
+#define YAW_ABS_POS_MAX_IOUT 5.0f
+#define YAW_ABS_POS_MIN_IOUT -5.0f
 
 #define YAW_REL_POS_P 15.0f
 #define YAW_REL_POS_I 0.0f
@@ -64,25 +64,42 @@
 #define YAW_REL_POS_MAX_IOUT 1.0f
 #define YAW_REL_POS_MIN_IOUT -1.0f
 
-#define PITCH_ABS_POS_P 50.0f
-#define PITCH_ABS_POS_I 0.085f
-#define PITCH_ABS_POS_D 5.0f
+#define YAW_VEL_P 0.80f
+#define YAW_VEL_I 0.0f
+#define YAW_VEL_D 0.003f
+#define YAW_VEL_F 0.0f
+#define YAW_VEL_MAX_OUT 3.0f
+#define YAW_VEL_MIN_OUT -3.0f
+#define YAW_VEL_MAX_IOUT 1.0f
+#define YAW_VEL_MIN_IOUT -1.0f
+
+
+#define PITCH_ABS_POS_P 55.0f
+#define PITCH_ABS_POS_I 5.0f
+#define PITCH_ABS_POS_D 4.0f
 #define PITCH_ABS_POS_F 0.0f
 #define PITCH_ABS_POS_MAX_OUT 20.0f
 #define PITCH_ABS_POS_MIN_OUT -20.0f
 #define PITCH_ABS_POS_MAX_IOUT 5.0f
 #define PITCH_ABS_POS_MIN_IOUT -5.0f
 
-#define PITCH_REL_POS_P 20.0f
+#define PITCH_REL_POS_P 15.0f
 #define PITCH_REL_POS_I 0.025f
-#define PITCH_REL_POS_D 5.0f
+#define PITCH_REL_POS_D 0.03f
 #define PITCH_REL_POS_F 0.0f
 #define PITCH_REL_POS_MAX_OUT 5.0
 #define PITCH_REL_POS_MIN_OUT -5.0
 #define PITCH_REL_POS_MAX_IOUT 1.0
 #define PITCH_REL_POS_MIN_IOUT -1.0
 
-
+#define PITCH_VEL_P 1.0f
+#define PITCH_VEL_I 0.0f
+#define PITCH_VEL_D 0.0003f
+#define PITCH_VEL_F 0.0f
+#define PITCH_VEL_MAX_OUT 3.0
+#define PITCH_VEL_MIN_OUT -3.0
+#define PITCH_VEL_MAX_IOUT 1.0
+#define PITCH_VEL_MIN_IOUT -1.0
 
 
 typedef enum
@@ -103,6 +120,7 @@ typedef struct
     PID_control euler_vel_control;
 
     float vel_set;
+    float vel;
 
     float absolute_zero_angle;
     float absolute_angle;
@@ -171,6 +189,8 @@ typedef struct
 
     scan_struct gimbalScan;//×Ô¶¯É¨Ãè
     bool enable;
+
+    float current_time;
 
     uint8_t yaw_can_tx_data[8];
     uint8_t pitch_can_tx_data[8];

@@ -42,6 +42,8 @@ typedef struct __attribute__((packed))
     float pitch;
     float last_yaw;
     float last_pitch;
+
+    float receive_time;
 } vision_receive_packet_t;
 
 typedef struct __attribute__((packed))

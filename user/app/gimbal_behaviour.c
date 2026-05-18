@@ -8,11 +8,14 @@
 #include "fsi6.h"
 #include <math.h>
 
-#define RADAR_REACHED_YAW_ERR 0.08f
+#define RADAR_REACHED_YAW_ERR 0.05f
 #define RADAR_REACHED_PITCH_ERR 0.06f
-#define AUTO_SCAN_YAW_RANGE 0.35f
+
+#define AUTO_SCAN_YAW_RANGE 0.20f
 #define AUTO_SCAN_PITCH_RANGE 0.20f
-#define AUTO_SCAN_YAW_PERIOD 4.0f
+#define AUTO_SCAN_YAW_PERIOD 1.5f
+#define AUTO_SCAN_PITCH_PERIOD 2.0f
+#define AUTO_SCAN_PITCH_PHASE (0.5f * PI)
 #define AUTO_SCAN_PITCH_STEP 0.04f
 
 /* 全局变量 --------------------------------------------------------------- */
@@ -38,7 +41,7 @@ static uint8_t gimbal_radar_reached(const gimbal_control_struct *control);
 void gimbal_behaviour_set(gimbal_control_struct *behaver)
 {
     static gimbal_mode_enum last_mode = GIMBAL_INIT_MODE;
-
+    static uint16_t time = 0;
     if (behaver == NULL)
     {
         return;
@@ -95,6 +98,25 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
                 case RC_SW_DOWN:
                 {
 
+                    if (!toe_is_error(VISION_TOE) && behaver->vision_point->receive_packet.packet_state == DEC_OK)
+                    {
+                        time = 0;
+                    }
+                    else
+                    {
+                        time++;
+                    }
+                    if (time == 0)
+                    {
+                        behaver->current_time = HAL_GetTick() * 0.001f;
+                        gimbalMode = GIMBAL_MANUAL_ATTACK_MODE;
+                    }
+                    else if (time > 100)
+                    {
+                        gimbalMode = GIMBAL_AUTO_SCAN_MODE;
+                        time = 101;
+                    }
+
                     break;
                 }
             }
@@ -102,13 +124,11 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         }
         case GIMBAL_AUTO:  // 自动模式细分
         {
-            if (!toe_is_error(VISION_TOE) &&
-                behaver->vision_point->receive_packet.packet_state == DEC_OK)
+            if (!toe_is_error(VISION_TOE) && behaver->vision_point->receive_packet.packet_state == DEC_OK)
             {
                 gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
             }
-            else if (!toe_is_error(RADAR_TOE) &&
-                     behaver->radar_point->receive_packet.packet_state == DEC_OK)
+            else if (!toe_is_error(RADAR_TOE) && behaver->radar_point->receive_packet.packet_state == DEC_OK)
             {
                 gimbalMode = gimbal_radar_reached(behaver) ? GIMBAL_AUTO_SCAN_MODE : GIMBAL_AUTO_MOVE_MODE;
             }
@@ -239,13 +259,13 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         case GIMBAL_AUTO_MOVE_MODE:  // 自动移动
         {
             gimbal_auto_move_control(add_yaw, add_pitch, gimbal_control_set);
-            Power_5V_OFF;  // 关闭激光
+            Power_5V_ON;  // 关闭激光
             break;
         }
         case GIMBAL_AUTO_SCAN_MODE:  // 自动扫描
         {
             gimbal_auto_scan_control(add_yaw, add_pitch, gimbal_control_set);
-            Power_5V_OFF;  // 关闭激光
+            Power_5V_ON;  // 关闭激光
             break;
         }
         case GIMBAL_MANUAL_ATTACK_MODE:  // 手动攻击
@@ -327,12 +347,57 @@ static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_st
  * @param  range_yaw   偏航扫描范围
  * @param  range_pitch 俯仰扫描范围
  * @param  period_yaw  偏航扫描周期
+ * @param
  * @param  run_time    已运行时间
  * @note   偏航轴做三角波往复运动，每次换向时俯仰轴步进一行
  */
-void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pitch, float period_yaw, float run_time)
+void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pitch,
+    float period_yaw, float period_pitch, float phase, float run_time)
 {
-    // 1. 计算偏航轴当前目标位置（三角波轨迹）
+    // // 1. 计算偏航轴当前目标位置（三角波轨迹）
+    // (void)period_pitch;
+    // (void)phase;
+    //
+    // if (scan_control == NULL || period_yaw <= 0.0f)
+    // {
+    //     return;
+    // }
+    //
+    // float cycle_time = fmodf(run_time, period_yaw);
+    // float half_period = 0.5f * period_yaw;
+    // float next_yaw = 0.0f;
+    // int8_t current_dir = 1;
+    //
+    // if (cycle_time < half_period)
+    // {
+    //     next_yaw = -range_yaw + 2.0f * range_yaw * cycle_time / half_period;
+    //     current_dir = 1;
+    // }
+    // else
+    // {
+    //     next_yaw = range_yaw - 2.0f * range_yaw * (cycle_time - half_period) / half_period;
+    //     current_dir = -1;
+    // }
+    //
+    // if (scan_control->last_yaw_dir == 0)
+    // {
+    //     scan_control->last_yaw_dir = current_dir;
+    // }
+    // else if (current_dir != scan_control->last_yaw_dir)
+    // {
+    //     scan_control->pitch_accumulated += AUTO_SCAN_PITCH_STEP;
+    //     if (scan_control->pitch_accumulated > range_pitch)
+    //     {
+    //         scan_control->pitch_accumulated = -range_pitch;
+    //     }
+    //     scan_control->last_yaw_dir = current_dir;
+    // }
+    //
+    // scan_control->auto_scan_AC_set_yaw = next_yaw;
+    // scan_control->auto_scan_AC_set_pitch = scan_control->pitch_accumulated;
+    // return;
+
+#if 1
     float step_yaw = 4.0f * range_yaw / period_yaw;
     float calc_time = run_time - period_yaw * ((int16_t)(run_time / period_yaw));
 
@@ -347,7 +412,8 @@ void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pi
         next_yaw = -step_yaw * calc_time + 2.0f * range_yaw;
         current_dir = -1;
     }
-    else {
+    else
+    {
         next_yaw = step_yaw * calc_time - 4.0f * range_yaw;
         current_dir = 1;
     }
@@ -370,6 +436,7 @@ void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pi
     // 4. 输出设定值
     scan_control->auto_scan_AC_set_yaw = next_yaw;
     scan_control->auto_scan_AC_set_pitch = scan_control->pitch_accumulated;
+#endif
 }
 
 /**
@@ -387,7 +454,8 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
 
     // 计算当前扫描位置
     scan_control_set(&control->gimbalScan, AUTO_SCAN_YAW_RANGE, AUTO_SCAN_PITCH_RANGE,
-                     AUTO_SCAN_YAW_PERIOD, control->gimbalScan.scan_run_time);
+                     AUTO_SCAN_YAW_PERIOD,AUTO_SCAN_PITCH_PERIOD,AUTO_SCAN_PITCH_PHASE,
+                     control->gimbalScan.scan_run_time);
 
     *yaw = control->gimbalScan.yaw_center_value + control->gimbalScan.auto_scan_AC_set_yaw;
     *pitch = control->gimbalScan.pitch_center_value + control->gimbalScan.auto_scan_AC_set_pitch;
@@ -408,6 +476,7 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     *pitch = -control->vision_point->receive_packet.pitch;
 }
 
+//扫描复位
 static void gimbal_scan_reset(gimbal_control_struct *control)
 {
     if (control == NULL)
@@ -431,7 +500,7 @@ static void gimbal_scan_reset(gimbal_control_struct *control)
     control->gimbalScan.auto_scan_AC_set_yaw = 0.0f;
     control->gimbalScan.auto_scan_AC_set_pitch = 0.0f;
     control->gimbalScan.pitch_accumulated = -AUTO_SCAN_PITCH_RANGE;
-    control->gimbalScan.last_yaw_dir = 1;
+    control->gimbalScan.last_yaw_dir = 0;
 }
 
 static uint8_t gimbal_radar_reached(const gimbal_control_struct *control)

@@ -106,17 +106,28 @@ float PID_calc(pid_struct *pid, float ref, float set)
     if (pid->mode == PID_POSITION)
     {
         pid->Pout = pid->Kp * pid->error[0];
-        pid->Iout += pid->Ki * pid->error[0];// * integral_coeff;
+
+        if (fabs(pid->error[0]) < 0.0001f)
+        {
+            pid->Iout = 0;
+        }
+        else
+        {
+            pid->Iout += pid->Ki * pid->error[0] * integral_coeff;
+        }
         pid->Dbuf[2] = pid->Dbuf[1];
         pid->Dbuf[1] = pid->Dbuf[0];
         pid->Dbuf[0] = (pid->error[0] - pid->error[1]);
         pid->Dout = pid->Kd * pid->Dbuf[0];
         pid->out = pid->Pout + pid->Iout + pid->Dout;
         // 反算抗饱和: 输出超限时反向修正积分，避免积分卡死在边界
-        if (pid->out > pid->max_out) {
+        if (pid->out > pid->max_out)
+        {
             pid->Iout -= (pid->out - pid->max_out);
             pid->out = pid->max_out;
-        } else if (pid->out < pid->min_out) {
+        }
+        else if (pid->out < pid->min_out)
+            {
             pid->Iout -= (pid->out - pid->min_out);
             pid->out = pid->min_out;
         }
@@ -125,13 +136,31 @@ float PID_calc(pid_struct *pid, float ref, float set)
     else if (pid->mode == PID_DELTA)
     {
         pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
-        pid->Iout = pid->Ki * pid->error[0] * integral_coeff;
+
+        if (fabs(pid->error[0]) < 0.0005f)
+        {
+            pid->Iout = 0;
+        }
+        else
+        {
+            pid->Iout = pid->Ki * pid->error[0] * integral_coeff;
+        }
         pid->Dbuf[2] = pid->Dbuf[1];
         pid->Dbuf[1] = pid->Dbuf[0];
         pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
         pid->Dout = pid->Kd * pid->Dbuf[0];
         pid->out += pid->Pout + pid->Iout + pid->Dout;
-        LimitMax(pid->out,pid->min_out ,pid->max_out);
+        // 反算抗饱和: 输出超限时反向修正积分，避免积分卡死在边界
+        if (pid->out > pid->max_out)
+        {
+            pid->Iout -= (pid->out - pid->max_out);
+            pid->out = pid->max_out;
+        }
+        else if (pid->out < pid->min_out)
+        {
+            pid->Iout -= (pid->out - pid->min_out);
+            pid->out = pid->min_out;
+        }
     }
     return pid->out;
 }
