@@ -46,10 +46,10 @@
 
 #define GIMBAL_PID_PERIOD 0.001f
 
-#define YAW_ABS_POS_P 67.0f
-#define YAW_ABS_POS_I 5.0f
-#define YAW_ABS_POS_D 0.001f
-#define YAW_ABS_POS_F 0.24f
+#define YAW_ABS_POS_P 60.0f
+#define YAW_ABS_POS_I 15.0f
+#define YAW_ABS_POS_D 10.0f
+#define YAW_ABS_POS_F 0.1f
 #define YAW_ABS_POS_MAX_OUT 10.0f
 #define YAW_ABS_POS_MIN_OUT -10.0f
 #define YAW_ABS_POS_MAX_IOUT 1.0f
@@ -74,9 +74,9 @@
 #define YAW_VEL_MIN_IOUT -1.0f
 
 
-#define PITCH_ABS_POS_P 70.0f
-#define PITCH_ABS_POS_I 5.0f
-#define PITCH_ABS_POS_D 0.001f
+#define PITCH_ABS_POS_P 85.0f
+#define PITCH_ABS_POS_I 30.0f
+#define PITCH_ABS_POS_D 20.0f
 #define PITCH_ABS_POS_F 2.0f
 #define PITCH_ABS_POS_MAX_OUT 10.0f
 #define PITCH_ABS_POS_MIN_OUT -10.0f
