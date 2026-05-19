@@ -17,25 +17,25 @@
 #include "cap_comm.h"
 #include "PID_control.h"
 
-//»¡¶È¸ñÊ½»¯Îª-PI~PI
+//ï¿½ï¿½ï¿½È¸ï¿½Ê½ï¿½ï¿½Îª-PI~PI
 #define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
 
 
 #define ECD_RANGE 8191
 #define HALF_ECD_RANGE 4096
-#define MOTOR_ECD_TO_RAD 0.000766990394f //±àÂëÖµ×ª»»Îª»¡¶ÈÖµ  2*PI/8192
-//yawµç»úÁãµã±àÂëÖµ
+#define MOTOR_ECD_TO_RAD 0.000766990394f //ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµ  2*PI/8192
+//yawï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
 #define YAW_ZERO_ENCODER 4096
-//pitchµç»úÁãµã±àÂëÖµ
+//pitchï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
 #define PITCH_ZERO_ENCODER 4096
-//yawÖáÊý¾ÝÏÞ·ùÖµ
+//yawï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½Öµ
 #define YAW_ABS_ZERO 0.0f
 #define YAW_ABS_MAX 0.6f
 #define YAW_ABS_MIN -0.6f
 #define YAW_REL_ZERO 0.0f
 #define YAW_REL_MAX 3.14f
 #define YAW_REL_MIN -3.14f
-//pitchÖáÊý¾ÝÏÞ·ùÖµ
+//pitchï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½Öµ
 #define PITCH_ABS_ZERO 0.0f
 #define PITCH_ABS_MAX 0.36f
 #define PITCH_ABS_MIN -0.43f
@@ -109,15 +109,15 @@ typedef enum
     MOTOR_ENCODER,
     MOTOR_STOP
 }motor_mode_enum;
-//µ¥¸öÅ·À­½Ç½á¹¹Ìå
+//ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½Ç½á¹¹ï¿½ï¿½
 typedef struct
 {
     motor_mode_enum motorMode;
     motor_mode_enum last_motorMode;
 
-    PID_control euler_abs_pos_control;//½Ç¶È»·
-    PID_control euler_rel_pos_control;//½ÇËÙ¶È»·
-    PID_control euler_vel_control;
+    pid_ctrl_t euler_abs_pos_control;//è§’åº¦çŽ¯
+    pid_ctrl_t euler_rel_pos_control;//è§’é€Ÿåº¦çŽ¯
+    pid_ctrl_t euler_vel_control;
 
     float vel_set;
     float vel;
@@ -137,36 +137,36 @@ typedef struct
 
 typedef struct
 {
-    // É¨ÃèµÍÍ¨ÂË²¨½á¹¹Ìå
+    // É¨ï¿½ï¿½ï¿½Í¨ï¿½Ë²ï¿½ï¿½á¹¹ï¿½ï¿½
     first_order_filter_type_t pitch_auto_scan_first_order_filter;
     first_order_filter_type_t yaw_auto_scan_first_order_filter;
 
-    //yawÖáÖÐÐÄÖµ
+    //yawï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
     float yaw_center_value;
-    //pitchÖáÖÐÐÄÖµ
+    //pitchï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
     float pitch_center_value;
 
-    //yawÖáÔË¶¯·ù¶È
+    //yawï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½
     float yaw_range;
-    //pitchÖáÔË¶¯·ù¶È
+    //pitchï¿½ï¿½ï¿½Ë¶ï¿½ï¿½ï¿½ï¿½ï¿½
     float pitch_range;
 
-    //µ±Ç°ÔËÐÐÊ±¼ä µ¥Î»s
+    //ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ï¿½ï¿½Î»s
     float scan_run_time;
-    //³õÊ¼¼ÆÊ±Ê±¼ä µ¥Î»s
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Ê±Ê±ï¿½ï¿½ ï¿½ï¿½Î»s
     float scan_begin_time;
 
-    //yawÖáÉ¨ÃèÖÜÆÚ µ¥Î»s
+    //yawï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Î»s
     float scan_yaw_period;
-    //pitchÖáÉ¨ÃèÖÜÆÚ  µ¥Î»s
+    //pitchï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½Î»s
     float scan_pitch_period;
 
-    // ×Ô¶¯É¨ÃèÉèÖÃ¸¡¶¯Öµ
+    // ï¿½Ô¶ï¿½É¨ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½Öµ
     float auto_scan_AC_set_yaw;
     float auto_scan_AC_set_pitch;
 
     int8_t last_yaw_dir;
-    float pitch_accumulated; // ÓÃÓÚ¼ÇÂ¼ÉßÐÎÉ¨ÃèÖÐ Pitch Öáµ±Ç°×ßµ½ÁËÄÄÀï
+    float pitch_accumulated; // ï¿½ï¿½ï¿½Ú¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½É¨ï¿½ï¿½ï¿½ï¿½ Pitch ï¿½áµ±Ç°ï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }scan_struct;
 
 
@@ -174,20 +174,20 @@ typedef struct
 
 typedef struct
 {
-    const INS_t *imu_point;//ÍÓÂÝÒÇÊý¾Ý
-    const dt7_data_struct *rc_dt7_point;//Ò£¿ØÆ÷Êý¾Ý
+    const INS_t *imu_point;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    const dt7_data_struct *rc_dt7_point;//Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     const fsi6_data_struct *rc_fsi6_point;
 
     radar_data_t *radar_point;
-    vision_data_t *vision_point;//ÊÓ¾õÊý¾Ý
+    vision_data_t *vision_point;//ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½
 
 
     gimbal_motor_t yawEuler;
-    dm_control_t yawMotor;//yawµç»ú½á¹¹Ìå
+    dm_control_t yawMotor;//yawï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½
     gimbal_motor_t pitchEuler;
-    dm_control_t pitchMotor;//pitchµç»ú½á¹¹Ìå
+    dm_control_t pitchMotor;//pitchï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½
 
-    scan_struct gimbalScan;//×Ô¶¯É¨Ãè
+    scan_struct gimbalScan;//ï¿½Ô¶ï¿½É¨ï¿½ï¿½
     bool enable;
 
     float current_time;
@@ -196,7 +196,7 @@ typedef struct
     uint8_t pitch_can_tx_data[8];
 }gimbal_control_struct;
 
-extern gimbal_control_struct gimbalControl;//ÔÆÌ¨¿ØÖÆ
+extern gimbal_control_struct gimbalControl;//ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½
 void UserGimbal_AddTxPacket(void);
 void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
 void gimbal_motor_gyro_control(gimbal_control_struct *gimbal_control,gimbal_motor_t *motor_control);
