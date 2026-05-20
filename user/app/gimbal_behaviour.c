@@ -213,7 +213,7 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
             else
             {
                 motor_mode_update->yawEuler.motorMode = MOTOR_ENCODER;
-                motor_mode_update->pitchEuler.motorMode = MOTOR_GYRO;
+                motor_mode_update->pitchEuler.motorMode = MOTOR_ENCODER;
             }
             break;
         }

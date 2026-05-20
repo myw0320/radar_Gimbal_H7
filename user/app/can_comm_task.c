@@ -50,15 +50,20 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         {
             case 0x01:
             {
-                DM_GetRxPacket(&gimbalControl.yawMotor.motor_measurement,rx1_data);
+                //DM_GetRxPacket(&gimbalControl.yawMotor.motor_measurement,rx1_data);
                 detect_hook(GIMBAL_YAW_TOE);
                 break;
             }
-            // case 0x210:
-            // {
-            //     CAP_GetRxPacket(&cap_rx_tset,rx1_data);//³¬µç
-            //     break;
-            // }
+            case 0x301:
+            {
+                //DM1TO4_GetRxPacket(&gimbalControl.yawMotor.motor_measurement,rx1_data);
+                detect_hook(GIMBAL_YAW_TOE);
+                break;
+            }
+            case 0x205:
+            {
+                DJI_GetRxPacket(&gimbalControl.yawMotor.motor_measurement,rx1_data);
+            }
         }
     }
     else if (hfdcan == &hfdcan2)
@@ -70,7 +75,13 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         {
             case 0x02:
             {
-                DM_GetRxPacket(&gimbalControl.pitchMotor.motor_measurement,rx2_data);
+                //DM_GetRxPacket(&gimbalControl.pitchMotor.motor_measurement,rx2_data);
+                detect_hook(GIMBAL_PITCH_TOE);
+                break;
+            }
+            case 0x302:
+            {
+                DM1TO4_GetRxPacket(&gimbalControl.pitchMotor.motor_measurement,rx2_data);
                 detect_hook(GIMBAL_PITCH_TOE);
                 break;
             }

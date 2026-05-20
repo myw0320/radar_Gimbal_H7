@@ -23,11 +23,10 @@ void DJI_Init(dji_control_struct *init, dji_motor_type_enum type, uint8_t id)
  */
 void DJI_GetRxPacket(dji_motor_struct *motor,uint8_t *rx_data)
 {
-    int16_t tmp_rpm;
+
     motor->last_encoder = motor->encoder;
     motor->encoder = (uint16_t)((rx_data[0]<<8)|rx_data[1]);
-    tmp_rpm = (int16_t)((rx_data[2]<<8)|rx_data[3]);
-    motor->rpm = (float)tmp_rpm;
+    motor->rpm = (int16_t)((rx_data[2]<<8)|rx_data[3]);
     motor->torque_current = (uint16_t)((rx_data[4]<<8)|rx_data[5]);
     motor->temperature = rx_data[6];
     //直接转换数据
@@ -36,23 +35,23 @@ void DJI_GetRxPacket(dji_motor_struct *motor,uint8_t *rx_data)
     if (motor->motor_type == M2006 || motor->motor_type == M3508)
     {
         motor->diff_enc = motor->encoder - motor->last_encoder;
-        if (motor->diff_enc > ENCODER_HALF)
+        if (motor->diff_enc > DJI_ENCODER_HALF)
         {
-            motor->diff_enc -= ENCODER;
+            motor->diff_enc -= DJI_ENCODER_RES;
         }
-        else if (motor->diff_enc < -ENCODER_HALF)
+        else if (motor->diff_enc < -DJI_ENCODER_HALF)
         {
-            motor->diff_enc += ENCODER;
+            motor->diff_enc += DJI_ENCODER_RES;
         }
         motor->total_pulses += motor->diff_enc;
-        motor->motor_revolutions = (double)motor->total_pulses / ENCODER;
+        motor->motor_revolutions = (double)motor->total_pulses / DJI_ENCODER_RES;
         if (motor->motor_type == M2006)
         {
-            motor->output_revolutions = motor->motor_revolutions / M2006_RATIO;
+            motor->output_revolutions = motor->motor_revolutions / DJI_ENCODER_RES;
         }
         else if (motor->motor_type == M3508)
         {
-            motor->output_revolutions = motor->motor_revolutions / M3508_RATIO;
+            motor->output_revolutions = motor->motor_revolutions / M3508_GEAR_RATIO;
         }
 
         motor->ratio_angle = (float)(fmod(motor->output_revolutions * 360.0f,360.0f));

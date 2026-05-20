@@ -50,56 +50,56 @@
 #define YAW_ABS_POS_I 15.0f
 #define YAW_ABS_POS_D 10.0f
 #define YAW_ABS_POS_F 0.1f
-#define YAW_ABS_POS_MAX_OUT 10.0f
-#define YAW_ABS_POS_MIN_OUT -10.0f
+#define YAW_ABS_POS_MAX_OUT 2.0f
+#define YAW_ABS_POS_MIN_OUT -2.0f
 #define YAW_ABS_POS_MAX_IOUT 1.0f
 #define YAW_ABS_POS_MIN_IOUT -1.0f
 
-#define YAW_REL_POS_P 15.0f
-#define YAW_REL_POS_I 0.0f
-#define YAW_REL_POS_D 2.0f
-#define YAW_REL_POS_F 0.0f
+#define YAW_REL_POS_P 8.0f
+#define YAW_REL_POS_I 0.05f
+#define YAW_REL_POS_D 0.02f
+#define YAW_REL_POS_F 0.1f
 #define YAW_REL_POS_MAX_OUT 2.0f
 #define YAW_REL_POS_MIN_OUT -2.0f
 #define YAW_REL_POS_MAX_IOUT 1.0f
 #define YAW_REL_POS_MIN_IOUT -1.0f
 
-#define YAW_VEL_P 0.80f
-#define YAW_VEL_I 0.0f
-#define YAW_VEL_D 0.003f
-#define YAW_VEL_F 0.0f
-#define YAW_VEL_MAX_OUT 3.0f
-#define YAW_VEL_MIN_OUT -3.0f
-#define YAW_VEL_MAX_IOUT 1.0f
-#define YAW_VEL_MIN_IOUT -1.0f
+#define YAW_VEL_P 2200.0f
+#define YAW_VEL_I 1000.0f
+#define YAW_VEL_D 10.0f
+#define YAW_VEL_F 2.0f
+#define YAW_VEL_MAX_OUT 10000.0f
+#define YAW_VEL_MIN_OUT -10000.0f
+#define YAW_VEL_MAX_IOUT 5000.0f
+#define YAW_VEL_MIN_IOUT -5000.0f
 
 
-#define PITCH_ABS_POS_P 85.0f
-#define PITCH_ABS_POS_I 30.0f
-#define PITCH_ABS_POS_D 20.0f
-#define PITCH_ABS_POS_F 2.0f
-#define PITCH_ABS_POS_MAX_OUT 10.0f
-#define PITCH_ABS_POS_MIN_OUT -10.0f
-#define PITCH_ABS_POS_MAX_IOUT 2.0f
-#define PITCH_ABS_POS_MIN_IOUT -2.0f
+#define PITCH_ABS_POS_P 6.0f
+#define PITCH_ABS_POS_I 1.5f
+#define PITCH_ABS_POS_D 0.002f
+#define PITCH_ABS_POS_F 0.1f
+#define PITCH_ABS_POS_MAX_OUT 2.0f
+#define PITCH_ABS_POS_MIN_OUT -2.0f
+#define PITCH_ABS_POS_MAX_IOUT 0.5f
+#define PITCH_ABS_POS_MIN_IOUT -0.5f
 
-#define PITCH_REL_POS_P 15.0f
-#define PITCH_REL_POS_I 0.025f
-#define PITCH_REL_POS_D 0.03f
-#define PITCH_REL_POS_F 0.0f
-#define PITCH_REL_POS_MAX_OUT 5.0
-#define PITCH_REL_POS_MIN_OUT -5.0
-#define PITCH_REL_POS_MAX_IOUT 1.0
-#define PITCH_REL_POS_MIN_IOUT -1.0
+#define PITCH_REL_POS_P 8.0f
+#define PITCH_REL_POS_I 0.05f
+#define PITCH_REL_POS_D 0.02f
+#define PITCH_REL_POS_F 0.1f
+#define PITCH_REL_POS_MAX_OUT 2.0f
+#define PITCH_REL_POS_MIN_OUT -2.0f
+#define PITCH_REL_POS_MAX_IOUT 0.5f
+#define PITCH_REL_POS_MIN_IOUT -0.5f
 
-#define PITCH_VEL_P 1.0f
-#define PITCH_VEL_I 0.0f
-#define PITCH_VEL_D 0.0003f
-#define PITCH_VEL_F 0.0f
-#define PITCH_VEL_MAX_OUT 3.0
-#define PITCH_VEL_MIN_OUT -3.0
-#define PITCH_VEL_MAX_IOUT 1.0
-#define PITCH_VEL_MIN_IOUT -1.0
+#define PITCH_VEL_P 50.0f
+#define PITCH_VEL_I 0.01f
+#define PITCH_VEL_D 0.2f
+#define PITCH_VEL_F 0.1f
+#define PITCH_VEL_MAX_OUT 8000.0f
+#define PITCH_VEL_MIN_OUT -8000.0f
+#define PITCH_VEL_MAX_IOUT 5.0f
+#define PITCH_VEL_MIN_IOUT -5.0f
 
 
 typedef enum
@@ -119,6 +119,7 @@ typedef struct
     pid_ctrl_t euler_rel_pos_control;//角速度环
     pid_ctrl_t euler_vel_control;
 
+    first_order_filter_type_t euler_filter;
     float vel_set;
     float vel;
 
@@ -183,9 +184,9 @@ typedef struct
 
 
     gimbal_motor_t yawEuler;
-    dm_control_t yawMotor;//yaw����ṹ��
+    dji_control_struct yawMotor;//yaw����ṹ��
     gimbal_motor_t pitchEuler;
-    dm_control_t pitchMotor;//pitch����ṹ��
+    dm1to4_control_t pitchMotor;//pitch����ṹ��
 
     scan_struct gimbalScan;//�Զ�ɨ��
     bool enable;

@@ -3,7 +3,7 @@
 #include "stdint.h"
 #include "math.h"
 #include "bsp_can.h"
-
+#include "motor.h"
 
 
 
@@ -66,11 +66,10 @@ typedef struct __attribute__((packed))
 
 typedef struct __attribute__((packed))
 {
-	uint8_t motor_id;
 	uint16_t encoder;
 	uint16_t last_encoder;
 	int16_t rpm;
-	uint16_t torque_current;
+	int16_t torque_current;
 	uint16_t temperature;
 
 	float omega;
@@ -99,13 +98,19 @@ typedef struct __attribute__((packed))
 	dm_mode_enum mode;
 	uint16_t can_id;
 
-
+	float give_pos;//-PI~PI
+	float give_vel;//rad/s
+	float give_torque;
+	float give_kp;
+	float give_kd;
+	int16_t give_cmd_current;
 }dm1to4_control_t;
 
 void DM_Enable(uint8_t *tx_data);
 void DM_Disable(uint8_t *tx_data);
 void DM_SaveZero(uint8_t *tx_data);
 void DM_Clear(uint8_t *tx_data);
+
 void DM_Init(dm_control_t *init,dm_motor_type_enum type, dm_mode_enum mode, uint8_t canid);
 void DM_GetRxPacket(dm_motor_t *motor,uint8_t *rx_data);
 void DM1TO4_GetRxPacket(dm1to4_motor_t *motor,uint8_t *rx_data);

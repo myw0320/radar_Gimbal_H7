@@ -110,9 +110,10 @@ void DM1TO4_GetRxPacket(dm1to4_motor_t *motor,uint8_t *rx_data)
 {
 	motor->last_encoder = motor->encoder;
 	motor->encoder = (uint16_t)(rx_data[0]<<8|rx_data[1]);
-	motor->rpm = (uint16_t)(rx_data[2]<<8|rx_data[3]);
-	motor->torque_current = (uint16_t)(rx_data[4]<<8|rx_data[5]);
+	motor->rpm = (int16_t)(rx_data[2]<<8|rx_data[3]);
+	motor->torque_current = (int16_t)(rx_data[4]<<8|rx_data[5]);
 	motor->temperature = rx_data[6];
+	motor->omega = (float)motor->rpm * RPM_TO_OMEGA * 0.001f;
 }
 
 

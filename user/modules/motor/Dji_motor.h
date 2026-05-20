@@ -2,32 +2,10 @@
 #define __DJI_MOTOR_H
 #include "stdint.h"
 #include "bsp_can.h"
+#include "motor.h"
 
-// #define M3508_K0 2.49688994e-6f
-// #define M3508_K1 1.253e-07
-// #define M3508_K2 1.23e-07
-// #define M3508_K3 4.081f
-//
-// #define GM6020_K0 0.8130f
-// #define GM6020_K1 -0.0005f
-// #define GM6020_K2 6.0021f
-// #define GM6020_K3 1.3715f
 
-#define ENCODER 8191.0f
-#define ENCODER_HALF 4096.0f
-//减速比
-#define M3508_RATIO 15.756f
-#define M2006_RATIO 36
-// 电流到输出的转化系数
-#define M3508_Current_To_Out (20.0f/16384.0f)
-#define GM6020_Current_To_Out (3.0f/16384.0f)
-#define M2006_Current_To_Out (10.0f/10000.0f)
 
-#define M3508_RPM_TO_VECTOR  0.000415809748903494517209f
-#define GM6020_RPM_TO_VECTOR 0.001746201886833
-#define M2006_RMP_TO_VECTOR 0.00290888208665721596153948461415f
-
-#define RPM_TO_OMEGA 0.104719753f
 typedef enum
 {
     M3508,
@@ -58,10 +36,8 @@ typedef struct __attribute__((packed))
 typedef struct
 {
     dji_motor_struct motor_measurement;//电机原始数据
-    float now_power;
 
     float give_vel;//rad/s
-    float give_cmd_power;
     int16_t give_cmd_current;//给定电流值
 
 }dji_control_struct;
