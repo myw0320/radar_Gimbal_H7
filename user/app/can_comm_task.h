@@ -6,7 +6,7 @@
 
 
 #define YAW_CAN hfdcan1
-#define YAW_CAN_ID 0x1FF
+#define YAW_CAN_ID 0x3FE
 
 #define PITCH_CAN hfdcan2
 #define PITCH_CAN_ID 0x3FE//0x02

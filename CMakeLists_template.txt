@@ -67,6 +67,7 @@ Middlewares/ST/ARM/DSP/lib
 # User include_directories BEGIN
 include_directories(
 user/algorithm/controller
+user/algorithm/Filter
 user/algorithm/EKF
 user/algorithm/kalman
 user/algorithm/mahony

@@ -75,7 +75,10 @@ extern UART_HandleTypeDef huart10;
 extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN EV */
+__weak void USER_TIM_IRQ(void)
+{
 
+}
 /* USER CODE END EV */
 
 /******************************************************************************/

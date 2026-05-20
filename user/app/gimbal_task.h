@@ -16,7 +16,7 @@
 #include "Mathh.h"
 #include "cap_comm.h"
 #include "PID_control.h"
-
+#include "Filter_control.h"
 //���ȸ�ʽ��Ϊ-PI~PI
 #define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
 
@@ -46,60 +46,67 @@
 
 #define GIMBAL_PID_PERIOD 0.001f
 
-#define YAW_ABS_POS_P 60.0f
-#define YAW_ABS_POS_I 15.0f
-#define YAW_ABS_POS_D 10.0f
-#define YAW_ABS_POS_F 0.1f
-#define YAW_ABS_POS_MAX_OUT 2.0f
-#define YAW_ABS_POS_MIN_OUT -2.0f
+/* 角度环微分项低通截止频率 (Hz)
+   只滤 D 项，P/I/F 无延迟，兼顾振荡抑制与动态响应 */
+#define YAW_ABS_POS_D_FC     150.0f
+#define YAW_REL_POS_D_FC     150.0f
+#define PITCH_ABS_POS_D_FC   150.0f
+#define PITCH_REL_POS_D_FC   150.0f
+
+#define YAW_ABS_POS_P 8.0f
+#define YAW_ABS_POS_I 2.5f
+#define YAW_ABS_POS_D 0.015f
+#define YAW_ABS_POS_F 0.4f
+#define YAW_ABS_POS_MAX_OUT 1.0f
+#define YAW_ABS_POS_MIN_OUT -1.0f
 #define YAW_ABS_POS_MAX_IOUT 1.0f
 #define YAW_ABS_POS_MIN_IOUT -1.0f
 
-#define YAW_REL_POS_P 8.0f
-#define YAW_REL_POS_I 0.05f
-#define YAW_REL_POS_D 0.02f
-#define YAW_REL_POS_F 0.1f
-#define YAW_REL_POS_MAX_OUT 2.0f
-#define YAW_REL_POS_MIN_OUT -2.0f
+#define YAW_REL_POS_P 12.0f
+#define YAW_REL_POS_I 3.0f
+#define YAW_REL_POS_D 0.01f
+#define YAW_REL_POS_F 0.4f
+#define YAW_REL_POS_MAX_OUT 1.0f
+#define YAW_REL_POS_MIN_OUT -1.0f
 #define YAW_REL_POS_MAX_IOUT 1.0f
 #define YAW_REL_POS_MIN_IOUT -1.0f
 
-#define YAW_VEL_P 2200.0f
-#define YAW_VEL_I 1000.0f
-#define YAW_VEL_D 10.0f
-#define YAW_VEL_F 2.0f
-#define YAW_VEL_MAX_OUT 10000.0f
-#define YAW_VEL_MIN_OUT -10000.0f
-#define YAW_VEL_MAX_IOUT 5000.0f
-#define YAW_VEL_MIN_IOUT -5000.0f
+#define YAW_VEL_P 60.0f
+#define YAW_VEL_I 1.8f
+#define YAW_VEL_D 0.01f
+#define YAW_VEL_F 0.0f
+#define YAW_VEL_MAX_OUT 5000.0f
+#define YAW_VEL_MIN_OUT -5000.0f
+#define YAW_VEL_MAX_IOUT 500.0f
+#define YAW_VEL_MIN_IOUT -500.0f
 
 
-#define PITCH_ABS_POS_P 6.0f
+#define PITCH_ABS_POS_P 8.0f
 #define PITCH_ABS_POS_I 1.5f
-#define PITCH_ABS_POS_D 0.002f
-#define PITCH_ABS_POS_F 0.1f
-#define PITCH_ABS_POS_MAX_OUT 2.0f
-#define PITCH_ABS_POS_MIN_OUT -2.0f
+#define PITCH_ABS_POS_D 0.015f
+#define PITCH_ABS_POS_F 0.4f
+#define PITCH_ABS_POS_MAX_OUT 1.0f
+#define PITCH_ABS_POS_MIN_OUT -1.0f
 #define PITCH_ABS_POS_MAX_IOUT 0.5f
 #define PITCH_ABS_POS_MIN_IOUT -0.5f
 
-#define PITCH_REL_POS_P 8.0f
-#define PITCH_REL_POS_I 0.05f
-#define PITCH_REL_POS_D 0.02f
-#define PITCH_REL_POS_F 0.1f
-#define PITCH_REL_POS_MAX_OUT 2.0f
-#define PITCH_REL_POS_MIN_OUT -2.0f
-#define PITCH_REL_POS_MAX_IOUT 0.5f
-#define PITCH_REL_POS_MIN_IOUT -0.5f
+#define PITCH_REL_POS_P 12.0f
+#define PITCH_REL_POS_I 2.6f
+#define PITCH_REL_POS_D 0.01f
+#define PITCH_REL_POS_F 0.4f
+#define PITCH_REL_POS_MAX_OUT 1.0f
+#define PITCH_REL_POS_MIN_OUT -1.0f
+#define PITCH_REL_POS_MAX_IOUT 1.0f
+#define PITCH_REL_POS_MIN_IOUT -1.0f
 
-#define PITCH_VEL_P 50.0f
-#define PITCH_VEL_I 0.01f
-#define PITCH_VEL_D 0.2f
-#define PITCH_VEL_F 0.1f
-#define PITCH_VEL_MAX_OUT 8000.0f
-#define PITCH_VEL_MIN_OUT -8000.0f
-#define PITCH_VEL_MAX_IOUT 5.0f
-#define PITCH_VEL_MIN_IOUT -5.0f
+#define PITCH_VEL_P 60.0f
+#define PITCH_VEL_I 1.5f
+#define PITCH_VEL_D 0.01f
+#define PITCH_VEL_F 0.0f
+#define PITCH_VEL_MAX_OUT 5000.0f
+#define PITCH_VEL_MIN_OUT -5000.0f
+#define PITCH_VEL_MAX_IOUT 500.0f
+#define PITCH_VEL_MIN_IOUT -500.0f
 
 
 typedef enum
@@ -119,7 +126,7 @@ typedef struct
     pid_ctrl_t euler_rel_pos_control;//角速度环
     pid_ctrl_t euler_vel_control;
 
-    first_order_filter_type_t euler_filter;
+    filter_ctrl_t euler_filter;
     float vel_set;
     float vel;
 
@@ -184,7 +191,7 @@ typedef struct
 
 
     gimbal_motor_t yawEuler;
-    dji_control_struct yawMotor;//yaw����ṹ��
+    dm1to4_control_t yawMotor;//yaw����ṹ��
     gimbal_motor_t pitchEuler;
     dm1to4_control_t pitchMotor;//pitch����ṹ��
 
