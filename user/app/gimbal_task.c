@@ -6,9 +6,7 @@
 #include "cmsis_os.h"
 //#include "cap_comm.h"
 
-gimbal_control_struct gimbalControl;//��̨����
-extern cali_flag_t cali_flag;
-extern float gimbal_yaw_center_offset;
+gimbal_control_struct gimbalControl;//云台控制
 
 static void gimbal_init(gimbal_control_struct *init);
 static void gimbal_update(gimbal_control_struct *update);
@@ -39,9 +37,9 @@ void Gimbal_Task(void const *pvParameters)
     {
         osDelay(1);
     }
-    // HAL_TIM_Base_Start_IT(&htim7);
-    //��ʼ��
+    //初始化
     gimbal_init(&gimbalControl);
+
     while(1)
     {
         gimbal_update(&gimbalControl);//��������
@@ -55,23 +53,36 @@ void Gimbal_Task(void const *pvParameters)
 }
 void UserGimbal_AddTxPacket(void)
 {
-    if ((!gimbalControl.rc_fsi6_point->rc.sw[0] && !gimbalControl.rc_fsi6_point->rc.sw[1]) || toe_is_error(DBUS_TOE))// || gimbalControl.rc_point->rc.sw[0] == 2 && gimbalControl.rc_point->rc.sw[1] == 2)
+    if ((!gimbalControl.rc_fsi6_point->rc.sw[0] && !gimbalControl.rc_fsi6_point->rc.sw[1]) || toe_is_error(DBUS_TOE))
     {
-        DJI_AddTxPacket(gimbalControl.yaw_can_tx_data,0,0,0,0);
+        DM_Disable(gimbalControl.yaw_can_tx_data);
         can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
-
-        DM1TO4_AddTxPacket(gimbalControl.pitch_can_tx_data,0,0,0,0);
+        DM_Disable(gimbalControl.pitch_can_tx_data);
         can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
-
     }
     else
     {
-        DJI_AddTxPacket(gimbalControl.yaw_can_tx_data,gimbalControl.yawMotor.give_cmd_current,0,0,0);
-        can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
+        if (gimbalControl.yawMotor.motor_measurement.state == 1)
+        {
+            DM_AddTxPacket(&gimbalControl.yawMotor,gimbalControl.yaw_can_tx_data);
+            can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
+        }
+        else
+        {
+            DM_Enable(gimbalControl.yaw_can_tx_data);
+            can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
+        }
 
-        DM1TO4_AddTxPacket(gimbalControl.pitch_can_tx_data,0,gimbalControl.pitchMotor.give_cmd_current,0,0);
-        can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
-
+        if (gimbalControl.pitchMotor.motor_measurement.state == 1)
+        {
+            DM_AddTxPacket(&gimbalControl.pitchMotor,gimbalControl.pitch_can_tx_data);
+            can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
+        }
+        else
+        {
+            DM_Enable(gimbalControl.pitch_can_tx_data);
+            can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
+        }
     }
 }
 
@@ -89,34 +100,53 @@ static void gimbal_init(gimbal_control_struct *init)
     init->rc_dt7_point = &dt7Data;
     init->rc_fsi6_point = &fsi6Data;
 
+    //���zero
+    // DM_SaveZero(init->yaw_can_tx_data);
+    // can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
+    // osDelay(10);
+    // DM_SaveZero(init->pitch_can_tx_data);
+    // can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
+
+    //������
+    // DM_Clear(init->yaw_can_tx_data);
+    // can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
+    // osDelay(10);
+    // DM_Clear(init->pitch_can_tx_data);
+    // can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
+    // ���ʹ��
+    DM_Enable(init->yaw_can_tx_data);
+    can_tx_data(&YAW_CAN,YAW_CAN_ID,gimbalControl.yaw_can_tx_data);
+    osDelay(10);
+    DM_Enable(init->pitch_can_tx_data);
+    can_tx_data(&PITCH_CAN,PITCH_CAN_ID,gimbalControl.pitch_can_tx_data);
 
     //yaw���ݳ�ʼ��
-    //DM_Init(&init->yawMotor,DM4310,MIT,0x01);//������Ƴ�ʼ��
+    DM_Init(&init->yawMotor,DM4310,MIT,0x01);//������Ƴ�ʼ��
     PID_Init(&init->yawEuler.euler_abs_pos_control, PIDF_POSITION, YAW_ABS_POS_P, YAW_ABS_POS_I, YAW_ABS_POS_D,
              YAW_ABS_POS_F, YAW_ABS_POS_MAX_IOUT, YAW_ABS_POS_MAX_OUT,
-             GIMBAL_PID_PERIOD, 0.0005f, 0.001f, 0.2f, 0.2f, YAW_ABS_POS_D_FC, PID_D_ERR);
+             GIMBAL_PID_PERIOD, 0.0005f, 0.01f, 0.2f, 0.0f, 0.0f, PID_D_ERR);
 
     PID_Init(&init->yawEuler.euler_rel_pos_control, PIDF_POSITION, YAW_REL_POS_P, YAW_REL_POS_I, YAW_REL_POS_D,
              YAW_REL_POS_F, YAW_REL_POS_MAX_IOUT, YAW_REL_POS_MAX_OUT,
-             GIMBAL_PID_PERIOD, 0.0f, 0.001f, 0.5f,0.0f, YAW_REL_POS_D_FC, PID_D_ERR);
-
-    PID_Init(&init->yawEuler.euler_vel_control, PIDF_POSITION, YAW_VEL_P,YAW_VEL_I,YAW_VEL_D,
-            YAW_VEL_F,YAW_VEL_MAX_IOUT,YAW_VEL_MAX_OUT,
-            GIMBAL_PID_PERIOD,0.0f,0.0f,0.0f,0.0f,0.0f,PID_D_ERR);
+             GIMBAL_PID_PERIOD, 0.0f, 0.001f, 0.5f,0.0f, 0.0f, PID_D_ERR);
+    //
+    // PID_Init(&init->yawEuler.euler_vel_control, PIDF_DELTA, YAW_VEL_P,YAW_VEL_I,YAW_VEL_D,
+    //         YAW_VEL_F,YAW_VEL_MAX_IOUT,YAW_VEL_MAX_OUT,
+    //         GIMBAL_PID_PERIOD,0.0f,0.0f,0.0f,0.0f,0.0f,PID_D_ERR);
 
     //pitch
-    //DM_Init(&init->pitchMotor,DM4310,MIT,0x06);//
+    DM_Init(&init->pitchMotor,DM4310,MIT,0x02);//
     PID_Init(&init->pitchEuler.euler_abs_pos_control, PIDF_POSITION, PITCH_ABS_POS_P, PITCH_ABS_POS_I, PITCH_ABS_POS_D,
              PITCH_ABS_POS_F, PITCH_ABS_POS_MAX_IOUT, PITCH_ABS_POS_MAX_OUT,
-             GIMBAL_PID_PERIOD, 0.0005f, 0.001f, 0.2f, 0.2f, PITCH_ABS_POS_D_FC, PID_D_ERR);
+             GIMBAL_PID_PERIOD, 0.0005f, 0.01f, 0.2f, 0.0f, 0.0f, PID_D_ERR);
 
     PID_Init(&init->pitchEuler.euler_rel_pos_control, PIDF_POSITION, PITCH_REL_POS_P, PITCH_REL_POS_I, PITCH_REL_POS_D,
              PITCH_REL_POS_F, PITCH_REL_POS_MAX_IOUT, PITCH_REL_POS_MAX_OUT,
-             GIMBAL_PID_PERIOD, 0.000f, 0.0f, 0.0f, 0.0f, PITCH_REL_POS_D_FC, PID_D_ERR);
+             GIMBAL_PID_PERIOD, 0.000f, 0.0f, 0.0f, 0.0f, 0.0f, PID_D_ERR);
 
-    PID_Init(&init->pitchEuler.euler_vel_control,PIDF_POSITION, PITCH_VEL_P,PITCH_VEL_I,PITCH_VEL_D,
-            PITCH_VEL_F,PITCH_VEL_MAX_IOUT,PITCH_VEL_MAX_OUT,
-            GIMBAL_PID_PERIOD,0.0f,0.0f,0.0f,0.0f,0.0f,PID_D_ERR);
+    // PID_Init(&init->pitchEuler.euler_vel_control,PIDF_DELTA, PITCH_VEL_P,PITCH_VEL_I,PITCH_VEL_D,
+    //         PITCH_VEL_F,PITCH_VEL_MAX_IOUT,PITCH_VEL_MAX_OUT,
+    //         GIMBAL_PID_PERIOD,0.0f,0.0f,0.0f,0.0f,0.0f,PID_D_ERR);
 
     init->gimbalScan.scan_begin_time =  HAL_GetTick() * 0.001f;
     gimbal_update(init);
@@ -138,6 +168,8 @@ static void gimbal_init(gimbal_control_struct *init)
     init->pitchEuler.relative_zero_angle = PITCH_REL_ZERO;
     init->pitchEuler.relative_angle_set = 0;
 
+    Filter_Init(&init->yawEuler.euler_filter,FILTER_NOTCH,0.001f,500,1.0f,0.0f,5);
+    Filter_Init(&init->pitchEuler.euler_filter,FILTER_NOTCH,0.001f,500,1.0f,0.0f,5);
 }
 
 
@@ -164,12 +196,14 @@ static void gimbal_update(gimbal_control_struct *update)
 
     //yaw���ݸ���
      update->yawEuler.absolute_angle = update->imu_point->Yaw;//��ȡ���Խ�
-     update->yawEuler.relative_angle = motor_ecd_to_rad(update->yawMotor.motor_measurement.encoder,7491);//��ȡ��Խ�
-     update->yawEuler.vel = update->yawMotor.motor_measurement.omega;
+     update->yawEuler.relative_angle = update->yawMotor.motor_measurement.pos;
+         //motor_ecd_to_rad(update->yawMotor.motor_measurement.encoder,7491);//��ȡ��Խ�
+     update->yawEuler.vel = update->yawMotor.motor_measurement.vel;
      //pitch���ݸ���
      update->pitchEuler.absolute_angle = update->imu_point->Pitch;//��ȡ���Խ�
-     update->pitchEuler.relative_angle = motor_ecd_to_rad(update->pitchMotor.motor_measurement.encoder,8107);
-     update->pitchEuler.vel = update->pitchMotor.motor_measurement.omega;
+     update->pitchEuler.relative_angle = update->pitchMotor.motor_measurement.pos;
+         //motor_ecd_to_rad(update->pitchMotor.motor_measurement.encoder,8107);
+     update->pitchEuler.vel = update->pitchMotor.motor_measurement.vel;
 
 }
 
@@ -495,18 +529,22 @@ static void gimbal_motor_vel_control(gimbal_control_struct *gimbal_control,gimba
     if (motor_control == &gimbal_control->yawEuler)
     {
         motor_control->euler_vel_control.ref = motor_control->vel_set;
-        motor_control->euler_vel_control.fdb = motor_control->vel;
-        PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_vel_control);
-
-        gimbal_control->yawMotor.give_cmd_current = (int16_t)motor_control->euler_vel_control.out;
+        gimbal_control->yawMotor.give_kd = 1.2f;
+        gimbal_control->yawMotor.give_vel = motor_control->vel_set;
+        // motor_control->euler_vel_control.fdb = motor_control->vel;
+        // PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_vel_control);
+        //
+        // gimbal_control->yawMotor.give_torque = (int16_t)motor_control->euler_vel_control.out;
     }
     else if (motor_control == &gimbal_control->pitchEuler)
     {
-        motor_control->euler_vel_control.ref = motor_control->vel_set;
-        motor_control->euler_vel_control.fdb = motor_control->vel;
-        PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_vel_control);
-
-        gimbal_control->pitchMotor.give_cmd_current = (int16_t)motor_control->euler_vel_control.out;
+        // motor_control->euler_vel_control.ref = motor_control->vel_set;
+        gimbal_control->pitchMotor.give_kd = 1.4f;
+        gimbal_control->pitchMotor.give_vel = motor_control->vel_set;
+        // motor_control->euler_vel_control.fdb = motor_control->vel;
+        // PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_vel_control);
+        //
+        // gimbal_control->pitchMotor.give_torque = (int16_t)motor_control->euler_vel_control.out;
     }
 
 
@@ -537,7 +575,6 @@ void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_m
 
 
         motor_control->vel_set = motor_control->euler_rel_pos_control.out;
-
         gimbal_motor_vel_control(gimbal_control,&gimbal_control->yawEuler);
     }
     else if (motor_control == &gimbal_control->pitchEuler)
@@ -547,7 +584,6 @@ void gimbal_motor_encoder_control(gimbal_control_struct *gimbal_control,gimbal_m
         PID_TIM_Adjust_PeriodElapsedCallback(&motor_control->euler_rel_pos_control);
 
         motor_control->vel_set = motor_control->euler_rel_pos_control.out;
-
         gimbal_motor_vel_control(gimbal_control,&gimbal_control->pitchEuler);
     }
 }

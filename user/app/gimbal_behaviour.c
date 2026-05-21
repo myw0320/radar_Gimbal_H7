@@ -472,8 +472,12 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
         return;
     }
 
-    *yaw = control->vision_point->receive_packet.yaw;
-    *pitch = -control->vision_point->receive_packet.pitch;
+
+    *yaw =
+        Filter_Calc(&control->yawEuler.euler_filter,control->vision_point->receive_packet.yaw);
+    *pitch =
+        Filter_Calc(&control->pitchEuler.euler_filter,-control->vision_point->receive_packet.pitch);
+
 }
 
 //扫描复位
