@@ -6,10 +6,6 @@
 
 void Can_Task(void const *pvParameters)
 {
-    while(INS.ins_flag==0)
-    {//等待加速度收敛
-        osDelay(1);
-    }
     while (1)
     {
         UserGimbal_AddTxPacket();
@@ -34,8 +30,7 @@ void can_tx_data(FDCAN_HandleTypeDef *hcan, uint16_t id, uint8_t *tx_data)
     HAL_FDCAN_AddMessageToTxFifoQ(hcan, &TxHeader, tx_data);
 }
 
-//
-// cap_rx_data_t cap_rx_tset;
+
 
 uint8_t rx1_data[8];
 uint8_t rx2_data[8];

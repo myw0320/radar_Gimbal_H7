@@ -4,28 +4,14 @@
 #include "stdbool.h"
 #include "dt7.h"
 
-//cali device name
+
 typedef enum
 {
-    CALI_HEAD = 0,
-    CALI_GIMBAL = 1,
-    CALI_GYRO = 2,
-    CALI_ACC = 3,
-    CALI_MAG = 4,
-    //add more...
-    CALI_LIST_LENGHT,
-} cali_id_e;
-
-
-
-//gimbal device
-typedef struct
-{
-    uint16_t yaw_offset;
-    uint16_t pitch_offset;
-    float pitch_min_angle;
-} gimbal_cali_t;
-
+    GIMBAL_CALI_IDLE = 0,
+    GIMBAL_CALI_TO_ENCODER_ZERO,
+    GIMBAL_CALI_DONE,
+    GIMBAL_CALI_ERROR,
+} gimbal_cali_state_e;
 
 
 typedef struct

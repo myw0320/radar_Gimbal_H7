@@ -8,23 +8,15 @@
 #include "fsi6.h"
 #include <math.h>
 
-#define RADAR_REACHED_YAW_ERR 0.05f
-#define RADAR_REACHED_PITCH_ERR 0.06f
-
-#define AUTO_SCAN_YAW_RANGE 0.20f
-#define AUTO_SCAN_PITCH_RANGE 0.20f
-#define AUTO_SCAN_YAW_PERIOD 1.5f
-#define AUTO_SCAN_PITCH_PERIOD 2.0f
-#define AUTO_SCAN_PITCH_PHASE (0.5f * PI)
-#define AUTO_SCAN_PITCH_STEP 0.04f
-
 /* 全局变量 --------------------------------------------------------------- */
+
 gimbal_control_mode_enum gimbalControlMode = GIMBAL_STOP;       // 云台控制模式
 gimbal_control_mode_enum gimbalControlModeLast = GIMBAL_STOP;   // 上一次云台控制模式
 
-gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;                 // 云台当前模式
+gimbal_mode_enum gimbalMode = GIMBAL_INIT_MODE;                 // 云台当前子模式
 
 /* 静态函数声明 ------------------------------------------------------------- */
+
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_manual_rc_control(float *yaw, float *pitch, gimbal_control_struct *control);
 static void gimbal_stop_control(float *yaw, float *pitch, gimbal_control_struct *control);
@@ -34,18 +26,22 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
 static void gimbal_scan_reset(gimbal_control_struct *control);
 static uint8_t gimbal_radar_reached(const gimbal_control_struct *control);
 
+/* 函数实现 --------------------------------------------------------------- */
+
 /**
  * @brief  根据遥控器开关设置云台行为模式
  * @param  behaver 云台控制结构体指针
  */
 void gimbal_behaviour_set(gimbal_control_struct *behaver)
 {
-    static gimbal_mode_enum last_mode = GIMBAL_INIT_MODE;
-    static uint16_t time = 0;
     if (behaver == NULL)
     {
         return;
     }
+
+    static gimbal_mode_enum last_mode = GIMBAL_INIT_MODE;
+    static uint16_t mode_time = 0;
+
     last_mode = gimbalMode;
     // 读取遥控器两位开关，组合为模式选择位
     uint8_t mode_bit = ((behaver->rc_fsi6_point->rc.sw[0]<<1) | behaver->rc_fsi6_point->rc.sw[1]);
@@ -57,10 +53,10 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         case 0:
             gimbalControlMode = GIMBAL_STOP;
             break;
-        case 2:
-            gimbalControlMode = GIMBAL_STOP;
-            break;
         case 1:
+            gimbalControlMode = GIMBAL_INIT;
+            break;
+        case 2:
             gimbalControlMode = GIMBAL_AUTO;
             break;
         case 3:
@@ -97,24 +93,23 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
                 }
                 case RC_SW_DOWN:
                 {
-
                     if (!toe_is_error(VISION_TOE) && behaver->vision_point->receive_packet.packet_state == DEC_OK)
                     {
-                        time = 0;
+                        mode_time = 0;
                     }
                     else
                     {
-                        time++;
+                        mode_time++;
                     }
-                    if (time == 0)
+                    if (mode_time == 0)
                     {
                         behaver->current_time = HAL_GetTick() * 0.001f;
                         gimbalMode = GIMBAL_MANUAL_ATTACK_MODE;
                     }
-                    else if (time > 100)
+                    else if (mode_time > 100)
                     {
                         gimbalMode = GIMBAL_AUTO_SCAN_MODE;
-                        time = 101;
+                        mode_time = 101;
                     }
 
                     break;
@@ -124,44 +119,26 @@ void gimbal_behaviour_set(gimbal_control_struct *behaver)
         }
         case GIMBAL_AUTO:  // 自动模式细分
         {
+            // 视觉有效 → 自动攻击
             if (!toe_is_error(VISION_TOE) && behaver->vision_point->receive_packet.packet_state == DEC_OK)
             {
                 gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
             }
+            // 雷达有效 → 根据是否到位选择扫描/移动
             else if (!toe_is_error(RADAR_TOE) && behaver->radar_point->receive_packet.packet_state == DEC_OK)
             {
                 gimbalMode = gimbal_radar_reached(behaver) ? GIMBAL_AUTO_SCAN_MODE : GIMBAL_AUTO_MOVE_MODE;
             }
+            // 都无效 → 自动扫描
             else
             {
                 gimbalMode = GIMBAL_AUTO_SCAN_MODE;
             }
             break;
-
-            // 雷达数据有效
-            if (!toe_is_error(RADAR_TOE) && behaver->radar_point->receive_packet.packet_state == DEC_OK)
-            {
-                if (!toe_is_error(VISION_TOE))  // 视觉数据有效
-                {
-                    if (behaver->radar_point->receive_packet.packet_state == DEC_OK)  // 识别到目标
-                    {
-                        gimbalMode = GIMBAL_AUTO_ATTACK_MODE;
-                    }
-                    else if (behaver->radar_point->receive_packet.packet_state == DEC_DATA_NO)  // 未识别目标
-                    {
-                        gimbalMode = GIMBAL_AUTO_SCAN_MODE;
-                    }
-                }
-                else
-                {
-                    gimbalMode = GIMBAL_AUTO_MOVE_MODE;
-                }
-
-            }
-
         }
     }
 
+    // 进入扫描模式时复位扫描状态
     if (last_mode != GIMBAL_AUTO_SCAN_MODE && gimbalMode == GIMBAL_AUTO_SCAN_MODE)
     {
         gimbal_scan_reset(behaver);
@@ -205,6 +182,7 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
         case GIMBAL_AUTO_SCAN_MODE:
         case GIMBAL_AUTO_ATTACK_MODE:
         {
+            // 遥控器SW3决定电机模式：上=陀螺仪，其他=编码器
             if (motor_mode_update->rc_fsi6_point->rc.sw[3] == RC_SW_UP)
             {
                 motor_mode_update->yawEuler.motorMode = MOTOR_GYRO;
@@ -219,15 +197,15 @@ void gimbal_motor_mode_update(gimbal_control_struct *motor_mode_update)
         }
     }
 
-    // 记录进入本次更新前的电机模式，用于检测模式切换
+    // 记录上一次电机模式（用于检测模式切换）
     motor_mode_update->yawEuler.last_motorMode = yaw_last_motor_mode;
     motor_mode_update->pitchEuler.last_motorMode = pitch_last_motor_mode;
 }
 
 /**
  * @brief  根据当前云台模式执行对应的控制策略
- * @param  add_yaw          偏航角增量输出
- * @param  add_pitch        俯仰角增量输出
+ * @param  add_yaw           偏航角增量输出
+ * @param  add_pitch         俯仰角增量输出
  * @param  gimbal_control_set 云台控制结构体指针
  */
 void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_control_struct *gimbal_control_set)
@@ -253,23 +231,23 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
         case GIMBAL_MANUAL_MOVE_MODE:  // 手动移动
         {
             gimbal_manual_rc_control(add_yaw, add_pitch, gimbal_control_set);
-            Power_5V_ON;  // 关闭激光
+            Power_5V_ON;  // 打开激光
             break;
         }
-        case GIMBAL_AUTO_MOVE_MODE:  // 自动移动
+        case GIMBAL_AUTO_MOVE_MODE:  // 自动移动（雷达引导）
         {
             gimbal_auto_move_control(add_yaw, add_pitch, gimbal_control_set);
-            Power_5V_ON;  // 关闭激光
+            Power_5V_ON;  // 打开激光
             break;
         }
         case GIMBAL_AUTO_SCAN_MODE:  // 自动扫描
         {
             gimbal_auto_scan_control(add_yaw, add_pitch, gimbal_control_set);
-            Power_5V_ON;  // 关闭激光
+            Power_5V_ON;  // 打开激光
             break;
         }
         case GIMBAL_MANUAL_ATTACK_MODE:  // 手动攻击
-        case GIMBAL_AUTO_ATTACK_MODE:    // 自动攻击
+        case GIMBAL_AUTO_ATTACK_MODE:    // 自动攻击（视觉引导）
         {
             gimbal_auto_attack_control(add_yaw, add_pitch, gimbal_control_set);
             Power_5V_ON;  // 打开激光
@@ -283,7 +261,7 @@ void gimbal_behaviour_control_set(float *add_yaw, float *add_pitch, gimbal_contr
 }
 
 /**
- * @brief  云台初始化控制 — 回绝对零位
+ * @brief  初始化控制 — 回绝对零位
  */
 static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
@@ -296,7 +274,7 @@ static void gimbal_init_control(float *yaw, float *pitch, gimbal_control_struct 
 }
 
 /**
- * @brief  云台停止控制 — 角度增量置零
+ * @brief  停止控制 — 角度增量置零
  */
 static void gimbal_stop_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
@@ -347,68 +325,25 @@ static void gimbal_auto_move_control(float *yaw, float *pitch, gimbal_control_st
  * @param  range_yaw   偏航扫描范围
  * @param  range_pitch 俯仰扫描范围
  * @param  period_yaw  偏航扫描周期
- * @param
  * @param  run_time    已运行时间
  * @note   偏航轴做三角波往复运动，每次换向时俯仰轴步进一行
  */
-void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pitch,
-    float period_yaw, float period_pitch, float phase, float run_time)
+static void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pitch, float period_yaw, float run_time)
 {
-    // // 1. 计算偏航轴当前目标位置（三角波轨迹）
-    // (void)period_pitch;
-    // (void)phase;
-    //
-    // if (scan_control == NULL || period_yaw <= 0.0f)
-    // {
-    //     return;
-    // }
-    //
-    // float cycle_time = fmodf(run_time, period_yaw);
-    // float half_period = 0.5f * period_yaw;
-    // float next_yaw = 0.0f;
-    // int8_t current_dir = 1;
-    //
-    // if (cycle_time < half_period)
-    // {
-    //     next_yaw = -range_yaw + 2.0f * range_yaw * cycle_time / half_period;
-    //     current_dir = 1;
-    // }
-    // else
-    // {
-    //     next_yaw = range_yaw - 2.0f * range_yaw * (cycle_time - half_period) / half_period;
-    //     current_dir = -1;
-    // }
-    //
-    // if (scan_control->last_yaw_dir == 0)
-    // {
-    //     scan_control->last_yaw_dir = current_dir;
-    // }
-    // else if (current_dir != scan_control->last_yaw_dir)
-    // {
-    //     scan_control->pitch_accumulated += AUTO_SCAN_PITCH_STEP;
-    //     if (scan_control->pitch_accumulated > range_pitch)
-    //     {
-    //         scan_control->pitch_accumulated = -range_pitch;
-    //     }
-    //     scan_control->last_yaw_dir = current_dir;
-    // }
-    //
-    // scan_control->auto_scan_AC_set_yaw = next_yaw;
-    // scan_control->auto_scan_AC_set_pitch = scan_control->pitch_accumulated;
-    // return;
-
-#if 1
+    // 1. 三角波位置解算
     float step_yaw = 4.0f * range_yaw / period_yaw;
     float calc_time = run_time - period_yaw * ((int16_t)(run_time / period_yaw));
 
     float next_yaw = 0;
     int8_t current_dir = 1;  // 当前运动方向：1=正向，-1=反向
 
-    if (calc_time < 0.25f * period_yaw) {
+    if (calc_time < 0.25f * period_yaw)
+    {
         next_yaw = step_yaw * calc_time;
         current_dir = 1;
     }
-    else if (calc_time < 0.75f * period_yaw) {
+    else if (calc_time < 0.75f * period_yaw)
+    {
         next_yaw = -step_yaw * calc_time + 2.0f * range_yaw;
         current_dir = -1;
     }
@@ -418,7 +353,7 @@ void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pi
         current_dir = 1;
     }
 
-    // 2. 检测方向翻转，每次换向俯仰步进一个增量
+    // 2. 方向翻转时俯仰步进
     if (current_dir != scan_control->last_yaw_dir)
     {
         scan_control->pitch_accumulated += AUTO_SCAN_PITCH_STEP;
@@ -430,17 +365,16 @@ void scan_control_set(scan_struct *scan_control, float range_yaw, float range_pi
         }
     }
 
-    // 3. 记录当前方向供下次比较
+    // 3. 保存方向
     scan_control->last_yaw_dir = current_dir;
 
     // 4. 输出设定值
     scan_control->auto_scan_AC_set_yaw = next_yaw;
     scan_control->auto_scan_AC_set_pitch = scan_control->pitch_accumulated;
-#endif
 }
 
 /**
- * @brief  自动扫描控制 — 输出扫描角度增量
+ * @brief  自动扫描控制 — 输出扫描角度设定值
  */
 static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
@@ -454,16 +388,16 @@ static void gimbal_auto_scan_control(float *yaw, float *pitch, gimbal_control_st
 
     // 计算当前扫描位置
     scan_control_set(&control->gimbalScan, AUTO_SCAN_YAW_RANGE, AUTO_SCAN_PITCH_RANGE,
-                     AUTO_SCAN_YAW_PERIOD,AUTO_SCAN_PITCH_PERIOD,AUTO_SCAN_PITCH_PHASE,
-                     control->gimbalScan.scan_run_time);
+                     AUTO_SCAN_YAW_PERIOD,control->gimbalScan.scan_run_time);
 
+    // 中心点 + 扫描偏移
     *yaw = control->gimbalScan.yaw_center_value + control->gimbalScan.auto_scan_AC_set_yaw;
     *pitch = control->gimbalScan.pitch_center_value + control->gimbalScan.auto_scan_AC_set_pitch;
 }
 
 /**
  * @brief  自动攻击控制 — 跟随视觉目标角度
- * @note   当视觉数据为无效值(≥6.28)时保持上一次有效值
+ * @note   当视觉数据为无效值时保持上一次有效值（由上层逻辑保证）
  */
 static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_struct *control)
 {
@@ -471,16 +405,13 @@ static void gimbal_auto_attack_control(float *yaw, float *pitch, gimbal_control_
     {
         return;
     }
-
-
-    *yaw =
-        Filter_Calc(&control->yawEuler.euler_filter,control->vision_point->receive_packet.yaw);
-    *pitch =
-        Filter_Calc(&control->pitchEuler.euler_filter,-control->vision_point->receive_packet.pitch);
-
+    *yaw = control->vision_point->receive_packet.yaw;
+    *pitch = -control->vision_point->receive_packet.pitch;
 }
 
-//扫描复位
+/**
+ * @brief  扫描复位 — 重置扫描中心、时间、累计值
+ */
 static void gimbal_scan_reset(gimbal_control_struct *control)
 {
     if (control == NULL)
@@ -488,6 +419,7 @@ static void gimbal_scan_reset(gimbal_control_struct *control)
         return;
     }
 
+    // 雷达有效则以雷达目标为中心，否则以当前角度为中心
     if (!toe_is_error(RADAR_TOE) && control->radar_point->receive_packet.packet_state == DEC_OK)
     {
         control->gimbalScan.yaw_center_value = control->radar_point->receive_packet.yaw;
@@ -507,6 +439,10 @@ static void gimbal_scan_reset(gimbal_control_struct *control)
     control->gimbalScan.last_yaw_dir = 0;
 }
 
+/**
+ * @brief  判断云台是否已到达雷达目标位置
+ * @return 1=已到位，0=未到位
+ */
 static uint8_t gimbal_radar_reached(const gimbal_control_struct *control)
 {
     if (control == NULL)

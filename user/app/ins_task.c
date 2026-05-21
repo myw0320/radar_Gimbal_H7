@@ -201,8 +201,6 @@ void INS_Task(void const * argument)
 		{
 			INS.MotionAccel_b[i] = (INS.Accel[i] - gravity_b[i]) * ins_dt / (INS.AccelLPF + ins_dt)
 															  + INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + ins_dt);
-			//				INS.MotionAccel_b[i] = (INS.Accel[i] ) * dt / (INS.AccelLPF + dt)
-			//															+ INS.MotionAccel_b[i] * INS.AccelLPF / (INS.AccelLPF + dt);
 		}
 		BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // 转换回导航系n
 
